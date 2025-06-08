@@ -1,0 +1,38 @@
+{
+  "name": "clipboard-list",
+  "version": "1.0.0",
+  "description": "智能剪切板管理工具 - 支持屏幕吸附、待办清单、笔记功能",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "npm run build && electron .",
+    "dev": "tsc && electron . --dev",
+    "watch": "tsc --watch",
+    "dist": "npm run build && electron-builder",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "electron",
+    "clipboard",
+    "todo",
+    "notes",
+    "productivity",
+    "windows"
+  ],
+  "author": "LongDz",
+  "license": "MIT",
+  "homepage": "https://github.com/longdz/clipboard-list",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/longdz/clipboard-list.git"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "electron": "^36.4.0",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "auto-launch": "^5.0.6",
+    "electron-updater": "^6.6.2"
+  }
+}

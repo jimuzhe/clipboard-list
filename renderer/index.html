@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClipBoard List - 智能剪切板管理工具</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- 标题栏 -->
+    <div class="title-bar">
+        <div class="title-bar-text">
+            <span class="app-icon">📋</span>
+            <span>ClipBoard List</span>
+        </div>
+        <div class="title-bar-controls">
+            <button id="always-on-top-btn" class="control-btn" title="置顶">📌</button>
+            <button id="minimize-btn" class="control-btn" title="最小化">➖</button>
+            <button id="close-btn" class="control-btn" title="隐藏">✖️</button>
+        </div>
+    </div>
+
+    <!-- 主要内容区域 -->
+    <div class="main-container">
+        <!-- 选项卡导航 -->
+        <div class="tab-nav">
+            <button class="tab-btn active" data-tab="clipboard">📋 剪切板</button>
+            <button class="tab-btn" data-tab="todo">✅ 待办</button>
+            <button class="tab-btn" data-tab="notes">📝 笔记</button>
+            <button class="tab-btn" data-tab="settings">⚙️ 设置</button>
+        </div>
+
+        <!-- 剪切板面板 -->
+        <div id="clipboard-panel" class="panel active">
+            <div class="panel-header">
+                <h3>剪切板历史</h3>
+                <div class="header-controls">
+                    <button id="clear-clipboard" class="btn btn-danger">清空</button>
+                    <input type="text" id="clipboard-search" placeholder="搜索剪切板内容..." class="search-input">
+                </div>
+            </div>
+            <div class="clipboard-list" id="clipboard-list">
+                <!-- 剪切板项目将在这里动态生成 -->
+            </div>
+        </div>
+
+        <!-- 待办清单面板 -->
+        <div id="todo-panel" class="panel">
+            <div class="panel-header">
+                <h3>待办清单</h3>
+                <div class="header-controls">
+                    <select id="todo-filter" class="filter-select">
+                        <option value="all">全部</option>
+                        <option value="pending">待完成</option>
+                        <option value="completed">已完成</option>
+                        <option value="high">高优先级</option>
+                    </select>
+                    <button id="add-todo" class="btn btn-primary">添加</button>
+                </div>
+            </div>
+            <div class="todo-input-area" id="todo-input-area" style="display: none;">
+                <input type="text" id="todo-title" placeholder="待办事项标题..." class="input-field">
+                <textarea id="todo-description" placeholder="描述（可选）..." class="textarea-field"></textarea>
+                <div class="todo-controls">
+                    <select id="todo-priority" class="priority-select">
+                        <option value="low">低优先级</option>
+                        <option value="medium">中优先级</option>
+                        <option value="high">高优先级</option>
+                    </select>
+                    <div class="todo-actions">
+                        <button id="save-todo" class="btn btn-success">保存</button>
+                        <button id="cancel-todo" class="btn btn-secondary">取消</button>
+                    </div>
+                </div>
+            </div>
+            <div class="todo-list" id="todo-list">
+                <!-- 待办事项将在这里动态生成 -->
+            </div>
+        </div>
+
+        <!-- 笔记面板 -->
+        <div id="notes-panel" class="panel">
+            <div class="panel-header">
+                <h3>Markdown 笔记</h3>
+                <div class="header-controls">
+                    <button id="new-note" class="btn btn-primary">新建笔记</button>
+                    <button id="save-note" class="btn btn-success">保存</button>
+                    <button id="toggle-preview" class="btn btn-secondary">预览模式</button>
+                </div>
+            </div>
+            <div class="notes-container">
+                <div class="notes-sidebar">
+                    <input type="text" id="notes-search" placeholder="搜索笔记..." class="search-input">
+                    <div class="notes-list" id="notes-list">
+                        <!-- 笔记列表将在这里生成 -->
+                    </div>
+                </div>
+                <div class="notes-editor">
+                    <div class="editor-tabs">
+                        <button class="editor-tab active" data-mode="edit">编辑</button>
+                        <button class="editor-tab" data-mode="preview">预览</button>
+                        <button class="editor-tab" data-mode="split">分屏</button>
+                    </div>
+                    <div class="editor-content">
+                        <textarea id="markdown-editor" placeholder="开始写作...支持 Markdown 语法"></textarea>
+                        <div id="markdown-preview" class="markdown-preview"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 设置面板 -->
+        <div id="settings-panel" class="panel">
+            <div class="panel-header">
+                <h3>应用设置</h3>
+            </div>
+            <div class="settings-content">
+                <div class="setting-group">
+                    <h4>外观设置</h4>
+                    <div class="setting-item">
+                        <label for="theme-select">主题选择：</label>
+                        <select id="theme-select" class="setting-select">
+                            <option value="light">浅色主题</option>
+                            <option value="dark">深色主题</option>
+                            <option value="auto">跟随系统</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" id="glass-effect" checked>
+                            启用毛玻璃效果
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <h4>功能设置</h4>
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" id="auto-start" checked>
+                            开机自启动
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" id="clipboard-monitor" checked>
+                            监控剪切板变化
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <label for="max-clipboard-items">剪切板历史数量：</label>
+                        <input type="number" id="max-clipboard-items" value="100" min="10" max="1000"
+                            class="setting-input">
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <h4>快捷键</h4>
+                    <div class="setting-item">
+                        <label>显示/隐藏窗口：</label>
+                        <span class="shortcut-display">Ctrl + Shift + V</span>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <h4>关于</h4>
+                    <div class="setting-item">
+                        <span>版本：<span id="app-version">1.0.0</span></span>
+                    </div>
+                    <div class="setting-item">
+                        <button id="check-updates" class="btn btn-primary">检查更新</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 番茄时钟模态框 -->
+    <div id="pomodoro-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🍅 番茄时钟</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="pomodoro-display">
+                    <div class="time-display" id="pomodoro-time">25:00</div>
+                    <div class="pomodoro-controls">
+                        <button id="pomodoro-start" class="btn btn-primary">开始</button>
+                        <button id="pomodoro-pause" class="btn btn-secondary">暂停</button>
+                        <button id="pomodoro-reset" class="btn btn-danger">重置</button>
+                    </div>
+                </div>
+                <div class="pomodoro-settings">
+                    <div class="setting-item">
+                        <label for="work-duration">工作时长（分钟）：</label>
+                        <input type="number" id="work-duration" value="25" min="1" max="60">
+                    </div>
+                    <div class="setting-item">
+                        <label for="break-duration">休息时长（分钟）：</label>
+                        <input type="number" id="break-duration" value="5" min="1" max="30">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+
+</html>
