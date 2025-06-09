@@ -9,6 +9,8 @@
     "start": "npm run build && electron .",
     "dev": "tsc && electron . --dev",
     "watch": "tsc --watch",
+    "clean": "rimraf dist-installer/win-unpacked && rimraf dist-installer/*.exe",
+    "predist": "npm run clean",
     "dist": "npm run build && electron-builder",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -45,25 +47,28 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
-      "icon": "assets/app-icon.png"
+      "icon": "assets/app-icon.ico"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "installerIcon": "assets/app-icon.png",
-      "uninstallerIcon": "assets/app-icon.png",
-      "installerHeaderIcon": "assets/app-icon.png"
+      "installerIcon": "assets/app-icon.ico",
+      "uninstallerIcon": "assets/app-icon.ico",
+      "installerHeaderIcon": "assets/app-icon.ico"
     }
   },
   "devDependencies": {
     "@types/node": "^22.15.30",
     "electron": "^36.4.0",
     "electron-builder": "^24.6.4",
+    "rimraf": "^3.0.2",
     "typescript": "^5.8.3"
   },
   "dependencies": {

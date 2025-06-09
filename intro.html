@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>移记 - 智能剪切板管理工具</title>
+    <link rel="stylesheet" href="intro-styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="assets/app-icon.png" alt="移记" class="nav-logo">
+                <span class="nav-title">移记</span>
+            </div>
+            <div class="nav-links">
+                <a href="#features" class="nav-link">功能</a>
+                <a href="#screenshots" class="nav-link">截图</a>
+                <a href="#download" class="nav-link">下载</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主标题区域 -->
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    <span class="hero-title-main">移记</span>
+                    <span class="hero-title-sub">捕捉每一个好点子</span>
+                </h1>
+                <p class="hero-description">
+                    智能剪切板管理工具，让你的创意从不丢失。
+                    支持屏幕吸附、待办清单、Markdown 笔记。
+                    优雅而强大，就像你习惯的那样。
+                </p>
+                <div class="hero-buttons">
+                    <a href="#download" class="btn btn-primary">
+                        <span>免费下载</span>
+                        <i class="icon-download"></i>
+                    </a>
+                    <a href="#features" class="btn btn-secondary">
+                        <span>了解更多</span>
+                        <i class="icon-arrow"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="app-preview">
+                    <div class="app-window">
+                        <div class="window-header">
+                            <div class="window-controls">
+                                <span class="control red"></span>
+                                <span class="control yellow"></span>
+                                <span class="control green"></span>
+                            </div>
+                            <div class="window-title">移记</div>
+                        </div>
+                        <div class="window-content">
+                            <div class="app-tabs">
+                                <span class="tab active">📋 剪切板</span>
+                                <span class="tab">✅ 待办</span>
+                                <span class="tab">📝 笔记</span>
+                            </div>
+                            <div class="clipboard-items">
+                                <div class="clipboard-item">
+                                    <div class="item-content">console.log('Hello World');</div>
+                                    <div class="item-meta">代码片段 · 2分钟前</div>
+                                </div>
+                                <div class="clipboard-item">
+                                    <div class="item-content">设计一个现代化的用户界面</div>
+                                    <div class="item-meta">文本 · 5分钟前</div>
+                                </div>
+                                <div class="clipboard-item">
+                                    <div class="item-content">https://example.com/api/data</div>
+                                    <div class="item-meta">链接 · 10分钟前</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 功能特性区域 -->
+    <section id="features" class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">强大功能，简单易用</h2>
+                <p class="section-subtitle">让每一个功能都恰到好处</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <div class="icon-wrapper">
+                            <span class="icon">🚀</span>
+                        </div>
+                    </div>
+                    <h3 class="feature-title">开机自启</h3>
+                    <p class="feature-description">
+                        开机后自动启动，隐藏在系统托盘，
+                        随时待命，从不打扰。
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <div class="icon-wrapper">
+                            <span class="icon">📌</span>
+                        </div>
+                    </div>
+                    <h3 class="feature-title">屏幕吸附</h3>
+                    <p class="feature-description">
+                        像 QQ 一样的窗口吸附体验，
+                        鼠标接近自动展开，离开自动收起。
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <div class="icon-wrapper">
+                            <span class="icon">💻</span>
+                        </div>
+                    </div>
+                    <h3 class="feature-title">智能剪切板</h3>
+                    <p class="feature-description">
+                        自动识别代码片段，支持内容修改、
+                        一键复制和置顶管理。
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <div class="icon-wrapper">
+                            <span class="icon">✅</span>
+                        </div>
+                    </div>
+                    <h3 class="feature-title">待办清单</h3>
+                    <p class="feature-description">
+                        支持优先级设置、拖拽排序、
+                        状态筛选，还有番茄时钟助力专注。
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <div class="icon-wrapper">
+                            <span class="icon">📝</span>
+                        </div>
+                    </div>
+                    <h3 class="feature-title">Markdown 笔记</h3>
+                    <p class="feature-description">
+                        实时预览，完整语法支持，
+                        让你的想法更有条理。
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <div class="icon-wrapper">
+                            <span class="icon">🎨</span>
+                        </div>
+                    </div>
+                    <h3 class="feature-title">现代设计</h3>
+                    <p class="feature-description">
+                        毛玻璃效果，可切换主题，
+                        每一个细节都精心雕琢。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 截图展示区域 -->
+    <section id="screenshots" class="screenshots">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">精美界面</h2>
+                <p class="section-subtitle">一目了然的设计语言</p>
+            </div>
+            <div class="screenshots-carousel">
+                <div class="screenshot-item active">
+                    <div class="screenshot-window">
+                        <div class="window-header">
+                            <div class="window-controls">
+                                <span class="control red"></span>
+                                <span class="control yellow"></span>
+                                <span class="control green"></span>
+                            </div>
+                        </div>
+                        <div class="screenshot-content clipboard-view">
+                            <div class="tab-nav">
+                                <span class="tab active">📋 剪切板</span>
+                                <span class="tab">✅ 待办</span>
+                                <span class="tab">📝 笔记</span>
+                            </div>
+                            <div class="content-area">
+                                <div class="search-bar">
+                                    <input type="text" placeholder="搜索剪切板内容...">
+                                </div>
+                                <div class="items-list">
+                                    <div class="item">
+                                        <div class="item-icon">💻</div>
+                                        <div class="item-text">const app = require('electron');</div>
+                                        <div class="item-actions">📌</div>
+                                    </div>
+                                    <div class="item">
+                                        <div class="item-icon">📄</div>
+                                        <div class="item-text">用户体验设计的基本原则</div>
+                                        <div class="item-actions">📋</div>
+                                    </div>
+                                    <div class="item">
+                                        <div class="item-icon">🔗</div>
+                                        <div class="item-text">https://github.com/electron/electron</div>
+                                        <div class="item-actions">🔗</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 下载区域 -->
+    <section id="download" class="download">
+        <div class="container">
+            <div class="download-content">
+                <h2 class="download-title">现在就开始使用</h2>
+                <p class="download-description">
+                    适用于 Windows 10/11，完全免费，开源可信赖。
+                </p>
+                <div class="download-buttons">
+                    <a href="dist-installer/移记 Setup 1.0.0.exe" class="btn btn-download">
+                        <span class="btn-text">下载 Windows 版</span>
+                        <span class="btn-subtitle">v1.0.0 · 免费</span>
+                    </a>
+                </div>
+                <div class="download-info">
+                    <div class="info-item">
+                        <span class="info-label">大小</span>
+                        <span class="info-value">~50MB</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">系统</span>
+                        <span class="info-value">Windows 10+</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">许可</span>
+                        <span class="info-value">MIT 开源</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <img src="assets/app-icon.png" alt="移记" class="footer-logo">
+                    <span class="footer-title">移记</span>
+                </div>
+                <div class="footer-text">
+                    <p>用心打造的桌面效率工具</p>
+                    <p>让创意从不丢失，让工作更高效</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="intro-script.js"></script>
+</body>
+</html>
