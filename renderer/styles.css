@@ -177,6 +177,36 @@ body {
   align-items: center;
 }
 
+/* 自动保存状态指示器 */
+.auto-save-status {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  font-size: 11px;
+  transition: all 0.3s ease;
+}
+
+.save-indicator {
+  color: var(--success-color);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.auto-save-status.saving .save-indicator {
+  color: var(--warning-color);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
 /* 按钮样式 */
 .btn {
   padding: 6px 12px;
@@ -229,7 +259,7 @@ body {
 }
 
 /* 输入框样式 */
-.search-input, .input-field, .setting-input {
+.search-input, .input-field, .setting-input, .priority-select, .filter-select {
   padding: 8px 12px;
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
@@ -240,7 +270,7 @@ body {
   width: 100%;
 }
 
-.search-input:focus, .input-field:focus, .setting-input:focus {
+.search-input:focus, .input-field:focus, .setting-input:focus, .priority-select:focus, .filter-select:focus {
   outline: none;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(0, 122, 204, 0.1);
@@ -256,6 +286,35 @@ body {
   resize: vertical;
   min-height: 60px;
   font-family: var(--font-family);
+  transition: var(--transition);
+}
+
+.textarea-field:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 122, 204, 0.1);
+}
+
+/* 优先级选择器样式 */
+.priority-select {
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+  padding-right: 32px;
+  appearance: none;
+  cursor: pointer;
+}
+
+.filter-select {
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+  padding-right: 32px;
+  appearance: none;
+  cursor: pointer;
+  min-width: 120px;
 }
 
 /* 剪切板面板 */
@@ -378,6 +437,7 @@ body {
   padding: 16px;
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
+  backdrop-filter: blur(10px);
 }
 
 .todo-controls {
@@ -395,61 +455,437 @@ body {
 .todo-list {
   flex: 1;
   overflow-y: auto;
-  padding: 8px;
+  padding: 12px;
+  gap: 8px;
+  display: flex;
+  flex-direction: column;
 }
 
+/* 优化的待办事项卡片 */
 .todo-item {
-  background: var(--bg-secondary);
+  background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  margin-bottom: 8px;
-  padding: 12px;
-  transition: var(--transition);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: grab;
+  position: relative;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.todo-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.todo-item::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
+  opacity: 0;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.todo-item:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  border-color: var(--primary-color);
+}
+
+.todo-item:hover::before {
+  opacity: 1;
+  height: 6px;
+}
+
+.todo-item:hover::after {
+  opacity: 1;
 }
 
 .todo-item:active {
   cursor: grabbing;
+  transform: rotate(3deg) scale(1.05);
 }
 
+/* 完成状态 */
 .todo-item.completed {
   opacity: 0.6;
-  text-decoration: line-through;
+  background: linear-gradient(135deg, var(--bg-secondary), rgba(40, 167, 69, 0.1));
+  border-color: var(--success-color);
+  transform: scale(0.98);
 }
 
+.todo-item.completed .todo-item-title span {
+  text-decoration: line-through;
+  color: var(--text-secondary);
+}
+
+.todo-item.completed::before {
+  background: linear-gradient(90deg, transparent, var(--success-color), transparent);
+  opacity: 0.8;
+  height: 4px;
+}
+
+.todo-item.completed .todo-checkbox {
+  background: var(--success-color);
+  border-color: var(--success-color);
+  animation: checkBounce 0.4s ease;
+}
+
+@keyframes checkBounce {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* 优先级样式 */
 .todo-item.high-priority {
-  border-left: 4px solid var(--danger-color);
+  border-left: 5px solid var(--danger-color);
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.08), var(--bg-card));
+  box-shadow: 0 4px 20px rgba(220, 53, 69, 0.1);
+}
+
+.todo-item.high-priority:hover {
+  box-shadow: 0 12px 40px rgba(220, 53, 69, 0.2);
 }
 
 .todo-item.medium-priority {
-  border-left: 4px solid var(--warning-color);
+  border-left: 5px solid var(--warning-color);
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.08), var(--bg-card));
+  box-shadow: 0 4px 20px rgba(255, 193, 7, 0.1);
+}
+
+.todo-item.medium-priority:hover {
+  box-shadow: 0 12px 40px rgba(255, 193, 7, 0.2);
 }
 
 .todo-item.low-priority {
-  border-left: 4px solid var(--success-color);
+  border-left: 5px solid var(--success-color);
+  background: linear-gradient(135deg, rgba(40, 167, 69, 0.08), var(--bg-card));
+  box-shadow: 0 4px 20px rgba(40, 167, 69, 0.1);
 }
 
+.todo-item.low-priority:hover {
+  box-shadow: 0 12px 40px rgba(40, 167, 69, 0.2);
+}
+
+/* 待办事项头部 */
 .todo-item-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
+  align-items: flex-start;
+  margin-bottom: 16px;
 }
 
 .todo-item-title {
-  font-weight: 500;
-  font-size: 13px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  flex: 1;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-primary);
 }
 
+.todo-checkbox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  margin: 2px 0 0 0;
+  flex-shrink: 0;
+  appearance: none;
+}
+
+.todo-checkbox:checked {
+  background: var(--success-color);
+  border-color: var(--success-color);
+  transform: scale(1.1);
+}
+
+.todo-checkbox:checked::before {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  animation: checkAppear 0.3s ease;
+}
+
+.todo-checkbox:hover {
+  border-color: var(--primary-color);
+  transform: scale(1.15);
+  box-shadow: 0 0 0 3px rgba(0, 122, 204, 0.1);
+}
+
+@keyframes checkAppear {
+  0% { 
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0);
+  }
+  100% { 
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* 操作按钮 */
 .todo-item-actions {
   display: flex;
-  gap: 4px;
+  gap: 8px;
   opacity: 0;
-  transition: var(--transition);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateX(15px);
 }
 
 .todo-item:hover .todo-item-actions {
   opacity: 1;
+  transform: translateX(0);
+}
+
+.todo-item-actions .control-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.todo-item-actions .control-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.4s ease;
+}
+
+.todo-item-actions .control-btn:hover::before {
+  left: 100%;
+}
+
+.todo-item-actions .control-btn:hover {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(0, 122, 204, 0.3);
+}
+
+.todo-item-actions .pomodoro-btn:hover {
+  background: var(--warning-color);
+  border-color: var(--warning-color);
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+}
+
+.todo-item-actions .edit-btn:hover {
+  background: var(--info-color);
+  border-color: var(--info-color);
+  box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
+}
+
+.todo-item-actions .delete-btn:hover {
+  background: var(--danger-color);
+  border-color: var(--danger-color);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+/* 描述文本 */
+.todo-item-description {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 12px 0 16px 36px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, var(--bg-secondary), rgba(255, 255, 255, 0.5));
+  border-radius: 10px;
+  border-left: 4px solid var(--info-color);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  position: relative;
+}
+
+.todo-item-description::before {
+  content: '💬';
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-size: 14px;
+  opacity: 0.6;
+}
+
+/* 元信息区域 */
+.todo-item-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* 优先级徽章 */
+.priority-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.priority-badge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: left 0.6s ease;
+}
+
+.priority-badge:hover::before {
+  left: 100%;
+}
+
+.priority-high {
+  background: linear-gradient(135deg, #ff4757, #ff3742);
+  color: white;
+  box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
+}
+
+.priority-high::after {
+  content: '🔥';
+  margin-left: 3px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+.priority-medium {
+  background: linear-gradient(135deg, #ffa502, #ff9500);
+  color: white;
+  box-shadow: 0 4px 15px rgba(255, 165, 2, 0.4);
+}
+
+.priority-medium::after {
+  content: '⚡';
+  margin-left: 3px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+.priority-low {
+  background: linear-gradient(135deg, #2ed573, #1dd1a1);
+  color: white;
+  box-shadow: 0 4px 15px rgba(46, 213, 115, 0.4);
+}
+
+.priority-low::after {
+  content: '🍃';
+  margin-left: 3px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+/* 时间显示 */
+.todo-item-time {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  padding: 4px 8px;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  position: relative;
+}
+
+.todo-item-time::before {
+  content: '🕒';
+  margin-right: 4px;
+}
+
+/* 拖拽状态 */
+.todo-item.sortable-ghost {
+  opacity: 0.4;
+  transform: rotate(8deg) scale(1.05);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+}
+
+.todo-item.sortable-chosen {
+  transform: scale(1.08);
+  z-index: 1000;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+}
+
+.todo-item.sortable-drag {
+  opacity: 0.8;
+  transform: rotate(5deg);
+}
+
+/* 空状态 */
+.todo-list:empty::after {
+  content: '🎯 还没有待办事项\A点击"添加"按钮创建第一个任务';
+  white-space: pre-line;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.8;
+  height: 240px;
+  background: linear-gradient(135deg, var(--bg-secondary), rgba(255, 255, 255, 0.7));
+  border-radius: 16px;
+  border: 2px dashed var(--border-color);
+  backdrop-filter: blur(10px);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin: 20px 0;
+  transition: all 0.3s ease;
+}
+
+.todo-list:empty:hover::after {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  transform: scale(1.02);
 }
 
 /* 笔记面板 */
@@ -465,6 +901,20 @@ body {
   background: var(--bg-secondary);
   display: flex;
   flex-direction: column;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.notes-sidebar.collapsed {
+  width: 0;
+  border-right: none;
+  min-width: 0;
+}
+
+.notes-sidebar.collapsed .search-input,
+.notes-sidebar.collapsed .notes-list {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .notes-list {
@@ -480,6 +930,10 @@ body {
   cursor: pointer;
   transition: var(--transition);
   font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
 }
 
 .note-item:hover {
@@ -489,6 +943,53 @@ body {
 .note-item.active {
   background: var(--primary-color);
   color: white;
+}
+
+.note-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.note-title {
+  font-weight: 500;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.note-date {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+.note-item-actions {
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  margin-left: 8px;
+}
+
+.note-item:hover .note-item-actions {
+  opacity: 1;
+}
+
+.note-item-actions .delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  color: var(--danger-color);
+}
+
+.note-item-actions .delete-btn:hover {
+  background: var(--danger-color);
+  color: white;
+  transform: scale(1.1);
 }
 
 .notes-editor {
@@ -549,7 +1050,58 @@ body {
   background: var(--bg-primary);
   font-size: 13px;
   line-height: 1.6;
-  display: none;
+  border-left: 1px solid var(--border-color);
+}
+
+.markdown-preview h1, .markdown-preview h2, .markdown-preview h3 {
+  color: var(--primary-color);
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.markdown-preview h1 {
+  font-size: 18px;
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 8px;
+}
+
+.markdown-preview h2 {
+  font-size: 16px;
+}
+
+.markdown-preview h3 {
+  font-size: 14px;
+}
+
+.markdown-preview p {
+  margin: 10px 0;
+}
+
+.markdown-preview code {
+  background: var(--bg-secondary);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 12px;
+}
+
+.markdown-preview strong {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.markdown-preview em {
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+.markdown-preview a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.markdown-preview a:hover {
+  text-decoration: underline;
 }
 
 .markdown-preview.active {
@@ -621,15 +1173,14 @@ body {
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(5px);
-  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
 }
 
 .modal {
-  display: none;
   position: fixed;
   top: 0;
   left: 0;
@@ -637,185 +1188,591 @@ body {
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(5px);
+  display: none;
+  align-items: center;
+  justify-content: center;
   z-index: 1000;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 .modal.active {
   display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .modal-content {
   background: var(--bg-primary);
   border-radius: var(--border-radius);
-  box-shadow: var(--box-shadow);
-  max-width: 400px;
-  width: 90%;
-  max-height: 80%;
-  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 500px;
+  width: 100%;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  animation: slideInScale 0.3s ease;
+  border: 1px solid var(--border-color);
+  position: relative;
+  margin: auto;
 }
 
 .edit-modal {
-  max-width: 500px;
-  width: 95%;
+  max-width: 600px;
 }
 
 .modal-header {
-  padding: 16px;
+  padding: 16px 20px;
   border-bottom: 1px solid var(--border-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
   background: var(--bg-secondary);
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
 }
 
 .modal-header h3 {
   margin: 0;
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .modal-close {
   background: none;
   border: none;
-  font-size: 24px;
+  font-size: 20px;
   cursor: pointer;
   color: var(--text-secondary);
-  padding: 0;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
+  padding: 4px 8px;
+  border-radius: 4px;
   transition: var(--transition);
 }
 
 .modal-close:hover {
-  background: var(--danger-color);
-  color: white;
+  background: var(--bg-glass);
+  color: var(--text-primary);
 }
 
 .modal-body {
-  padding: 16px;
+  padding: 20px;
 }
 
 .modal-footer {
-  padding: 16px;
+  padding: 16px 20px;
   border-top: 1px solid var(--border-color);
   display: flex;
-  gap: 8px;
+  gap: 10px;
   justify-content: flex-end;
   background: var(--bg-secondary);
+  border-radius: 0 0 16px 16px;
 }
 
-/* 表单样式 */
-.form-group {
-  margin-bottom: 16px;
+/* 删除确认对话框专用样式 */
+.delete-confirm-modal {
+  max-width: 420px;
+  width: 90%;
 }
 
-.form-group label {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-primary);
+.delete-confirm-modal .modal-header {
+  background: linear-gradient(135deg, var(--danger-color), #c82333);
+  color: white;
+  padding: 20px;
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+  border-bottom: none;
 }
 
-.form-group input,
-.form-group textarea,
-.form-group select {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  font-size: 12px;
-  transition: var(--transition);
-}
-
-.form-group textarea {
-  resize: vertical;
-  min-height: 100px;
-  font-family: var(--font-family);
-}
-
-.form-group input:focus,
-.form-group textarea:focus,
-.form-group select:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.2);
-}
-
-.checkbox-group {
+.delete-confirm-modal .modal-header h3 {
+  margin: 0;
+  font-weight: 600;
   display: flex;
   align-items: center;
-}
-
-.checkbox-group label {
-  display: flex;
-  align-items: center;
-  margin-bottom: 0;
-  cursor: pointer;
-}
-
-.checkbox-group input[type="checkbox"] {
-  width: auto;
-  margin-right: 8px;
-}
-
-/* 番茄时钟 */
-.pomodoro-display {
-  text-align: center;
-  margin-bottom: 24px;
-}
-
-.time-display {
-  font-size: 48px;
-  font-weight: bold;
-  color: var(--primary-color);
-  margin-bottom: 16px;
-  font-family: monospace;
-}
-
-.pomodoro-controls {
-  display: flex;
   gap: 8px;
+  color: white;
+}
+
+.delete-confirm-modal .modal-header .modal-close {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 18px;
+  padding: 6px;
+}
+
+.delete-confirm-modal .modal-header .modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.delete-confirm-modal .modal-body {
+  padding: 24px;
+  text-align: center;
+}
+
+.warning-text {
+  background: rgba(255, 193, 7, 0.1);
+  color: var(--warning-color);
+  padding: 12px 16px;
+  border-radius: var(--border-radius);
+  border-left: 4px solid var(--warning-color);
+  margin-bottom: 16px;
+  font-weight: 600;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.delete-info, .note-info {
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.delete-info strong, .note-info strong {
+  color: var(--danger-color);
+  font-weight: 600;
+}
+
+.delete-confirm-modal .modal-footer {
+  padding: 20px 24px;
+  background: var(--bg-secondary);
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  border-top: 1px solid var(--border-color);
+}
+
+.delete-confirm-modal .btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 100px;
   justify-content: center;
 }
 
-.pomodoro-settings .setting-item {
-  flex-direction: column;
-  align-items: stretch;
-  gap: 8px;
+.delete-confirm-modal .btn-danger {
+  background: linear-gradient(135deg, var(--danger-color), #c82333);
+  color: white;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
 }
 
-/* 滚动条 */
-::-webkit-scrollbar {
-  width: 6px;
+.delete-confirm-modal .btn-danger:hover {
+  background: linear-gradient(135deg, #c82333, var(--danger-color));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
 }
 
-::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
+.delete-confirm-modal .btn-secondary {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 2px solid var(--border-color);
 }
 
-::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 3px;
+.delete-confirm-modal .btn-secondary:hover {
+  background: var(--bg-glass);
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: var(--text-secondary);
+/* 深色主题下的删除确认对话框 */
+[data-theme="dark"] .warning-text {
+  background: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
 }
 
-/* 动画 */
-@keyframes fadeIn {
+[data-theme="dark"] .delete-confirm-modal .btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .delete-confirm-modal .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: var(--primary-color);
+}
+
+@keyframes slideInScale {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* 添加待办事项模态框专用样式 */
+.add-todo-modal .modal-content {
+  background: var(--bg-primary);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideInScale 0.3s ease;
+  max-width: 520px;
+  width: 95%;
+  max-height: calc(100vh - 40px);
+  position: relative;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.add-todo-modal .modal-header {
+  background: linear-gradient(135deg, var(--primary-color), #0056b3);
+  color: white;
+  padding: 24px;
+  border-radius: 16px 16px 0 0;
+  border-bottom: none;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.add-todo-modal .modal-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.add-todo-modal .modal-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.add-todo-modal .modal-title h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+}
+
+.add-todo-modal .modal-icon {
+  font-size: 24px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.add-todo-modal .modal-close {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 24px;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 1;
+  cursor: pointer;
+}
+
+.add-todo-modal .modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  transform: scale(1.1);
+}
+
+.add-todo-modal .modal-body {
+  padding: 32px;
+  background: var(--bg-primary);
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.add-todo-modal .todo-form {
+  max-width: 100%;
+}
+
+.add-todo-modal .form-group {
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.add-todo-modal .form-group:last-child {
+  margin-bottom: 0;
+}
+
+.add-todo-modal .form-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.add-todo-modal .label-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.add-todo-modal .required {
+  color: var(--danger-color);
+  font-weight: bold;
+}
+
+.add-todo-modal .form-input,
+.add-todo-modal .form-textarea,
+.add-todo-modal .form-select {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 14px;
+  transition: all 0.3s ease;
+  outline: none;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.add-todo-modal .form-input:focus,
+.add-todo-modal .form-textarea:focus,
+.add-todo-modal .form-select:focus {
+  border-color: var(--primary-color);
+  background: var(--bg-primary);
+  box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
+  transform: translateY(-1px);
+}
+
+.add-todo-modal .form-input::placeholder,
+.add-todo-modal .form-textarea::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.add-todo-modal .form-textarea {
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.5;
+}
+
+.add-todo-modal .form-select {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 48px;
+  appearance: none;
+}
+
+.add-todo-modal .form-select option {
+  padding: 8px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.add-todo-modal .form-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+/* 当分类字段被隐藏时，让优先级占用整行 */
+.add-todo-modal .form-row .form-group:only-child {
+  grid-column: 1 / -1;
+}
+
+.add-todo-modal .char-counter {
+  position: absolute;
+  bottom: -20px;
+  right: 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+  opacity: 0.8;
+}
+
+.add-todo-modal .input-help {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  opacity: 0.8;
+}
+
+.add-todo-modal .input-feedback {
+  margin-top: 6px;
+  font-size: 12px;
+  min-height: 18px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.add-todo-modal .form-features {
+  margin-top: 24px;
+  padding: 20px;
+  background: var(--bg-glass);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.add-todo-modal .feature-item {
+  margin-bottom: 16px;
+}
+
+.add-todo-modal .feature-item:last-child {
+  margin-bottom: 0;
+}
+
+.add-todo-modal .checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 8px 0;
+  transition: all 0.2s ease;
+}
+
+.add-todo-modal .checkbox-label:hover {
+  background: var(--bg-hover);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 0 -12px;
+}
+
+.add-todo-modal .form-checkbox {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.add-todo-modal .checkbox-custom {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-secondary);
+  position: relative;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.add-todo-modal .form-checkbox:checked + .checkbox-custom {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  transform: scale(1.1);
+}
+
+.add-todo-modal .form-checkbox:checked + .checkbox-custom::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.add-todo-modal .checkbox-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.add-todo-modal .feature-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* 隐藏待办事项模态框中不需要的功能 */
+/* 隐藏分类选择器 */
+.add-todo-modal .form-group:has(#todo-category) {
+    display: none !important;
+}
+
+/* 兼容性方案：直接通过标签文本隐藏分类部分 */
+.add-todo-modal .form-group label[for="todo-category"] {
+    display: none !important;
+}
+
+.add-todo-modal #todo-category {
+    display: none !important;
+}
+
+/* 隐藏功能特性区块（番茄时钟和提醒通知） */
+.add-todo-modal .form-features {
+    display: none !important;
+}
+
+/* 隐藏单个功能项 */
+.add-todo-modal .feature-item {
+    display: none !important;
+}
+
+/* 确保截止日期下面没有多余的空间 */
+.add-todo-modal .form-group:has(#todo-deadline) {
+    margin-bottom: 20px;
+}
+
+/* 修复模态框底部圆角边框白边问题 */
+.add-todo-modal .modal-footer {
+    background: var(--bg-primary);
+    border-top: 1px solid var(--border-color);
+    border-radius: 0 0 16px 16px;
+    padding: 20px 32px;
+}
+
+/* 深色主题适配 */
+[data-theme="dark"] .add-todo-modal .form-input,
+[data-theme="dark"] .add-todo-modal .form-textarea,
+[data-theme="dark"] .add-todo-modal .form-select {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .add-todo-modal .form-input:focus,
+[data-theme="dark"] .add-todo-modal .form-textarea:focus,
+[data-theme="dark"] .add-todo-modal .form-select:focus {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--primary-color);
+}
+
+[data-theme="dark"] .add-todo-modal .btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .add-todo-modal .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: var(--primary-color);
+}
+
+[data-theme="dark"] .add-todo-modal .checkbox-custom {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .add-todo-modal .form-features {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -823,56 +1780,653 @@ body {
   }
 }
 
-@keyframes slideIn {
-  from {
-    transform: translateX(-100%);
+/* 番茄时钟模态框专用样式 */
+.pomodoro-modal .modal-content {
+  background: var(--bg-primary);
+  border-radius: 20px;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  animation: slideInScale 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  max-width: 580px;
+  width: 95%;
+  max-height: calc(100vh - 40px);
+  position: relative;
+  margin: auto;
+}
+
+.pomodoro-modal .modal-header {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+  color: white;
+  padding: 24px;
+  border-radius: 20px 20px 0 0;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pomodoro-modal .modal-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.pomodoro-modal .modal-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.pomodoro-modal .modal-title h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+}
+
+.pomodoro-modal .modal-icon {
+  font-size: 28px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  animation: bounce 2s infinite;
+}
+
+.pomodoro-modal .modal-close {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 24px;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 1;
+  cursor: pointer;
+}
+
+.pomodoro-modal .modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  transform: scale(1.1);
+}
+
+.pomodoro-modal .modal-body {
+  padding: 0;
+  background: var(--bg-primary);
+  overflow-y: auto;
+}
+
+.pomodoro-display {
+  text-align: center;
+  padding: 40px 30px;
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  position: relative;
+}
+
+.pomodoro-display::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 30% 20%, rgba(255, 107, 107, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.pomodoro-circle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 30px;
+  position: relative;
+}
+
+.pomodoro-progress {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  filter: drop-shadow(0 8px 25px rgba(255, 107, 107, 0.3));
+}
+
+.progress-ring {
+  transform: rotate(-90deg);
+  transition: all 0.3s ease;
+}
+
+.progress-ring-bg {
+  fill: none;
+  stroke: var(--border-color);
+  stroke-width: 6;
+  opacity: 0.3;
+}
+
+.progress-ring-fill {
+  fill: none;
+  stroke: url(#progressGradient);
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 628.32;
+  stroke-dashoffset: 628.32;
+  transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: url(#glow);
+}
+
+.time-display {
+  position: absolute;
+  font-size: 42px;
+  font-weight: 800;
+  color: var(--text-primary);
+  font-family: 'Segoe UI', 'Arial', monospace;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  letter-spacing: -1px;
+}
+
+.progress-indicator {
+  position: absolute;
+  bottom: -80px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.session-type {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 6px 16px;
+  background: var(--bg-glass);
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+}
+
+.progress-dots {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.progress-dots .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.progress-dots .dot.active {
+  background: #ff6b6b;
+  transform: scale(1.3);
+  box-shadow: 0 0 8px rgba(255, 107, 107, 0.5);
+}
+
+.pomodoro-status {
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: center;
+}
+
+.status-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  background: var(--bg-glass);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  backdrop-filter: blur(10px);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.status-icon {
+  font-size: 18px;
+  animation: pulse 2s infinite;
+}
+
+.pomodoro-controls {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.pomodoro-btn {
+  padding: 16px 32px;
+  border: none;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 130px;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pomodoro-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: all 0.3s ease;
+}
+
+.pomodoro-btn:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.pomodoro-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.pomodoro-btn:active {
+  transform: translateY(-1px);
+}
+
+.pomodoro-btn .btn-icon {
+  font-size: 16px;
+  transition: transform 0.3s ease;
+}
+
+.pomodoro-btn:hover .btn-icon {
+  transform: scale(1.2);
+}
+
+.pomodoro-btn.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 16px rgba(13, 110, 253, 0.3);
+}
+
+.pomodoro-btn.btn-secondary {
+  background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+  color: #2d3436;
+  box-shadow: 0 6px 20px rgba(255, 234, 167, 0.4);
+}
+
+.pomodoro-btn.btn-danger {
+  background: linear-gradient(135deg, #fd79a8 0%, #e84393 100%);
+  color: white;
+  box-shadow: 0 6px 20px rgba(253, 121, 168, 0.4);
+}
+
+.pomodoro-stats {
+  padding: 30px;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 20px 16px;
+  background: var(--bg-primary);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #ff6b6b, #ee5a52, #ff7675);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.stat-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.stat-item:hover::before {
+  transform: scaleX(1);
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: #ff6b6b;
+  margin-bottom: 8px;
+  font-family: 'Segoe UI', monospace;
+}
+
+.stat-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pomodoro-settings {
+  padding: 30px;
+  background: var(--bg-primary);
+  border-top: 1px solid var(--border-color);
+}
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.settings-header h4 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.toggle-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 26px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--border-color);
+  transition: 0.3s;
+  border-radius: 26px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background: white;
+  transition: 0.3s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background: #ff6b6b;
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(24px);
+}
+
+.setting-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.setting-item {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.setting-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.setting-item label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.setting-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  border: 2px solid var(--border-color);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.input-group:focus-within {
+  border-color: #ff6b6b;
+  box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.1);
+  transform: translateY(-1px);
+}
+
+.input-btn {
+  background: none;
+  border: none;
+  padding: 12px 16px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-weight: 700;
+  font-size: 16px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.input-btn:hover {
+  background: var(--bg-hover);
+  color: #ff6b6b;
+  transform: scale(1.1);
+}
+
+.setting-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 16px;
+  text-align: center;
+  font-weight: 700;
+  outline: none;
+  font-family: 'Segoe UI', monospace;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 16px;
+  background: var(--bg-glass);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.checkbox-label:hover {
+  background: var(--bg-hover);
+  border-color: #ff6b6b;
+  transform: translateY(-1px);
+}
+
+.setting-checkbox {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.checkbox-custom {
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-secondary);
+  position: relative;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.setting-checkbox:checked + .checkbox-custom {
+  background: #ff6b6b;
+  border-color: #ff6b6b;
+  transform: scale(1.1);
+}
+
+.setting-checkbox:checked + .checkbox-custom::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.checkbox-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.settings-advanced {
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+/* 运行状态样式 */
+.pomodoro-modal.running .progress-ring-fill {
+  stroke: #00b894;
+}
+
+.pomodoro-modal.running .modal-icon {
+  animation: spin 4s linear infinite;
+}
+
+.pomodoro-modal.break .progress-ring-fill {
+  stroke: #fdcb6e;
+}
+
+.pomodoro-modal.break .modal-header {
+  background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%);
+}
+
+/* 深色主题适配 */
+[data-theme="dark"] .pomodoro-modal .status-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .pomodoro-modal .stat-item {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .pomodoro-modal .input-group {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .pomodoro-modal .checkbox-label {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .pomodoro-modal .checkbox-custom {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 动画效果 */
+@keyframes bounce {
+  0%, 20%, 53%, 80%, 100% {
+    transform: translate3d(0,0,0);
   }
-  to {
-    transform: translateX(0);
+  40%, 43% {
+    transform: translate3d(0,-8px,0);
+  }
+  70% {
+    transform: translate3d(0,-4px,0);
+  }
+  90% {
+    transform: translate3d(0,-2px,0);
   }
 }
 
-.fade-in {
-  animation: fadeIn 0.3s ease-out;
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-.slide-in {
-  animation: slideIn 0.3s ease-out;
-}
-
-/* 响应式设计 */
-@media (max-width: 400px) {
-  .title-bar-text span:last-child {
-    display: none;
-  }
-  
-  .header-controls {
-    flex-direction: column;
-    gap: 4px;
-  }
-  
-  .notes-sidebar {
-    width: 150px;
-  }
-}
-
-/* 高对比度模式 */
-@media (prefers-contrast: high) {
-  :root {
-    --border-color: #000;
-    --bg-glass: rgba(255, 255, 255, 0.9);
-  }
-  
-  [data-theme="dark"] {
-    --border-color: #fff;
-    --bg-glass: rgba(0, 0, 0, 0.9);
-  }
-}
-
-/* 减少动画 */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation: none !important;
-    transition: none !important;
-  }
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.7; }
+  100% { transform: scale(1); opacity: 1; }
 }

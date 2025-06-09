@@ -9,7 +9,7 @@ import { Note } from '../types/notes';
 import { AppConfig } from '../types';
 
 /**
- * 数据服务 - 负责应用数据的本地持久化存储
+ * ć°ćŽćĺĄ - č´č´Łĺşç¨ć°ćŽçćŹĺ°ćäšĺĺ­ĺ¨
  */
 export class DataService extends EventEmitter {
     private dataPath: string;
@@ -28,7 +28,7 @@ export class DataService extends EventEmitter {
     }
 
     /**
-     * 初始化数据目�?
+     * ĺĺ§ĺć°ćŽçŽĺ˝?
      */
     private async initializeDirectories(): Promise<void> {
         try {
@@ -48,7 +48,7 @@ export class DataService extends EventEmitter {
     }
 
     /**
-     * 保存应用配置
+     * äżĺ­ĺşç¨éç˝Ž
      */
     public async saveConfig(config: AppConfig): Promise<void> {
         const configFile = path.join(this.configPath, 'app-config.json');
@@ -64,7 +64,7 @@ export class DataService extends EventEmitter {
     }
 
     /**
-     * 加载应用配置
+     * ĺ č˝˝ĺşç¨éç˝Ž
      */
     public async loadConfig(): Promise<AppConfig | null> {
         const configFile = path.join(this.configPath, 'app-config.json');
@@ -80,13 +80,13 @@ export class DataService extends EventEmitter {
     }
 
     /**
-     * 保存剪切板历�?
+     * äżĺ­ĺŞĺćżĺĺ?
      */
     public async saveClipboardHistory(items: ClipboardItem[]): Promise<void> {
         const clipboardFile = path.join(this.dataPath, 'clipboard-history.json');
 
         try {
-            // 创建备份
+            // ĺĺťşĺ¤äť˝
             await this.createBackup('clipboard-history.json');
 
             await this.writeJsonFile(clipboardFile, {
@@ -104,7 +104,7 @@ export class DataService extends EventEmitter {
     }
 
     /**
-     * 加载剪切板历�?
+     * ĺ č˝˝ĺŞĺćżĺĺ?
      */
     public async loadClipboardHistory(): Promise<ClipboardItem[]> {
         const clipboardFile = path.join(this.dataPath, 'clipboard-history.json');
@@ -129,7 +129,7 @@ export class DataService extends EventEmitter {
     }
 
     /**
-     * 保存待办事项
+     * äżĺ­ĺžĺäşéĄš
      */
     public async saveTodos(todos: TodoItem[]): Promise<void> {
         const todosFile = path.join(this.dataPath, 'todos.json');
@@ -152,7 +152,7 @@ export class DataService extends EventEmitter {
     }
 
     /**
-     * 加载待办事项
+     * ĺ č˝˝ĺžĺäşéĄš
      */
     public async loadTodos(): Promise<TodoItem[]> {
         const todosFile = path.join(this.dataPath, 'todos.json');
@@ -177,7 +177,7 @@ export class DataService extends EventEmitter {
     }
 
     /**
-     * 保存笔记
+     * äżĺ­çŹčŽ°
      */
     public async saveNotes(notes: Note[]): Promise<void> {
         const notesFile = path.join(this.dataPath, 'notes.json');
@@ -200,7 +200,7 @@ export class DataService extends EventEmitter {
     }
 
     /**
-     * 加载笔记
+     * ĺ č˝˝çŹčŽ°
      */
     public async loadNotes(): Promise<Note[]> {
         const notesFile = path.join(this.dataPath, 'notes.json');
@@ -225,7 +225,7 @@ export class DataService extends EventEmitter {
     }
 
     /**
-     * 保存通用数据
+     * äżĺ­éç¨ć°ćŽ
      */
     public async saveData(filename: string, data: any): Promise<void> {
         const filePath = path.join(this.dataPath, `${filename}.json`);
@@ -242,7 +242,7 @@ export class DataService extends EventEmitter {
     }
 
     /**
-     * 加载通用数据
+     * ĺ č˝˝éç¨ć°ćŽ
      */
     public async loadData<T>(filename: string): Promise<T | null> {
         const filePath = path.join(this.dataPath, `${filename}.json`);
@@ -258,7 +258,7 @@ export class DataService extends EventEmitter {
     }
 
     /**
-     * 删除数据文件
+     * ĺ é¤ć°ćŽćäťś
      */
     public async deleteData(filename: string): Promise<void> {
         const filePath = path.join(this.dataPath, `${filename}.json`);
@@ -276,7 +276,7 @@ export class DataService extends EventEmitter {
     }
 
     /**
-     * 创建数据备份
+     * ĺĺťşć°ćŽĺ¤äť˝
      */
     public async createBackup(filename: string): Promise<void> {
         const sourceFile = path.join(this.dataPath, filename);
@@ -290,7 +290,7 @@ export class DataService extends EventEmitter {
             await fs.copyFile(sourceFile, backupFile);
             logger.debug(`Backup created: ${backupFile}`);
 
-            // 清理旧备份（保留最�?0个）
+            // ć¸çć§ĺ¤äť˝ďźäżçćčż?0ä¸Şďź
             await this.cleanupOldBackups(filename, 10);
         } catch (error) {
             if ((error as any).code !== 'ENOENT') {
@@ -300,7 +300,7 @@ export class DataService extends EventEmitter {
     }
 
     /**
-     * 清理旧备份文�?
+     * ć¸çć§ĺ¤äť˝ćäť?
      */
     private async cleanupOldBackups(filename: string, keepCount: number): Promise<void> {
         try {
@@ -329,7 +329,7 @@ export class DataService extends EventEmitter {
     }
 
     /**
-     * 还原备份
+     * čżĺĺ¤äť˝
      */
     public async restoreBackup(filename: string, backupTimestamp?: number): Promise<void> {
         try {
@@ -341,7 +341,7 @@ export class DataService extends EventEmitter {
             if (backupTimestamp) {
                 backupFile = `${baseName}_${backupTimestamp}.json`;
             } else {
-                // 使用最新的备份
+                // ä˝żç¨ćć°çĺ¤äť˝
                 const backupFiles = files
                     .filter(file => file.startsWith(baseName) && file.endsWith('.json'))
                     .sort()
@@ -367,7 +367,7 @@ export class DataService extends EventEmitter {
     }
 
     /**
-     * 获取备份列表
+     * čˇĺĺ¤äť˝ĺčĄ¨
      */
     public async getBackupList(filename: string): Promise<Array<{
         name: string;
@@ -404,7 +404,7 @@ export class DataService extends EventEmitter {
     }
 
     /**
-     * 导出所有数�?
+     * ĺŻźĺşććć°ć?
      */
     public async exportAllData(): Promise<{
         config: AppConfig | null;
@@ -438,7 +438,7 @@ export class DataService extends EventEmitter {
     }
 
     /**
-     * 导入所有数�?
+     * ĺŻźĺĽććć°ć?
      */
     public async importAllData(data: {
         config?: AppConfig;
@@ -472,7 +472,7 @@ export class DataService extends EventEmitter {
     }
 
     /**
-     * 读取JSON文件
+     * čŻťĺJSONćäťś
      */
     private async readJsonFile<T>(filePath: string): Promise<T | null> {
         try {
@@ -487,7 +487,7 @@ export class DataService extends EventEmitter {
     }
 
     /**
-     * 写入JSON文件
+     * ĺĺĽJSONćäťś
      */
     private async writeJsonFile(filePath: string, data: any): Promise<void> {
         const content = JSON.stringify(data, null, 2);
@@ -495,7 +495,7 @@ export class DataService extends EventEmitter {
     }
 
     /**
-     * 获取数据目录信息
+     * čˇĺć°ćŽçŽĺ˝äżĄćŻ
      */
     public getDataDirectories(): {
         dataPath: string;
@@ -510,7 +510,7 @@ export class DataService extends EventEmitter {
     }
 
     /**
-     * 销毁服�?
+     * éćŻćĺ?
      */
     public destroy(): void {
         this.removeAllListeners();

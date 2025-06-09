@@ -102,8 +102,7 @@ export declare class ClipboardManagerNative extends EventEmitter {
     /**
      * 获取历史记录
      */
-    getHistory(): ClipboardItem[];
-    /**
+    getHistory(): ClipboardItem[]; /**
      * 清空历史记录
      */
     clearHistory(): void;

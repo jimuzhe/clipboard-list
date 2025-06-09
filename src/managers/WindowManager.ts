@@ -16,9 +16,7 @@ export class WindowManager extends EventEmitter {
     }
 
     createWindow(): BrowserWindow {
-        const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
-
-        this.window = new BrowserWindow({
+        const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize; this.window = new BrowserWindow({
             width: this.config.width,
             height: Math.min(this.config.height, screenHeight - 100),
             x: screenWidth - this.config.width - 20,
@@ -36,6 +34,9 @@ export class WindowManager extends EventEmitter {
                 backgroundThrottling: false, // 防止后台节流
             },
         });
+
+        // 设置初始隐藏状态，因为窗口创建时 show: false
+        this.isHidden = true;
 
         this.setupWindowEvents();
         this.initDocking();
@@ -77,7 +78,8 @@ export class WindowManager extends EventEmitter {
         });        // 窗口准备就绪
         this.window.once('ready-to-show', () => {
             // 不自动显示窗口，让用户通过托盘或快捷键显示
-            logger.info('Window ready to show (hidden by default)');
+            // 窗口显示逻辑现在由主进程的 handleCommandLineArgs 方法控制
+            logger.info('Window ready to show (controlled by startup logic)');
         });
 
         // 窗口移动事件
@@ -176,7 +178,7 @@ export class WindowManager extends EventEmitter {
     // 公共方法
 
     show(): void {
-        if (this.window && this.isHidden) {
+        if (this.window) {
             this.window.show();
             this.isHidden = false;
             this.emit('window-shown');

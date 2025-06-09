@@ -15,12 +15,15 @@ class AppState {
         this.pomodoroTimer = {
             workDuration: 25,
             breakDuration: 5,
+            longBreakDuration: 15,
+            sessionsUntilLongBreak: 4,
             currentTime: 25 * 60,
             isRunning: false,
-            isWork: true
+            isWork: true,
+            autoStartBreaks: false,
+            soundNotifications: true
         };
     }
-
     async loadData() {
         try {
             const data = await window.electronAPI.loadData();
@@ -31,6 +34,10 @@ class AppState {
                 this.settings = {
                     ...this.settings,
                     ...data.settings
+                };
+                this.pomodoroTimer = {
+                    ...this.pomodoroTimer,
+                    ...data.pomodoroTimer
                 };
             }
         } catch (error) {
@@ -44,7 +51,8 @@ class AppState {
                 clipboardItems: this.clipboardItems,
                 todoItems: this.todoItems,
                 notes: this.notes,
-                settings: this.settings
+                settings: this.settings,
+                pomodoroTimer: this.pomodoroTimer
             });
         } catch (error) {
             console.error('Failed to save data:', error);
@@ -184,7 +192,8 @@ class ClipboardManager {
 
     isImagePath(content) {
         return /\.(jpg|jpeg|png|gif|bmp|svg|webp)$/i.test(content);
-    }    renderClipboardList() {
+    }
+    renderClipboardList() {
         const container = document.getElementById('clipboard-list');
         if (!container) return;
 
@@ -206,7 +215,8 @@ class ClipboardManager {
         if (pinnedItems.length > 0 && unpinnedItems.length > 0) {
             this.addPinnedSeparator(container, pinnedItems.length);
         }
-    }    createClipboardItemElement(item) {
+    }
+    createClipboardItemElement(item) {
         const div = document.createElement('div');
         div.className = `clipboard-item ${item.pinned ? 'pinned' : ''}`;
         div.dataset.id = item.id;
@@ -277,11 +287,12 @@ class ClipboardManager {
             console.error('Failed to copy to clipboard:', error);
             this.showNotification('复制失败', '无法复制到剪切板');
         }
-    }    togglePin(itemId) {
+    }
+    togglePin(itemId) {
         const item = this.appState.clipboardItems.find(item => item.id === itemId);
         if (item) {
             item.pinned = !item.pinned;
-            
+
             // 添加动画效果
             const element = document.querySelector(`[data-id="${itemId}"]`);
             if (element) {
@@ -293,12 +304,13 @@ class ClipboardManager {
 
             this.appState.saveData();
             this.renderClipboardList();
-            
+
             // 显示通知
             const message = item.pinned ? '已置顶' : '取消置顶';
             this.showNotification(message, `剪切板项目${message}`);
         }
-    }editClipboardItem(itemId) {
+    }
+    editClipboardItem(itemId) {
         const item = this.appState.clipboardItems.find(item => item.id === itemId);
         if (item) {
             this.showEditModal(item);
@@ -396,27 +408,53 @@ class ClipboardManager {
             <div class="separator-text">其他项目</div>
             <div class="separator-line"></div>
         `;
-        
+
         // 在置顶项目后插入分隔线
         const items = container.children;
         if (items[separatorIndex]) {
             container.insertBefore(separator, items[separatorIndex]);
         }
     }
-
     deleteClipboardItem(itemId) {
-        if (confirm('确定要删除这个剪切板项目吗？')) {
-            this.appState.clipboardItems = this.appState.clipboardItems.filter(item => item.id !== itemId);
-            this.appState.saveData();
-            this.renderClipboardList();
-        }
-    }
+        const item = this.appState.clipboardItems.find(item => item.id === itemId);
+        if (!item) return;
 
+        // 获取内容预览
+        const preview = item.content.length > 50 ?
+            item.content.substring(0, 50) + '...' :
+            item.content;
+
+        // 使用统一的删除确认对话框
+        window.app.showDeleteConfirmDialog({
+            title: '删除剪切板项目',
+            itemName: preview,
+            itemType: '剪切板项目',
+            onConfirm: () => {
+                this.appState.clipboardItems = this.appState.clipboardItems.filter(item => item.id !== itemId);
+                this.appState.saveData();
+                this.renderClipboardList();
+                this.showNotification('删除成功', '剪切板项目已删除');
+            }
+        });
+    }
     clearClipboard() {
-        if (confirm('确定要清空剪切板历史吗？')) {
-            this.appState.clipboardItems = [];
+        // 保留置顶的项目，只清理非置顶项目
+        const pinnedItems = this.appState.clipboardItems.filter(item => item.pinned);
+        const totalItems = this.appState.clipboardItems.length;
+
+        if (pinnedItems.length === totalItems) {
+            this.showNotification('提示', '所有项目都已置顶，无需清理');
+            return;
+        }
+
+        if (confirm('确定要清空非置顶的剪切板历史吗？置顶项目将会保留。')) {
+            this.appState.clipboardItems = pinnedItems;
             this.appState.saveData();
             this.renderClipboardList();
+
+            // 显示操作结果通知
+            const clearedCount = totalItems - pinnedItems.length;
+            this.showNotification('清理完成', `已清理 ${clearedCount} 个非置顶项目，保留 ${pinnedItems.length} 个置顶项目`);
         }
     }
 
@@ -472,21 +510,10 @@ class TodoManager {
         this.renderTodoList();
         this.setupEventListeners();
     }
-
     setupEventListeners() {
         // 添加待办按钮
         document.getElementById('add-todo').addEventListener('click', () => {
-            this.showTodoInput();
-        });
-
-        // 保存待办按钮
-        document.getElementById('save-todo').addEventListener('click', () => {
-            this.saveTodo();
-        });
-
-        // 取消按钮
-        document.getElementById('cancel-todo').addEventListener('click', () => {
-            this.hideTodoInput();
+            this.showAddTodoModal();
         });
 
         // 筛选器
@@ -495,44 +522,274 @@ class TodoManager {
             this.renderTodoList();
         });
     }
+    showAddTodoModal() {
+        // 显示美化的添加待办事项模态框
+        const modal = document.getElementById('add-todo-modal');
+        if (!modal) return;
 
-    showTodoInput() {
-        document.getElementById('todo-input-area').style.display = 'block';
-        document.getElementById('todo-title').focus();
+        // 重置表单
+        this.resetAddTodoForm();
+
+        // 显示模态框
+        modal.style.display = 'flex';
+        setTimeout(() => {
+            modal.classList.add('active');
+        }, 10);
+
+        // 设置事件监听器
+        this.setupAddTodoModalEvents(modal);
+
+        // 自动聚焦到标题输入框
+        setTimeout(() => {
+            document.getElementById('todo-title').focus();
+        }, 300);
     }
 
-    hideTodoInput() {
-        document.getElementById('todo-input-area').style.display = 'none';
-        this.clearTodoInput();
-    }
-
-    clearTodoInput() {
+    resetAddTodoForm() {
+        // 重置所有表单字段
         document.getElementById('todo-title').value = '';
         document.getElementById('todo-description').value = '';
         document.getElementById('todo-priority').value = 'medium';
+        document.getElementById('todo-category').value = '';
+        document.getElementById('todo-deadline').value = '';
+        document.getElementById('todo-reminder').checked = false;
+        document.getElementById('todo-pomodoro').checked = false;
+
+        // 重置字符计数器
+        this.updateCharCounter();
+
+        // 重置验证状态
+        this.clearValidationMessages();
     }
 
-    saveTodo() {
-        const title = document.getElementById('todo-title').value.trim();
-        if (!title) {
-            alert('请输入待办事项标题');
-            return;
+    setupAddTodoModalEvents(modal) {
+        // 移除之前的事件监听器，避免重复绑定
+        const existingHandlers = modal._eventHandlers || {};
+
+        // 关闭按钮
+        const closeBtn = modal.querySelector('.modal-close');
+        if (closeBtn && !existingHandlers.close) {
+            const closeHandler = () => this.hideAddTodoModal();
+            closeBtn.addEventListener('click', closeHandler);
+            existingHandlers.close = closeHandler;
         }
 
+        // 取消按钮
+        const cancelBtn = document.getElementById('cancel-todo');
+        if (cancelBtn && !existingHandlers.cancel) {
+            const cancelHandler = () => this.hideAddTodoModal();
+            cancelBtn.addEventListener('click', cancelHandler);
+            existingHandlers.cancel = cancelHandler;
+        }
+
+        // 表单提交
+        const form = document.getElementById('add-todo-form');
+        if (form && !existingHandlers.submit) {
+            const submitHandler = (e) => {
+                e.preventDefault();
+                this.handleAddTodoSubmit();
+            };
+            form.addEventListener('submit', submitHandler);
+            existingHandlers.submit = submitHandler;
+        }
+
+        // 保存按钮（备用）
+        const saveBtn = document.getElementById('save-todo');
+        if (saveBtn && !existingHandlers.save) {
+            const saveHandler = (e) => {
+                e.preventDefault();
+                this.handleAddTodoSubmit();
+            };
+            saveBtn.addEventListener('click', saveHandler);
+            existingHandlers.save = saveHandler;
+        }
+
+        // 实时验证和字符计数
+        const titleInput = document.getElementById('todo-title');
+        if (titleInput && !existingHandlers.titleInput) {
+            const titleHandler = () => this.validateTitle();
+            titleInput.addEventListener('input', titleHandler);
+            titleInput.addEventListener('blur', titleHandler);
+            existingHandlers.titleInput = titleHandler;
+        }
+
+        const descTextarea = document.getElementById('todo-description');
+        if (descTextarea && !existingHandlers.descInput) {
+            const descHandler = () => this.updateCharCounter();
+            descTextarea.addEventListener('input', descHandler);
+            existingHandlers.descInput = descHandler;
+        }
+
+        // 点击模态框背景关闭
+        if (!existingHandlers.backdrop) {
+            const backdropHandler = (e) => {
+                if (e.target === modal || e.target.classList.contains('modal-backdrop')) {
+                    this.hideAddTodoModal();
+                }
+            };
+            modal.addEventListener('click', backdropHandler);
+            existingHandlers.backdrop = backdropHandler;
+        }
+
+        // ESC 键关闭
+        if (!existingHandlers.keydown) {
+            const keydownHandler = (e) => {
+                if (e.key === 'Escape') {
+                    this.hideAddTodoModal();
+                }
+            };
+            document.addEventListener('keydown', keydownHandler);
+            existingHandlers.keydown = keydownHandler;
+        }
+
+        // 保存事件处理器引用
+        modal._eventHandlers = existingHandlers;
+    }
+
+    hideAddTodoModal() {
+        const modal = document.getElementById('add-todo-modal');
+        if (!modal) return;
+
+        modal.classList.remove('active');
+
+        setTimeout(() => {
+            modal.style.display = 'none';
+
+            // 清理事件监听器
+            if (modal._eventHandlers && modal._eventHandlers.keydown) {
+                document.removeEventListener('keydown', modal._eventHandlers.keydown);
+                delete modal._eventHandlers.keydown;
+            }
+        }, 300);
+    }
+
+    validateTitle() {
+        const titleInput = document.getElementById('todo-title');
+        const feedback = document.getElementById('title-feedback');
+        const title = titleInput.value.trim();
+
+        if (!title) {
+            this.showFieldError(titleInput, feedback, '请输入待办事项标题');
+            return false;
+        } else if (title.length > 100) {
+            this.showFieldError(titleInput, feedback, '标题长度不能超过100个字符');
+            return false;
+        } else {
+            this.showFieldSuccess(titleInput, feedback, '');
+            return true;
+        }
+    }
+
+    updateCharCounter() {
+        const textarea = document.getElementById('todo-description');
+        const counter = document.getElementById('desc-counter');
+        const currentLength = textarea.value.length;
+
+        if (counter) {
+            counter.textContent = currentLength;
+
+            // 根据字符数量改变颜色
+            if (currentLength > 450) {
+                counter.style.color = 'var(--danger-color)';
+            } else if (currentLength > 400) {
+                counter.style.color = 'var(--warning-color)';
+            } else {
+                counter.style.color = 'var(--text-secondary)';
+            }
+        }
+    }
+
+    showFieldError(input, feedback, message) {
+        input.classList.remove('field-success');
+        input.classList.add('field-error');
+        if (feedback) {
+            feedback.textContent = message;
+            feedback.className = 'input-feedback error';
+        }
+    }
+
+    showFieldSuccess(input, feedback, message) {
+        input.classList.remove('field-error');
+        input.classList.add('field-success');
+        if (feedback) {
+            feedback.textContent = message;
+            feedback.className = 'input-feedback success';
+        }
+    }
+
+    clearValidationMessages() {
+        const inputs = document.querySelectorAll('#add-todo-modal .form-input, #add-todo-modal .form-textarea');
+        const feedbacks = document.querySelectorAll('#add-todo-modal .input-feedback');
+
+        inputs.forEach(input => {
+            input.classList.remove('field-error', 'field-success');
+        });
+
+        feedbacks.forEach(feedback => {
+            feedback.textContent = '';
+            feedback.className = 'input-feedback';
+        });
+    }
+
+    handleAddTodoSubmit() {
+        // 验证表单
+        const isValid = this.validateAddTodoForm();
+        if (!isValid) return;
+
+        // 收集表单数据
+        const formData = this.collectAddTodoFormData();
+
+        // 创建待办事项
         const todo = {
             id: Date.now(),
-            title,
-            description: document.getElementById('todo-description').value.trim(),
-            priority: document.getElementById('todo-priority').value,
+            title: formData.title,
+            description: formData.description,
+            priority: formData.priority,
+            category: formData.category,
+            dueDate: formData.deadline ? new Date(formData.deadline) : null,
+            hasReminder: formData.reminder,
+            hasPomodoroTimer: formData.pomodoro,
             completed: false,
             createdAt: new Date(),
-            completedAt: null
+            completedAt: null,
+            updatedAt: new Date()
         };
 
+        // 保存到状态
         this.appState.todoItems.unshift(todo);
         this.appState.saveData();
+
+        // 更新UI
         this.renderTodoList();
-        this.hideTodoInput();
+        this.hideAddTodoModal();
+
+        // 显示成功通知
+        this.showNotification('创建成功', `待办事项"${todo.title}"已创建`);
+    }
+
+    validateAddTodoForm() {
+        const titleValid = this.validateTitle();
+
+        // 可以添加更多验证规则
+        const descTextarea = document.getElementById('todo-description');
+        if (descTextarea.value.length > 500) {
+            this.showFieldError(descTextarea, null, '描述长度不能超过500个字符');
+            return false;
+        }
+
+        return titleValid;
+    }
+
+    collectAddTodoFormData() {
+        return {
+            title: document.getElementById('todo-title').value.trim(),
+            description: document.getElementById('todo-description').value.trim(),
+            priority: document.getElementById('todo-priority').value,
+            category: document.getElementById('todo-category').value,
+            deadline: document.getElementById('todo-deadline').value,
+            reminder: document.getElementById('todo-reminder').checked,
+            pomodoro: document.getElementById('todo-pomodoro').checked
+        };
     }
 
     renderTodoList() {
@@ -644,29 +901,201 @@ class TodoManager {
             this.renderTodoList();
         }
     }
-
     editTodo(todoId) {
         const todo = this.appState.todoItems.find(item => item.id === todoId);
         if (todo) {
-            const newTitle = prompt('编辑标题：', todo.title);
-            if (newTitle !== null && newTitle.trim()) {
-                todo.title = newTitle.trim();
-                const newDescription = prompt('编辑描述：', todo.description || '');
-                if (newDescription !== null) {
-                    todo.description = newDescription.trim();
+            this.showEditTodoModal(todo);
+        }
+    }    showEditTodoModal(todo) {
+        // 创建编辑模态框
+        const modal = document.createElement('div');
+        modal.className = 'modal active add-todo-modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">
+                        <span class="modal-icon">✏️</span>
+                        <h3>编辑待办事项</h3>
+                    </div>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form class="todo-form">
+                        <div class="form-group">
+                            <label for="edit-todo-title" class="form-label">
+                                <span class="label-icon">📝</span>
+                                标题 <span class="required">*</span>
+                            </label>
+                            <input type="text" id="edit-todo-title" class="form-input" 
+                                   value="${this.escapeHtml(todo.title)}" placeholder="请输入待办事项标题..." required>
+                            <div class="char-counter">
+                                <span id="edit-title-counter">0</span>/50
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="edit-todo-description" class="form-label">
+                                <span class="label-icon">📄</span>
+                                描述
+                            </label>
+                            <textarea id="edit-todo-description" class="form-textarea" 
+                                      placeholder="添加描述信息..." rows="4">${this.escapeHtml(todo.description || '')}</textarea>
+                            <div class="char-counter">
+                                <span id="edit-description-counter">0</span>/200
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="edit-todo-priority" class="form-label">
+                                    <span class="label-icon">⭐</span>
+                                    优先级
+                                </label>
+                                <select id="edit-todo-priority" class="form-select">
+                                    <option value="low" ${todo.priority === 'low' ? 'selected' : ''}>🍃 低优先级</option>
+                                    <option value="medium" ${todo.priority === 'medium' ? 'selected' : ''}>⚡ 中优先级</option>
+                                    <option value="high" ${todo.priority === 'high' ? 'selected' : ''}>🔥 高优先级</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="edit-todo-deadline" class="form-label">
+                                <span class="label-icon">📅</span>
+                                截止日期
+                            </label>
+                            <input type="datetime-local" id="edit-todo-deadline" class="form-input" 
+                                   value="${todo.dueDate ? new Date(todo.dueDate).toISOString().slice(0, 16) : ''}">
+                            <div class="input-help">选择待办事项的截止时间（可选）</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <div class="feature-item">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="edit-todo-completed" class="form-checkbox" ${todo.completed ? 'checked' : ''}>
+                                    <span class="checkbox-custom"></span>
+                                    <span class="checkbox-text">
+                                        <span class="feature-icon">✅</span>
+                                        标记为已完成
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="cancel-edit-todo">取消</button>
+                    <button class="btn btn-danger" id="delete-edit-todo" title="删除此待办事项">🗑️ 删除</button>
+                    <button class="btn btn-primary" id="save-edit-todo">💾 保存修改</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // 设置字符计数器
+        const titleInput = modal.querySelector('#edit-todo-title');
+        const titleCounter = modal.querySelector('#edit-title-counter');
+        const descriptionTextarea = modal.querySelector('#edit-todo-description');
+        const descriptionCounter = modal.querySelector('#edit-description-counter');
+
+        // 初始化计数器
+        titleCounter.textContent = titleInput.value.length;
+        descriptionCounter.textContent = descriptionTextarea.value.length;
+
+        // 标题字符计数
+        titleInput.addEventListener('input', () => {
+            titleCounter.textContent = titleInput.value.length;
+            if (titleInput.value.length > 50) {
+                titleCounter.style.color = 'var(--danger-color)';
+            } else {
+                titleCounter.style.color = 'var(--text-secondary)';
+            }
+        });
+
+        // 描述字符计数
+        descriptionTextarea.addEventListener('input', () => {
+            descriptionCounter.textContent = descriptionTextarea.value.length;
+            if (descriptionTextarea.value.length > 200) {
+                descriptionCounter.style.color = 'var(--danger-color)';
+            } else {
+                descriptionCounter.style.color = 'var(--text-secondary)';
+            }
+        });
+
+        // 添加事件监听
+        modal.querySelector('.modal-close').addEventListener('click', () => {
+            document.body.removeChild(modal);
+        });
+
+        modal.querySelector('#cancel-edit-todo').addEventListener('click', () => {
+            document.body.removeChild(modal);
+        });
+        modal.querySelector('#delete-edit-todo').addEventListener('click', () => {
+            // 使用统一的删除确认对话框
+            window.app.showDeleteConfirmDialog({
+                title: '删除待办事项',
+                itemName: todo.title,
+                itemType: '待办事项',
+                onConfirm: () => {
+                    this.deleteTodo(todo.id);
+                    document.body.removeChild(modal);
                 }
+            });
+        });
+        modal.querySelector('#save-edit-todo').addEventListener('click', () => {
+            const newTitle = modal.querySelector('#edit-todo-title').value.trim();
+            const newDescription = modal.querySelector('#edit-todo-description').value.trim();
+            const newPriority = modal.querySelector('#edit-todo-priority').value;
+            const newDueDate = modal.querySelector('#edit-todo-deadline').value;
+            const newCompleted = modal.querySelector('#edit-todo-completed').checked;
+
+            if (newTitle) {
+                todo.title = newTitle;
+                todo.description = newDescription;
+                todo.priority = newPriority;
+                todo.dueDate = newDueDate ? new Date(newDueDate) : null;
+                todo.completed = newCompleted;
+                todo.completedAt = newCompleted ? new Date() : null;
+                todo.updatedAt = new Date();
+
                 this.appState.saveData();
                 this.renderTodoList();
+                document.body.removeChild(modal);
+                this.showNotification('更新成功', '待办事项已保存');
+            } else {
+                alert('标题不能为空');
             }
-        }
-    }
+        });
 
+        // 点击模态框外部关闭
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                document.body.removeChild(modal);
+            }
+        });
+
+        // 自动聚焦到标题输入框
+        setTimeout(() => {
+            modal.querySelector('#edit-todo-title').focus();
+            modal.querySelector('#edit-todo-title').select();
+        }, 100);
+    }
     deleteTodo(todoId) {
-        if (confirm('确定要删除这个待办事项吗？')) {
-            this.appState.todoItems = this.appState.todoItems.filter(item => item.id !== todoId);
-            this.appState.saveData();
-            this.renderTodoList();
-        }
+        const todo = this.appState.todoItems.find(item => item.id === todoId);
+        if (!todo) return;
+
+        // 使用统一的删除确认对话框
+        window.app.showDeleteConfirmDialog({
+            title: '删除待办事项',
+            itemName: todo.title,
+            itemType: '待办事项',
+            onConfirm: () => {
+                this.appState.todoItems = this.appState.todoItems.filter(item => item.id !== todoId);
+                this.appState.saveData();
+                this.renderTodoList();
+                this.showNotification('删除成功', '待办事项已删除');
+            }
+        });
     }
 
     reorderTodos(draggedId, targetId) {
@@ -689,7 +1118,6 @@ class TodoManager {
         // 设置当前任务
         document.querySelector('.modal-header h3').textContent = `🍅 ${todo.title}`;
     }
-
     getPriorityText(priority) {
         const texts = {
             low: '低',
@@ -700,13 +1128,26 @@ class TodoManager {
     }
 
     formatDate(date) {
-        return new Date(date).toLocaleDateString('zh-CN');
+        return new Date(date).toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        });
     }
 
     escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    showNotification(title, body) {
+        if (window.electronAPI && window.electronAPI.showNotification) {
+            window.electronAPI.showNotification(title, body);
+        }
     }
 }
 
@@ -715,15 +1156,24 @@ class PomodoroManager {
     constructor(appState) {
         this.appState = appState;
         this.timer = null;
+        this.sessionCount = 0;
+        this.totalFocusTime = 0;
+        this.totalBreakTime = 0;
         this.init();
     }
 
     init() {
         this.setupEventListeners();
         this.updateDisplay();
+        this.updateButtons();
+        this.updateStatus();
+        this.updateStats();
+        this.updateProgressDots();
+        this.loadSettings();
     }
 
     setupEventListeners() {
+        // 主要控制按钮
         document.getElementById('pomodoro-start').addEventListener('click', () => {
             this.start();
         });
@@ -736,13 +1186,61 @@ class PomodoroManager {
             this.reset();
         });
 
-        document.querySelector('.modal-close').addEventListener('click', () => {
-            this.closeModal();
-        });
+        // 模态框关闭
+        const closeBtn = document.querySelector('#pomodoro-modal .modal-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                this.closeModal();
+            });
+        }
+
+        // 高级设置切换
+        const advancedToggle = document.getElementById('advanced-toggle');
+        if (advancedToggle) {
+            advancedToggle.addEventListener('change', (e) => {
+                this.toggleAdvancedSettings(e.target.checked);
+            });
+        }
+
+        // 输入按钮事件
+        this.setupInputButtons();
 
         // 设置变化监听
+        this.setupSettingsListeners();
+    }
+
+    setupInputButtons() {
+        // 为所有输入按钮添加事件监听
+        document.querySelectorAll('.input-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const target = btn.dataset.target;
+                const input = document.getElementById(target);
+                const isPlus = btn.classList.contains('plus');
+                const isMinus = btn.classList.contains('minus');
+
+                if (input) {
+                    let value = parseInt(input.value);
+                    const min = parseInt(input.min) || 1;
+                    const max = parseInt(input.max) || 60;
+
+                    if (isPlus && value < max) {
+                        input.value = value + 1;
+                    } else if (isMinus && value > min) {
+                        input.value = value - 1;
+                    }
+
+                    // 触发change事件
+                    input.dispatchEvent(new Event('change'));
+                }
+            });
+        });
+    }
+
+    setupSettingsListeners() {
+        // 基础设置
         document.getElementById('work-duration').addEventListener('change', (e) => {
             this.appState.pomodoroTimer.workDuration = parseInt(e.target.value);
+            this.saveSettings();
             if (this.appState.pomodoroTimer.isWork && !this.appState.pomodoroTimer.isRunning) {
                 this.reset();
             }
@@ -750,18 +1248,53 @@ class PomodoroManager {
 
         document.getElementById('break-duration').addEventListener('change', (e) => {
             this.appState.pomodoroTimer.breakDuration = parseInt(e.target.value);
+            this.saveSettings();
             if (!this.appState.pomodoroTimer.isWork && !this.appState.pomodoroTimer.isRunning) {
                 this.reset();
             }
         });
-    }
 
+        // 高级设置
+        const longBreakDuration = document.getElementById('long-break-duration');
+        if (longBreakDuration) {
+            longBreakDuration.addEventListener('change', (e) => {
+                this.appState.pomodoroTimer.longBreakDuration = parseInt(e.target.value);
+                this.saveSettings();
+            });
+        }
+
+        const sessionsUntilLongBreak = document.getElementById('sessions-until-long-break');
+        if (sessionsUntilLongBreak) {
+            sessionsUntilLongBreak.addEventListener('change', (e) => {
+                this.appState.pomodoroTimer.sessionsUntilLongBreak = parseInt(e.target.value);
+                this.saveSettings();
+            });
+        }
+
+        const autoStartBreaks = document.getElementById('auto-start-breaks');
+        if (autoStartBreaks) {
+            autoStartBreaks.addEventListener('change', (e) => {
+                this.appState.pomodoroTimer.autoStartBreaks = e.target.checked;
+                this.saveSettings();
+            });
+        }
+
+        const soundNotifications = document.getElementById('sound-notifications');
+        if (soundNotifications) {
+            soundNotifications.addEventListener('change', (e) => {
+                this.appState.pomodoroTimer.soundNotifications = e.target.checked;
+                this.saveSettings();
+            });
+        }
+    }
     start() {
         this.appState.pomodoroTimer.isRunning = true;
         this.timer = setInterval(() => {
             this.tick();
         }, 1000);
         this.updateButtons();
+        this.updateStatus();
+        this.updateModalState();
     }
 
     pause() {
@@ -771,6 +1304,8 @@ class PomodoroManager {
             this.timer = null;
         }
         this.updateButtons();
+        this.updateStatus();
+        this.updateModalState();
     }
 
     reset() {
@@ -778,6 +1313,9 @@ class PomodoroManager {
         const timer = this.appState.pomodoroTimer;
         timer.currentTime = timer.isWork ? timer.workDuration * 60 : timer.breakDuration * 60;
         this.updateDisplay();
+        this.updateButtons();
+        this.updateStatus();
+        this.updateModalState();
     }
 
     tick() {
@@ -794,18 +1332,187 @@ class PomodoroManager {
         const timer = this.appState.pomodoroTimer;
 
         if (timer.isWork) {
-            this.showNotification('工作完成！', '是时候休息一下了');
+            // 工作时间完成
+            this.sessionCount++;
+            this.totalFocusTime += timer.workDuration;
+            this.showNotification('工作完成！', '是时候休息一下了 ☕');
+
+            // 判断是否需要长休息
+            const needLongBreak = this.sessionCount % (timer.sessionsUntilLongBreak || 4) === 0;
+            const breakDuration = needLongBreak ?
+                (timer.longBreakDuration || 15) : timer.breakDuration;
+
             timer.isWork = false;
-            timer.currentTime = timer.breakDuration * 60;
+            timer.currentTime = breakDuration * 60;
+
+            // 更新会话类型显示
+            this.updateSessionType(needLongBreak ? 'long-break' : 'break');
+
         } else {
-            this.showNotification('休息结束！', '开始新的工作周期');
+            // 休息时间完成
+            this.totalBreakTime += timer.breakDuration;
+            this.showNotification('休息结束！', '开始新的工作周期 🔥');
             timer.isWork = true;
             timer.currentTime = timer.workDuration * 60;
+            this.updateSessionType('work');
         }
 
         this.updateDisplay();
+        this.updateButtons();
+        this.updateStats();
+        this.updateProgressDots();
+
+        // 播放提示音
+        if (timer.soundNotifications !== false) {
+            this.playNotificationSound();
+        }
+
+        // 自动开始下一阶段
+        if (timer.autoStartBreaks && !timer.isWork) {
+            setTimeout(() => this.start(), 2000);
+        }
     }
 
+    updateSessionType(type) {
+        const sessionTypeEl = document.getElementById('session-type');
+        if (sessionTypeEl) {
+            switch (type) {
+                case 'work':
+                    sessionTypeEl.textContent = '工作时间';
+                    break;
+                case 'break':
+                    sessionTypeEl.textContent = '短休息';
+                    break;
+                case 'long-break':
+                    sessionTypeEl.textContent = '长休息';
+                    break;
+                default:
+                    sessionTypeEl.textContent = '工作时间';
+            }
+        }
+    }
+
+    updateProgressDots() {
+        const dots = document.querySelectorAll('.progress-dots .dot');
+        const currentSession = this.sessionCount % 4;
+
+        dots.forEach((dot, index) => {
+            if (index < currentSession) {
+                dot.classList.add('active');
+            } else {
+                dot.classList.remove('active');
+            }
+        });
+    }
+
+    updateStats() {
+        // 更新完成轮次
+        const completedEl = document.getElementById('completed-sessions');
+        if (completedEl) {
+            completedEl.textContent = this.sessionCount;
+        }
+
+        // 更新专注时长 (转换为小时:分钟格式)
+        const focusTimeEl = document.getElementById('focus-time');
+        if (focusTimeEl) {
+            const hours = Math.floor(this.totalFocusTime / 60);
+            const minutes = this.totalFocusTime % 60;
+            focusTimeEl.textContent = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+        }
+
+        // 更新休息时长
+        const breakTimeEl = document.getElementById('break-time');
+        if (breakTimeEl) {
+            const hours = Math.floor(this.totalBreakTime / 60);
+            const minutes = this.totalBreakTime % 60;
+            breakTimeEl.textContent = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+        }
+    }
+
+    toggleAdvancedSettings(show) {
+        const advancedSettings = document.querySelector('.settings-advanced');
+        if (advancedSettings) {
+            if (show) {
+                advancedSettings.style.display = 'block';
+                setTimeout(() => advancedSettings.style.opacity = '1', 10);
+            } else {
+                advancedSettings.style.opacity = '0';
+                setTimeout(() => advancedSettings.style.display = 'none', 300);
+            }
+        }
+    }
+
+    loadSettings() {
+        // 加载设置到界面
+        const timer = this.appState.pomodoroTimer;
+
+        document.getElementById('work-duration').value = timer.workDuration || 25;
+        document.getElementById('break-duration').value = timer.breakDuration || 5;
+
+        const longBreakDuration = document.getElementById('long-break-duration');
+        if (longBreakDuration) {
+            longBreakDuration.value = timer.longBreakDuration || 15;
+        }
+
+        const sessionsUntilLongBreak = document.getElementById('sessions-until-long-break');
+        if (sessionsUntilLongBreak) {
+            sessionsUntilLongBreak.value = timer.sessionsUntilLongBreak || 4;
+        }
+
+        const autoStartBreaks = document.getElementById('auto-start-breaks');
+        if (autoStartBreaks) {
+            autoStartBreaks.checked = timer.autoStartBreaks || false;
+        }
+
+        const soundNotifications = document.getElementById('sound-notifications');
+        if (soundNotifications) {
+            soundNotifications.checked = timer.soundNotifications !== false;
+        }
+    }
+
+    saveSettings() {
+        // 保存设置到appState
+        this.appState.saveData();
+    }
+
+    updateModalState() {
+        const modal = document.getElementById('pomodoro-modal');
+        const timer = this.appState.pomodoroTimer;
+
+        // 移除所有状态类
+        modal.classList.remove('running', 'break', 'long-break');
+
+        if (timer.isRunning) {
+            modal.classList.add('running');
+            if (!timer.isWork) {
+                modal.classList.add('break');
+            }
+        }
+    }
+
+    playNotificationSound() {
+        // 简单的声音提示，使用Web Audio API创建提示音
+        try {
+            const audioContext = new(window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+            oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.2);
+
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
+        } catch (error) {
+            console.log('无法播放提示音:', error);
+        }
+    }
     updateDisplay() {
         const time = this.appState.pomodoroTimer.currentTime;
         const minutes = Math.floor(time / 60);
@@ -813,6 +1520,52 @@ class PomodoroManager {
         const display = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
         document.getElementById('pomodoro-time').textContent = display;
+
+        // 更新进度环
+        this.updateProgress();
+
+        // 更新状态显示
+        this.updateStatus();
+    }
+
+    updateProgress() {
+        const timer = this.appState.pomodoroTimer;
+        const totalTime = timer.isWork ? timer.workDuration * 60 : timer.breakDuration * 60;
+        const progress = ((totalTime - timer.currentTime) / totalTime) * 100;
+
+        const progressRing = document.querySelector('.progress-ring-fill');
+        if (progressRing) {
+            const circumference = 628.32; // 2 * π * 100 (半径为100)
+            const offset = circumference - (progress / 100) * circumference;
+            progressRing.style.strokeDashoffset = offset;
+        }
+    }
+
+    updateStatus() {
+        const timer = this.appState.pomodoroTimer;
+        const statusElement = document.getElementById('pomodoro-status');
+
+        if (statusElement) {
+            if (timer.isRunning) {
+                if (timer.isWork) {
+                    statusElement.textContent = '🔥 专注工作中...';
+                } else {
+                    statusElement.textContent = '☕ 休息时间...';
+                }
+            } else {
+                if (timer.isWork) {
+                    statusElement.textContent = '准备开始工作时间';
+                } else {
+                    statusElement.textContent = '准备开始休息时间';
+                }
+            }
+        }
+
+        // 更新会话类型显示
+        const sessionTypeEl = document.getElementById('session-type');
+        if (sessionTypeEl && !timer.isRunning) {
+            sessionTypeEl.textContent = timer.isWork ? '工作时间' : '休息时间';
+        }
     }
 
     updateButtons() {
@@ -833,8 +1586,15 @@ class PomodoroManager {
     }
 
     showNotification(title, body) {
-        if (window.electronAPI.showNotification) {
+        if (window.electronAPI && window.electronAPI.showNotification) {
             window.electronAPI.showNotification(title, body);
+        } else {
+            // 浏览器环境下的fallback
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(title, {
+                    body
+                });
+            }
         }
     }
 }
@@ -851,33 +1611,44 @@ class NotesManager {
         this.renderNotesList();
         this.setupEventListeners();
     }
-
     setupEventListeners() {
         // 新建笔记
         document.getElementById('new-note').addEventListener('click', () => {
             this.createNewNote();
         });
 
-        // 保存笔记
-        document.getElementById('save-note').addEventListener('click', () => {
-            this.saveCurrentNote();
+        // 预览按钮切换
+        document.getElementById('toggle-preview').addEventListener('click', () => {
+            this.togglePreview();
         });
 
-        // 编辑器模式切换
-        document.querySelectorAll('.editor-tab').forEach(tab => {
-            tab.addEventListener('click', (e) => {
-                this.switchMode(e.target.dataset.mode);
-            });
-        });
-
-        // 编辑器内容变化
+        // 编辑器内容变化 - 自动保存
+        let autoSaveTimeout = null;
         document.getElementById('markdown-editor').addEventListener('input', () => {
-            this.updatePreview();
-        });
+            // 显示保存状态
+            this.showSaveStatus('正在保存...');
 
-        // 搜索
+            // 如果当前是预览模式，更新预览
+            if (this.currentMode === 'preview') {
+                this.updatePreview();
+            }
+
+            // 防抖：用户停止输入500ms后才保存
+            if (autoSaveTimeout) {
+                clearTimeout(autoSaveTimeout);
+            }
+
+            autoSaveTimeout = setTimeout(() => {
+                this.autoSaveCurrentNote();
+            }, 500);
+        }); // 搜索
         document.getElementById('notes-search').addEventListener('input', (e) => {
             this.searchNotes(e.target.value);
+        });
+
+        // 侧边栏切换
+        document.getElementById('toggle-sidebar').addEventListener('click', () => {
+            this.toggleSidebar();
         });
     }
 
@@ -913,14 +1684,31 @@ class NotesManager {
         const div = document.createElement('div');
         div.className = `note-item ${this.appState.currentNote?.id === note.id ? 'active' : ''}`;
         div.dataset.id = note.id;
-
         div.innerHTML = `
-      <div class="note-title">${this.escapeHtml(note.title)}</div>
-      <div class="note-date">${this.formatDate(note.updatedAt)}</div>
+      <div class="note-content">
+        <div class="note-title">${this.escapeHtml(note.title)}</div>
+        <div class="note-date">${this.formatDate(note.updatedAt)}</div>
+      </div>
+      <div class="note-item-actions">
+        <button class="delete-btn" title="删除笔记">🗑️</button>
+      </div>
     `;
 
         div.addEventListener('click', () => {
             this.selectNote(note.id);
+        }); // 添加删除按钮事件监听
+        const deleteBtn = div.querySelector('.delete-btn');
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            // 使用统一的删除确认对话框
+            window.app.showDeleteConfirmDialog({
+                title: '删除笔记',
+                itemName: note.title,
+                itemType: '笔记',
+                onConfirm: () => {
+                    this.deleteNote(note.id);
+                }
+            });
         });
 
         return div;
@@ -934,10 +1722,8 @@ class NotesManager {
             this.renderNotesList();
         }
     }
-
     loadNoteToEditor(note) {
         document.getElementById('markdown-editor').value = note.content;
-        this.updatePreview();
     }
 
     saveCurrentNote() {
@@ -956,60 +1742,119 @@ class NotesManager {
         this.showNotification('保存成功', '笔记已保存');
     }
 
-    switchMode(mode) {
-        this.currentMode = mode;
+    // 自动保存当前笔记
+    autoSaveCurrentNote() {
+        if (!this.appState.currentNote) return;
 
-        // 更新选项卡状态
-        document.querySelectorAll('.editor-tab').forEach(tab => {
-            tab.classList.toggle('active', tab.dataset.mode === mode);
-        });
+        const content = document.getElementById('markdown-editor').value;
+        const firstLine = content.split('\n')[0];
+        const title = firstLine.replace(/^#+\s*/, '') || '无标题笔记';
 
-        const editor = document.getElementById('markdown-editor');
-        const preview = document.getElementById('markdown-preview');
+        this.appState.currentNote.content = content;
+        this.appState.currentNote.title = title.substring(0, 50);
+        this.appState.currentNote.updatedAt = new Date();
 
-        switch (mode) {
-            case 'edit':
-                editor.style.display = 'block';
-                preview.style.display = 'none';
-                editor.style.width = '100%';
-                break;
-            case 'preview':
-                editor.style.display = 'none';
-                preview.style.display = 'block';
-                preview.style.width = '100%';
-                this.updatePreview();
-                break;
-            case 'split':
-                editor.style.display = 'block';
-                preview.style.display = 'block';
-                editor.style.width = '50%';
-                preview.style.width = '50%';
-                this.updatePreview();
-                break;
+        this.appState.saveData();
+        this.renderNotesList(); // 显示自动保存完成状态
+        this.showSaveStatus('✅ 已保存');
+    }
+
+    // 显示保存状态
+    showSaveStatus(status) {
+        const statusElement = document.getElementById('auto-save-status');
+        const indicator = document.querySelector('.save-indicator');
+
+        if (indicator) {
+            indicator.textContent = status;
+
+            // 根据状态添加相应的样式
+            if (status === '正在保存...') {
+                statusElement.classList.add('saving');
+            } else {
+                statusElement.classList.remove('saving');
+
+                // 如果是保存完成状态，3秒后恢复默认
+                if (status === '✅ 已保存') {
+                    setTimeout(() => {
+                        if (indicator.textContent === '✅ 已保存') {
+                            indicator.textContent = '✅ 已保存';
+                        }
+                    }, 3000);
+                }
+            }
         }
     }
 
+    // 切换预览模式
+    togglePreview() {
+        const editor = document.getElementById('markdown-editor');
+        const preview = document.getElementById('markdown-preview');
+        const toggleBtn = document.getElementById('toggle-preview');
+
+        if (this.currentMode === 'edit') {
+            // 切换到预览模式
+            this.currentMode = 'preview';
+            editor.style.display = 'none';
+            preview.style.display = 'block';
+            toggleBtn.textContent = '✏️ 编辑';
+            this.updatePreview();
+        } else {
+            // 切换到编辑模式
+            this.currentMode = 'edit';
+            editor.style.display = 'block';
+            preview.style.display = 'none';
+            toggleBtn.textContent = '👁️ 预览';
+        }
+    }
+
+    // 切换侧边栏显示/隐藏
+    toggleSidebar() {
+        const sidebar = document.querySelector('.notes-sidebar');
+        const toggleBtn = document.getElementById('toggle-sidebar');
+
+        if (sidebar.classList.contains('collapsed')) {
+            // 展开侧边栏
+            sidebar.classList.remove('collapsed');
+            toggleBtn.textContent = '📁';
+            toggleBtn.title = '收起侧边栏';
+        } else {
+            // 收起侧边栏
+            sidebar.classList.add('collapsed');
+            toggleBtn.textContent = '📂';
+            toggleBtn.title = '展开侧边栏';
+        }
+    }
+
+    // 更新预览内容
     updatePreview() {
         const content = document.getElementById('markdown-editor').value;
         const preview = document.getElementById('markdown-preview');
-        preview.innerHTML = this.renderMarkdown(content);
+        if (preview) {
+            preview.innerHTML = this.renderMarkdown(content);
+        }
     }
 
+    // 简化的Markdown渲染器
     renderMarkdown(content) {
-        // 简单的 Markdown 渲染器
+        if (!content) return '';
+
         let html = content
             // 标题
             .replace(/^### (.*$)/gim, '<h3>$1</h3>')
             .replace(/^## (.*$)/gim, '<h2>$1</h2>')
             .replace(/^# (.*$)/gim, '<h1>$1</h1>')
             // 粗体
-            .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+            .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
             // 斜体
-            .replace(/\*(.*)\*/gim, '<em>$1</em>')
-            // 代码
+            .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+            // 代码块
+            .replace(/```([\s\S]*?)```/gim, '<pre><code>$1</code></pre>')
+            // 行内代码
             .replace(/`([^`]+)`/gim, '<code>$1</code>')
             // 链接
             .replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2" target="_blank">$1</a>')
+            // 图片
+            .replace(/!\[([^\]]*)\]\(([^)]+)\)/gim, '<img alt="$1" src="$2" />')
             // 换行
             .replace(/\n/gim, '<br>');
 
@@ -1044,6 +1889,37 @@ class NotesManager {
         if (window.electronAPI.showNotification) {
             window.electronAPI.showNotification(title, body);
         }
+    } // 删除笔记
+    deleteNote(noteId) {
+        const noteIndex = this.appState.notes.findIndex(n => n.id === noteId);
+        if (noteIndex === -1) return;
+
+        const deletedNote = this.appState.notes[noteIndex];
+        this.appState.notes.splice(noteIndex, 1);
+
+        // 如果删除的是当前编辑的笔记，需要处理编辑器状态
+        if (this.appState.currentNote && this.appState.currentNote.id === noteId) {
+            if (this.appState.notes.length > 0) {
+                // 如果还有其他笔记，选择下一个笔记
+                const nextNote = this.appState.notes[Math.min(noteIndex, this.appState.notes.length - 1)];
+                this.appState.currentNote = nextNote;
+                this.loadNoteToEditor(nextNote);
+            } else {
+                // 如果没有笔记了，清空编辑器
+                this.appState.currentNote = null;
+                document.getElementById('markdown-editor').value = '';
+                const preview = document.getElementById('markdown-preview');
+                if (preview) {
+                    preview.innerHTML = '<p class="no-content">请选择或创建一个笔记开始编辑</p>';
+                }
+            }
+        }
+
+        // 保存数据并重新渲染列表
+        this.appState.saveData();
+        this.renderNotesList();
+
+        this.showNotification('删除成功', `笔记 "${deletedNote.title}" 已删除`);
     }
 }
 
@@ -1099,6 +1975,8 @@ class ThemeManager {
 class App {
     constructor() {
         this.state = new AppState();
+        // 将实例赋值给全局变量，以便其他类可以访问统一的删除确认对话框
+        window.app = this;
         this.init();
     }
 
@@ -1141,16 +2019,21 @@ class App {
             btn.addEventListener('click', (e) => {
                 this.switchTab(e.target.dataset.tab);
             });
-        });
-
-        // 清空剪切板
+        }); // 剪切板搜索
+        document.getElementById('clipboard-search').addEventListener('input', (e) => {
+            this.searchClipboard(e.target.value);
+        }); // 清理剪切板按钮
         document.getElementById('clear-clipboard').addEventListener('click', () => {
             this.clipboardManager.clearClipboard();
         });
 
-        // 剪切板搜索
-        document.getElementById('clipboard-search').addEventListener('input', (e) => {
-            this.searchClipboard(e.target.value);
+        // 社区功能按钮
+        document.getElementById('open-community').addEventListener('click', () => {
+            this.openCommunity();
+        });
+
+        document.getElementById('open-community-new-window').addEventListener('click', () => {
+            this.openCommunityNewWindow();
         });
 
         // 设置项监听
@@ -1224,10 +2107,78 @@ class App {
             item.style.display = matches ? 'block' : 'none';
         });
     }
-
     async checkUpdates() {
         // 这里可以实现更新检查逻辑
         alert('当前已是最新版本！');
+    }
+
+    // 通用删除确认对话框
+    showDeleteConfirmDialog(options) {
+        const {
+            title = '确认删除',
+                message,
+                itemName,
+                itemType = '项目',
+                onConfirm,
+                confirmText = '🗑️ 删除',
+                cancelText = '取消'
+        } = options;
+
+        const modal = document.createElement('div');
+        modal.className = 'modal active';
+        modal.innerHTML = `
+            <div class="modal-content delete-confirm-modal">
+                <div class="modal-header">
+                    <h3>⚠️ ${title}</h3>
+                    <button class="modal-close">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="warning-text">⚠️ 此操作无法撤销！</div>
+                    <div class="delete-info">
+                        ${message || `您确定要删除${itemType} ${itemName ? `<strong>"${this.escapeHtml(itemName)}"</strong>` : ''} 吗？`}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="cancel-delete">${cancelText}</button>
+                    <button class="btn btn-danger" id="confirm-delete">${confirmText}</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // 添加事件监听
+        const closeModal = () => {
+            if (modal.parentNode) {
+                document.body.removeChild(modal);
+            }
+        };
+
+        modal.querySelector('.modal-close').addEventListener('click', closeModal);
+        modal.querySelector('#cancel-delete').addEventListener('click', closeModal);
+
+        modal.querySelector('#confirm-delete').addEventListener('click', () => {
+            if (onConfirm && typeof onConfirm === 'function') {
+                onConfirm();
+            }
+            closeModal();
+        });
+
+        // 点击模态框外部关闭
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        return modal;
+    }
+
+    // HTML转义工具方法
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 }
 

@@ -556,11 +556,13 @@ export class AdvancedClipboardManager extends EventEmitter {
     // ... 其他方法与原版相同
     public getHistory(): ClipboardItem[] {
         return [...this.clipboardHistory];
-    }
-
-    public clearHistory(): void {
-        this.clipboardHistory = [];
-        logger.info('Advanced clipboard history cleared');
+    } public clearHistory(): void {
+        // 保留置顶的项目，只清理非置顶项目
+        const pinnedItems = this.clipboardHistory.filter(item => item.isPinned);
+        this.clipboardHistory = pinnedItems;
+        logger.info('Advanced clipboard history cleared, pinned items preserved', {
+            pinnedCount: pinnedItems.length
+        });
     }
 
     public togglePin(id: string): boolean {

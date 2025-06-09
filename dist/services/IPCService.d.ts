@@ -1,13 +1,13 @@
 import { WebContents } from 'electron';
 import { EventEmitter } from 'events';
 /**
- * IPC服务 - 负责主进程和渲染进程之间的安全通信
+ * IPCćĺĄ - č´č´Łä¸ťčżç¨ĺć¸˛ćčżç¨äšé´çĺŽĺ¨éäżĄ
  */
 export declare class IPCService extends EventEmitter {
     private handlers;
     constructor();
     /**
-     * 设置IPC处理程序
+     * čŽžç˝ŽIPCĺ¤çç¨ĺş
      */
     private setupHandlers;
     /**
@@ -16,15 +16,15 @@ export declare class IPCService extends EventEmitter {
      */
     private setupCompatibilityAliases;
     /**
-     * 注册IPC处理程序
+     * ćł¨ĺIPCĺ¤çç¨ĺş
      */
     private registerHandler;
     /**
-     * 发送消息到渲染进程
+     * ĺéćśćŻĺ°ć¸˛ćčżç¨
      */
     sendToRenderer(webContents: WebContents, channel: string, data?: any): void;
     /**
-     * 广播消息到所有渲染进�?
+     * ĺšżć­ćśćŻĺ°ććć¸˛ćčżç¨?
      */
     broadcast(channel: string, data?: any): void;
     private handleGetAppVersion;
@@ -57,18 +57,18 @@ export declare class IPCService extends EventEmitter {
     private handleEnableAutoStart;
     private handleDisableAutoStart;
     /**
-     * 移除处理程序
+     * ç§ťé¤ĺ¤çç¨ĺş
      */
     removeHandler(channel: string): void;
     /**
-     * 移除所服�?
+     * ç§ťé¤ććĺ?
      */ removeAllHandlers(): void;
     /**
-     * 获取已注册的处理程序列表
+     * čˇĺĺˇ˛ćł¨ĺçĺ¤çç¨ĺşĺčĄ¨
      */
     getRegisteredHandlers(): string[];
     /**
-     * 销毁服�?
+     * éćŻćĺ?
      */
     destroy(): void;
 }

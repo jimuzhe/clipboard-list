@@ -68,6 +68,8 @@ class WindowManager extends events_1.EventEmitter {
                 backgroundThrottling: false, // 防止后台节流
             },
         });
+        // 设置初始隐藏状态，因为窗口创建时 show: false
+        this.isHidden = true;
         this.setupWindowEvents();
         this.initDocking();
         Logger_1.logger.info('Window created successfully', {
@@ -102,7 +104,8 @@ class WindowManager extends events_1.EventEmitter {
         }); // 窗口准备就绪
         this.window.once('ready-to-show', () => {
             // 不自动显示窗口，让用户通过托盘或快捷键显示
-            Logger_1.logger.info('Window ready to show (hidden by default)');
+            // 窗口显示逻辑现在由主进程的 handleCommandLineArgs 方法控制
+            Logger_1.logger.info('Window ready to show (controlled by startup logic)');
         });
         // 窗口移动事件
         this.window.on('moved', () => {
@@ -188,7 +191,7 @@ class WindowManager extends events_1.EventEmitter {
     }
     // 公共方法
     show() {
-        if (this.window && this.isHidden) {
+        if (this.window) {
             this.window.show();
             this.isHidden = false;
             this.emit('window-shown');

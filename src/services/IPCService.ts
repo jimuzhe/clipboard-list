@@ -7,7 +7,7 @@ import { Note } from '../types/notes';
 import { AppConfig } from '../types';
 
 /**
- * IPC服务 - 负责主进程和渲染进程之间的安全通信
+ * IPCćĺĄ - č´č´Łä¸ťčżç¨ĺć¸˛ćčżç¨äšé´çĺŽĺ¨éäżĄ
  */
 export class IPCService extends EventEmitter {
     private handlers: Map<string, Function> = new Map();
@@ -18,16 +18,16 @@ export class IPCService extends EventEmitter {
     }
 
     /**
-     * 设置IPC处理程序
+     * čŽžç˝ŽIPCĺ¤çç¨ĺş
      */
     private setupHandlers(): void {
-        // 应用相关
+        // ĺşç¨ç¸ĺł
         this.registerHandler('app:get-version', this.handleGetAppVersion.bind(this));
         this.registerHandler('app:get-config', this.handleGetConfig.bind(this));
         this.registerHandler('app:set-config', this.handleSetConfig.bind(this));
         this.registerHandler('app:show-notification', this.handleShowNotification.bind(this));
 
-        // 窗口控制
+        // çŞĺŁć§ĺś
         this.registerHandler('window:minimize', this.handleMinimizeWindow.bind(this));
         this.registerHandler('window:close', this.handleCloseWindow.bind(this));
         this.registerHandler('window:show', this.handleShowWindow.bind(this));
@@ -36,7 +36,7 @@ export class IPCService extends EventEmitter {
         this.registerHandler('window:set-size', this.handleSetWindowSize.bind(this));
         this.registerHandler('window:get-bounds', this.handleGetWindowBounds.bind(this));
 
-        // 剪切板相�?
+        // ĺŞĺćżç¸ĺ?
         this.registerHandler('clipboard:read', this.handleReadClipboard.bind(this));
         this.registerHandler('clipboard:write', this.handleWriteClipboard.bind(this));
         this.registerHandler('clipboard:get-history', this.handleGetClipboardHistory.bind(this));
@@ -44,7 +44,7 @@ export class IPCService extends EventEmitter {
         this.registerHandler('clipboard:toggle-pin', this.handleToggleClipboardPin.bind(this));
         this.registerHandler('clipboard:remove-item', this.handleRemoveClipboardItem.bind(this));
 
-        // 数据持久�?
+        // ć°ćŽćäšĺ?
         this.registerHandler('data:save', this.handleSaveData.bind(this));
         this.registerHandler('data:load', this.handleLoadData.bind(this));
         this.registerHandler('data:save-todos', this.handleSaveTodos.bind(this));
@@ -52,11 +52,11 @@ export class IPCService extends EventEmitter {
         this.registerHandler('data:save-notes', this.handleSaveNotes.bind(this));
         this.registerHandler('data:load-notes', this.handleLoadNotes.bind(this));
 
-        // 主题相关
+        // ä¸ťé˘ç¸ĺł
         this.registerHandler('theme:get', this.handleGetTheme.bind(this));
         this.registerHandler('theme:set', this.handleSetTheme.bind(this));
 
-        // 自启动相�?
+        // čŞĺŻĺ¨ç¸ĺ?
         this.registerHandler('auto-start:get-status', this.handleGetAutoStartStatus.bind(this));
         this.registerHandler('auto-start:toggle', this.handleToggleAutoStart.bind(this));
         this.registerHandler('auto-start:enable', this.handleEnableAutoStart.bind(this));
@@ -118,7 +118,7 @@ export class IPCService extends EventEmitter {
     }
 
     /**
-     * 注册IPC处理程序
+     * ćł¨ĺIPCĺ¤çç¨ĺş
      */
     private registerHandler(channel: string, handler: Function): void {
         this.handlers.set(channel, handler);
@@ -138,7 +138,7 @@ export class IPCService extends EventEmitter {
     }
 
     /**
-     * 发送消息到渲染进程
+     * ĺéćśćŻĺ°ć¸˛ćčżç¨
      */
     public sendToRenderer(webContents: WebContents, channel: string, data?: any): void {
         try {
@@ -150,13 +150,13 @@ export class IPCService extends EventEmitter {
     }
 
     /**
-     * 广播消息到所有渲染进�?
+     * ĺšżć­ćśćŻĺ°ććć¸˛ćčżç¨?
      */
     public broadcast(channel: string, data?: any): void {
         this.emit('broadcast', { channel, data });
     }
 
-    // === 应用相关处理程序 ===
+    // === ĺşç¨ç¸ĺłĺ¤çç¨ĺş ===
     private async handleGetAppVersion(): Promise<string> {
         const { app } = require('electron');
         return app.getVersion();
@@ -177,7 +177,7 @@ export class IPCService extends EventEmitter {
         this.emit('show-notification', { title, body, icon });
     }
 
-    // === 窗口控制处理程序 ===
+    // === çŞĺŁć§ĺśĺ¤çç¨ĺş ===
     private async handleMinimizeWindow(): Promise<void> {
         this.emit('window-minimize');
     }
@@ -212,7 +212,7 @@ export class IPCService extends EventEmitter {
         });
     }
 
-    // === 剪切板相关处理程�?===
+    // === ĺŞĺćżç¸ĺłĺ¤çç¨ĺş?===
     private async handleReadClipboard(): Promise<string> {
         return new Promise((resolve) => {
             this.emit('clipboard-read');
@@ -249,7 +249,7 @@ export class IPCService extends EventEmitter {
         });
     }
 
-    // === 数据持久化处理程�?===
+    // === ć°ćŽćäšĺĺ¤çç¨ĺş?===
     private async handleSaveData(event: IpcMainInvokeEvent, data: any): Promise<void> {
         this.emit('data-save', data);
     }
@@ -283,7 +283,7 @@ export class IPCService extends EventEmitter {
         });
     }
 
-    // === 主题相关处理程序 ===
+    // === ä¸ťé˘ç¸ĺłĺ¤çç¨ĺş ===
     private async handleGetTheme(): Promise<string> {
         return new Promise((resolve) => {
             this.emit('theme-get');
@@ -295,7 +295,7 @@ export class IPCService extends EventEmitter {
         this.emit('theme-set', theme);
     }
 
-    // === 自启动相关处理程�?===
+    // === čŞĺŻĺ¨ç¸ĺłĺ¤çç¨ĺş?===
     private async handleGetAutoStartStatus(): Promise<any> {
         return new Promise((resolve) => {
             this.emit('auto-start-get-status');
@@ -319,7 +319,7 @@ export class IPCService extends EventEmitter {
     }
 
     /**
-     * 移除处理程序
+     * ç§ťé¤ĺ¤çç¨ĺş
      */
     public removeHandler(channel: string): void {
         if (this.handlers.has(channel)) {
@@ -330,7 +330,7 @@ export class IPCService extends EventEmitter {
     }
 
   /**
-   * 移除所服�?
+   * ç§ťé¤ććĺ?
    */  public removeAllHandlers(): void {
         Array.from(this.handlers.keys()).forEach(channel => {
             ipcMain.removeHandler(channel);
@@ -340,14 +340,14 @@ export class IPCService extends EventEmitter {
     }
 
     /**
-     * 获取已注册的处理程序列表
+     * čˇĺĺˇ˛ćł¨ĺçĺ¤çç¨ĺşĺčĄ¨
      */
     public getRegisteredHandlers(): string[] {
         return Array.from(this.handlers.keys());
     }
 
     /**
-     * 销毁服�?
+     * éćŻćĺ?
      */
     public destroy(): void {
         this.removeAllHandlers();

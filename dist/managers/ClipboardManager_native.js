@@ -345,13 +345,16 @@ class ClipboardManagerNative extends events_1.EventEmitter {
      */
     getHistory() {
         return [...this.clipboardHistory];
-    }
-    /**
+    } /**
      * 清空历史记录
      */
     clearHistory() {
-        this.clipboardHistory = [];
-        Logger_1.logger.info('Native clipboard history cleared');
+        // 保留置顶的项目，只清理非置顶项目
+        const pinnedItems = this.clipboardHistory.filter(item => item.isPinned);
+        this.clipboardHistory = pinnedItems;
+        Logger_1.logger.info('Native clipboard history cleared, pinned items preserved', {
+            pinnedCount: pinnedItems.length
+        });
     }
     /**
      * 切换置顶状态

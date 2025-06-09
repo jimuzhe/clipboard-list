@@ -40,7 +40,7 @@ const path = __importStar(require("path"));
 const events_1 = require("events");
 const Logger_1 = require("../utils/Logger");
 /**
- * 数据服务 - 负责应用数据的本地持久化存储
+ * ć°ćŽćĺĄ - č´č´Łĺşç¨ć°ćŽçćŹĺ°ćäšĺĺ­ĺ¨
  */
 class DataService extends events_1.EventEmitter {
     constructor() {
@@ -52,7 +52,7 @@ class DataService extends events_1.EventEmitter {
         this.initializeDirectories();
     }
     /**
-     * 初始化数据目�?
+     * ĺĺ§ĺć°ćŽçŽĺ˝?
      */
     async initializeDirectories() {
         try {
@@ -71,7 +71,7 @@ class DataService extends events_1.EventEmitter {
         }
     }
     /**
-     * 保存应用配置
+     * äżĺ­ĺşç¨éç˝Ž
      */
     async saveConfig(config) {
         const configFile = path.join(this.configPath, 'app-config.json');
@@ -86,7 +86,7 @@ class DataService extends events_1.EventEmitter {
         }
     }
     /**
-     * 加载应用配置
+     * ĺ č˝˝ĺşç¨éç˝Ž
      */
     async loadConfig() {
         const configFile = path.join(this.configPath, 'app-config.json');
@@ -101,12 +101,12 @@ class DataService extends events_1.EventEmitter {
         }
     }
     /**
-     * 保存剪切板历�?
+     * äżĺ­ĺŞĺćżĺĺ?
      */
     async saveClipboardHistory(items) {
         const clipboardFile = path.join(this.dataPath, 'clipboard-history.json');
         try {
-            // 创建备份
+            // ĺĺťşĺ¤äť˝
             await this.createBackup('clipboard-history.json');
             await this.writeJsonFile(clipboardFile, {
                 version: '1.0',
@@ -122,7 +122,7 @@ class DataService extends events_1.EventEmitter {
         }
     }
     /**
-     * 加载剪切板历�?
+     * ĺ č˝˝ĺŞĺćżĺĺ?
      */
     async loadClipboardHistory() {
         const clipboardFile = path.join(this.dataPath, 'clipboard-history.json');
@@ -140,7 +140,7 @@ class DataService extends events_1.EventEmitter {
         }
     }
     /**
-     * 保存待办事项
+     * äżĺ­ĺžĺäşéĄš
      */
     async saveTodos(todos) {
         const todosFile = path.join(this.dataPath, 'todos.json');
@@ -160,7 +160,7 @@ class DataService extends events_1.EventEmitter {
         }
     }
     /**
-     * 加载待办事项
+     * ĺ č˝˝ĺžĺäşéĄš
      */
     async loadTodos() {
         const todosFile = path.join(this.dataPath, 'todos.json');
@@ -178,7 +178,7 @@ class DataService extends events_1.EventEmitter {
         }
     }
     /**
-     * 保存笔记
+     * äżĺ­çŹčŽ°
      */
     async saveNotes(notes) {
         const notesFile = path.join(this.dataPath, 'notes.json');
@@ -198,7 +198,7 @@ class DataService extends events_1.EventEmitter {
         }
     }
     /**
-     * 加载笔记
+     * ĺ č˝˝çŹčŽ°
      */
     async loadNotes() {
         const notesFile = path.join(this.dataPath, 'notes.json');
@@ -216,7 +216,7 @@ class DataService extends events_1.EventEmitter {
         }
     }
     /**
-     * 保存通用数据
+     * äżĺ­éç¨ć°ćŽ
      */
     async saveData(filename, data) {
         const filePath = path.join(this.dataPath, `${filename}.json`);
@@ -232,7 +232,7 @@ class DataService extends events_1.EventEmitter {
         }
     }
     /**
-     * 加载通用数据
+     * ĺ č˝˝éç¨ć°ćŽ
      */
     async loadData(filename) {
         const filePath = path.join(this.dataPath, `${filename}.json`);
@@ -247,7 +247,7 @@ class DataService extends events_1.EventEmitter {
         }
     }
     /**
-     * 删除数据文件
+     * ĺ é¤ć°ćŽćäťś
      */
     async deleteData(filename) {
         const filePath = path.join(this.dataPath, `${filename}.json`);
@@ -264,7 +264,7 @@ class DataService extends events_1.EventEmitter {
         }
     }
     /**
-     * 创建数据备份
+     * ĺĺťşć°ćŽĺ¤äť˝
      */
     async createBackup(filename) {
         const sourceFile = path.join(this.dataPath, filename);
@@ -273,7 +273,7 @@ class DataService extends events_1.EventEmitter {
             await fs.access(sourceFile);
             await fs.copyFile(sourceFile, backupFile);
             Logger_1.logger.debug(`Backup created: ${backupFile}`);
-            // 清理旧备份（保留最�?0个）
+            // ć¸çć§ĺ¤äť˝ďźäżçćčż?0ä¸Şďź
             await this.cleanupOldBackups(filename, 10);
         }
         catch (error) {
@@ -283,7 +283,7 @@ class DataService extends events_1.EventEmitter {
         }
     }
     /**
-     * 清理旧备份文�?
+     * ć¸çć§ĺ¤äť˝ćäť?
      */
     async cleanupOldBackups(filename, keepCount) {
         try {
@@ -310,7 +310,7 @@ class DataService extends events_1.EventEmitter {
         }
     }
     /**
-     * 还原备份
+     * čżĺĺ¤äť˝
      */
     async restoreBackup(filename, backupTimestamp) {
         try {
@@ -321,7 +321,7 @@ class DataService extends events_1.EventEmitter {
                 backupFile = `${baseName}_${backupTimestamp}.json`;
             }
             else {
-                // 使用最新的备份
+                // ä˝żç¨ćć°çĺ¤äť˝
                 const backupFiles = files
                     .filter(file => file.startsWith(baseName) && file.endsWith('.json'))
                     .sort()
@@ -343,7 +343,7 @@ class DataService extends events_1.EventEmitter {
         }
     }
     /**
-     * 获取备份列表
+     * čˇĺĺ¤äť˝ĺčĄ¨
      */
     async getBackupList(filename) {
         try {
@@ -371,7 +371,7 @@ class DataService extends events_1.EventEmitter {
         }
     }
     /**
-     * 导出所有数�?
+     * ĺŻźĺşććć°ć?
      */
     async exportAllData() {
         try {
@@ -397,7 +397,7 @@ class DataService extends events_1.EventEmitter {
         }
     }
     /**
-     * 导入所有数�?
+     * ĺŻźĺĽććć°ć?
      */
     async importAllData(data) {
         try {
@@ -422,7 +422,7 @@ class DataService extends events_1.EventEmitter {
         }
     }
     /**
-     * 读取JSON文件
+     * čŻťĺJSONćäťś
      */
     async readJsonFile(filePath) {
         try {
@@ -437,14 +437,14 @@ class DataService extends events_1.EventEmitter {
         }
     }
     /**
-     * 写入JSON文件
+     * ĺĺĽJSONćäťś
      */
     async writeJsonFile(filePath, data) {
         const content = JSON.stringify(data, null, 2);
         await fs.writeFile(filePath, content, 'utf8');
     }
     /**
-     * 获取数据目录信息
+     * čˇĺć°ćŽçŽĺ˝äżĄćŻ
      */
     getDataDirectories() {
         return {
@@ -454,7 +454,7 @@ class DataService extends events_1.EventEmitter {
         };
     }
     /**
-     * 销毁服�?
+     * éćŻćĺ?
      */
     destroy() {
         this.removeAllListeners();

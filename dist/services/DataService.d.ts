@@ -4,7 +4,7 @@ import { TodoItem } from '../types/todo';
 import { Note } from '../types/notes';
 import { AppConfig } from '../types';
 /**
- * 数据服务 - 负责应用数据的本地持久化存储
+ * ć°ćŽćĺĄ - č´č´Łĺşç¨ć°ćŽçćŹĺ°ćäšĺĺ­ĺ¨
  */
 export declare class DataService extends EventEmitter {
     private dataPath;
@@ -12,67 +12,67 @@ export declare class DataService extends EventEmitter {
     private backupPath;
     constructor();
     /**
-     * 初始化数据目�?
+     * ĺĺ§ĺć°ćŽçŽĺ˝?
      */
     private initializeDirectories;
     /**
-     * 保存应用配置
+     * äżĺ­ĺşç¨éç˝Ž
      */
     saveConfig(config: AppConfig): Promise<void>;
     /**
-     * 加载应用配置
+     * ĺ č˝˝ĺşç¨éç˝Ž
      */
     loadConfig(): Promise<AppConfig | null>;
     /**
-     * 保存剪切板历�?
+     * äżĺ­ĺŞĺćżĺĺ?
      */
     saveClipboardHistory(items: ClipboardItem[]): Promise<void>;
     /**
-     * 加载剪切板历�?
+     * ĺ č˝˝ĺŞĺćżĺĺ?
      */
     loadClipboardHistory(): Promise<ClipboardItem[]>;
     /**
-     * 保存待办事项
+     * äżĺ­ĺžĺäşéĄš
      */
     saveTodos(todos: TodoItem[]): Promise<void>;
     /**
-     * 加载待办事项
+     * ĺ č˝˝ĺžĺäşéĄš
      */
     loadTodos(): Promise<TodoItem[]>;
     /**
-     * 保存笔记
+     * äżĺ­çŹčŽ°
      */
     saveNotes(notes: Note[]): Promise<void>;
     /**
-     * 加载笔记
+     * ĺ č˝˝çŹčŽ°
      */
     loadNotes(): Promise<Note[]>;
     /**
-     * 保存通用数据
+     * äżĺ­éç¨ć°ćŽ
      */
     saveData(filename: string, data: any): Promise<void>;
     /**
-     * 加载通用数据
+     * ĺ č˝˝éç¨ć°ćŽ
      */
     loadData<T>(filename: string): Promise<T | null>;
     /**
-     * 删除数据文件
+     * ĺ é¤ć°ćŽćäťś
      */
     deleteData(filename: string): Promise<void>;
     /**
-     * 创建数据备份
+     * ĺĺťşć°ćŽĺ¤äť˝
      */
     createBackup(filename: string): Promise<void>;
     /**
-     * 清理旧备份文�?
+     * ć¸çć§ĺ¤äť˝ćäť?
      */
     private cleanupOldBackups;
     /**
-     * 还原备份
+     * čżĺĺ¤äť˝
      */
     restoreBackup(filename: string, backupTimestamp?: number): Promise<void>;
     /**
-     * 获取备份列表
+     * čˇĺĺ¤äť˝ĺčĄ¨
      */
     getBackupList(filename: string): Promise<Array<{
         name: string;
@@ -81,7 +81,7 @@ export declare class DataService extends EventEmitter {
         size: number;
     }>>;
     /**
-     * 导出所有数�?
+     * ĺŻźĺşććć°ć?
      */
     exportAllData(): Promise<{
         config: AppConfig | null;
@@ -91,7 +91,7 @@ export declare class DataService extends EventEmitter {
         exportDate: string;
     }>;
     /**
-     * 导入所有数�?
+     * ĺŻźĺĽććć°ć?
      */
     importAllData(data: {
         config?: AppConfig;
@@ -100,15 +100,15 @@ export declare class DataService extends EventEmitter {
         notes?: Note[];
     }): Promise<void>;
     /**
-     * 读取JSON文件
+     * čŻťĺJSONćäťś
      */
     private readJsonFile;
     /**
-     * 写入JSON文件
+     * ĺĺĽJSONćäťś
      */
     private writeJsonFile;
     /**
-     * 获取数据目录信息
+     * čˇĺć°ćŽçŽĺ˝äżĄćŻ
      */
     getDataDirectories(): {
         dataPath: string;
@@ -116,7 +116,7 @@ export declare class DataService extends EventEmitter {
         backupPath: string;
     };
     /**
-     * 销毁服�?
+     * éćŻćĺ?
      */
     destroy(): void;
 }

@@ -41,13 +41,13 @@ export declare class AutoStartManager extends EventEmitter {
     /**
      * 检查应用是否是以隐藏方式启动的
      */
-    wasStartedHidden(): boolean;
-    /**
+    wasStartedHidden(): boolean; /**
      * 处理命令行参数（检查是否包含隐藏启动标志）
      */
     handleCommandLineArgs(argv: string[]): {
         shouldStartHidden: boolean;
         isAutoStart: boolean;
+        isFirstRun: boolean;
     };
     /**
      * 配置自启动参数

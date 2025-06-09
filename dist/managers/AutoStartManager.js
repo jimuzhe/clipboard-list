@@ -119,21 +119,23 @@ class AutoStartManager extends events_1.EventEmitter {
             Logger_1.logger.error('Failed to check if started hidden:', error);
             return false;
         }
-    }
-    /**
+    } /**
      * 处理命令行参数（检查是否包含隐藏启动标志）
      */
     handleCommandLineArgs(argv) {
         const shouldStartHidden = argv.includes('--hidden') || this.wasStartedHidden();
         const isAutoStart = this.wasStartedAtLogin();
+        const isFirstRun = false; // 这里将在主进程中传入实际的首次运行状态
         Logger_1.logger.info('Command line args processed', {
             argv,
             shouldStartHidden,
-            isAutoStart
+            isAutoStart,
+            isFirstRun
         });
         return {
             shouldStartHidden,
-            isAutoStart
+            isAutoStart,
+            isFirstRun
         };
     }
     /**

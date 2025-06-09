@@ -5,7 +5,7 @@ const electron_1 = require("electron");
 const events_1 = require("events");
 const Logger_1 = require("../utils/Logger");
 /**
- * IPC服务 - 负责主进程和渲染进程之间的安全通信
+ * IPCćĺĄ - č´č´Łä¸ťčżç¨ĺć¸˛ćčżç¨äšé´çĺŽĺ¨éäżĄ
  */
 class IPCService extends events_1.EventEmitter {
     constructor() {
@@ -14,15 +14,15 @@ class IPCService extends events_1.EventEmitter {
         this.setupHandlers();
     }
     /**
-     * 设置IPC处理程序
+     * čŽžç˝ŽIPCĺ¤çç¨ĺş
      */
     setupHandlers() {
-        // 应用相关
+        // ĺşç¨ç¸ĺł
         this.registerHandler('app:get-version', this.handleGetAppVersion.bind(this));
         this.registerHandler('app:get-config', this.handleGetConfig.bind(this));
         this.registerHandler('app:set-config', this.handleSetConfig.bind(this));
         this.registerHandler('app:show-notification', this.handleShowNotification.bind(this));
-        // 窗口控制
+        // çŞĺŁć§ĺś
         this.registerHandler('window:minimize', this.handleMinimizeWindow.bind(this));
         this.registerHandler('window:close', this.handleCloseWindow.bind(this));
         this.registerHandler('window:show', this.handleShowWindow.bind(this));
@@ -30,24 +30,24 @@ class IPCService extends events_1.EventEmitter {
         this.registerHandler('window:toggle-always-on-top', this.handleToggleAlwaysOnTop.bind(this));
         this.registerHandler('window:set-size', this.handleSetWindowSize.bind(this));
         this.registerHandler('window:get-bounds', this.handleGetWindowBounds.bind(this));
-        // 剪切板相�?
+        // ĺŞĺćżç¸ĺ?
         this.registerHandler('clipboard:read', this.handleReadClipboard.bind(this));
         this.registerHandler('clipboard:write', this.handleWriteClipboard.bind(this));
         this.registerHandler('clipboard:get-history', this.handleGetClipboardHistory.bind(this));
         this.registerHandler('clipboard:clear-history', this.handleClearClipboardHistory.bind(this));
         this.registerHandler('clipboard:toggle-pin', this.handleToggleClipboardPin.bind(this));
         this.registerHandler('clipboard:remove-item', this.handleRemoveClipboardItem.bind(this));
-        // 数据持久�?
+        // ć°ćŽćäšĺ?
         this.registerHandler('data:save', this.handleSaveData.bind(this));
         this.registerHandler('data:load', this.handleLoadData.bind(this));
         this.registerHandler('data:save-todos', this.handleSaveTodos.bind(this));
         this.registerHandler('data:load-todos', this.handleLoadTodos.bind(this));
         this.registerHandler('data:save-notes', this.handleSaveNotes.bind(this));
         this.registerHandler('data:load-notes', this.handleLoadNotes.bind(this));
-        // 主题相关
+        // ä¸ťé˘ç¸ĺł
         this.registerHandler('theme:get', this.handleGetTheme.bind(this));
         this.registerHandler('theme:set', this.handleSetTheme.bind(this));
-        // 自启动相�?
+        // čŞĺŻĺ¨ç¸ĺ?
         this.registerHandler('auto-start:get-status', this.handleGetAutoStartStatus.bind(this));
         this.registerHandler('auto-start:toggle', this.handleToggleAutoStart.bind(this));
         this.registerHandler('auto-start:enable', this.handleEnableAutoStart.bind(this));
@@ -99,7 +99,7 @@ class IPCService extends events_1.EventEmitter {
         Logger_1.logger.info('IPC compatibility aliases registered');
     }
     /**
-     * 注册IPC处理程序
+     * ćł¨ĺIPCĺ¤çç¨ĺş
      */
     registerHandler(channel, handler) {
         this.handlers.set(channel, handler);
@@ -119,7 +119,7 @@ class IPCService extends events_1.EventEmitter {
         });
     }
     /**
-     * 发送消息到渲染进程
+     * ĺéćśćŻĺ°ć¸˛ćčżç¨
      */
     sendToRenderer(webContents, channel, data) {
         try {
@@ -131,12 +131,12 @@ class IPCService extends events_1.EventEmitter {
         }
     }
     /**
-     * 广播消息到所有渲染进�?
+     * ĺšżć­ćśćŻĺ°ććć¸˛ćčżç¨?
      */
     broadcast(channel, data) {
         this.emit('broadcast', { channel, data });
     }
-    // === 应用相关处理程序 ===
+    // === ĺşç¨ç¸ĺłĺ¤çç¨ĺş ===
     async handleGetAppVersion() {
         const { app } = require('electron');
         return app.getVersion();
@@ -153,7 +153,7 @@ class IPCService extends events_1.EventEmitter {
     async handleShowNotification(event, { title, body, icon }) {
         this.emit('show-notification', { title, body, icon });
     }
-    // === 窗口控制处理程序 ===
+    // === çŞĺŁć§ĺśĺ¤çç¨ĺş ===
     async handleMinimizeWindow() {
         this.emit('window-minimize');
     }
@@ -181,7 +181,7 @@ class IPCService extends events_1.EventEmitter {
             this.once('window-bounds-response', resolve);
         });
     }
-    // === 剪切板相关处理程�?===
+    // === ĺŞĺćżç¸ĺłĺ¤çç¨ĺş?===
     async handleReadClipboard() {
         return new Promise((resolve) => {
             this.emit('clipboard-read');
@@ -212,7 +212,7 @@ class IPCService extends events_1.EventEmitter {
             this.once('clipboard-item-removed', resolve);
         });
     }
-    // === 数据持久化处理程�?===
+    // === ć°ćŽćäšĺĺ¤çç¨ĺş?===
     async handleSaveData(event, data) {
         this.emit('data-save', data);
     }
@@ -240,7 +240,7 @@ class IPCService extends events_1.EventEmitter {
             this.once('data-notes-response', resolve);
         });
     }
-    // === 主题相关处理程序 ===
+    // === ä¸ťé˘ç¸ĺłĺ¤çç¨ĺş ===
     async handleGetTheme() {
         return new Promise((resolve) => {
             this.emit('theme-get');
@@ -250,7 +250,7 @@ class IPCService extends events_1.EventEmitter {
     async handleSetTheme(event, theme) {
         this.emit('theme-set', theme);
     }
-    // === 自启动相关处理程�?===
+    // === čŞĺŻĺ¨ç¸ĺłĺ¤çç¨ĺş?===
     async handleGetAutoStartStatus() {
         return new Promise((resolve) => {
             this.emit('auto-start-get-status');
@@ -270,7 +270,7 @@ class IPCService extends events_1.EventEmitter {
         this.emit('auto-start-disable');
     }
     /**
-     * 移除处理程序
+     * ç§ťé¤ĺ¤çç¨ĺş
      */
     removeHandler(channel) {
         if (this.handlers.has(channel)) {
@@ -280,7 +280,7 @@ class IPCService extends events_1.EventEmitter {
         }
     }
     /**
-     * 移除所服�?
+     * ç§ťé¤ććĺ?
      */ removeAllHandlers() {
         Array.from(this.handlers.keys()).forEach(channel => {
             electron_1.ipcMain.removeHandler(channel);
@@ -289,13 +289,13 @@ class IPCService extends events_1.EventEmitter {
         Logger_1.logger.info('All IPC handlers removed');
     }
     /**
-     * 获取已注册的处理程序列表
+     * čˇĺĺˇ˛ćł¨ĺçĺ¤çç¨ĺşĺčĄ¨
      */
     getRegisteredHandlers() {
         return Array.from(this.handlers.keys());
     }
     /**
-     * 销毁服�?
+     * éćŻćĺ?
      */
     destroy() {
         this.removeAllHandlers();

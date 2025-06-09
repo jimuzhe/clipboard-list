@@ -303,19 +303,31 @@ class ClipboardListApp {
         // 使用更低频率的监控间隔2秒，减少资源消耗
         this.clipboardManager.startMonitoring();
         Logger_1.logger.info('Clipboard monitoring started');
-    }
-    /**
+    } /**
      * 处理命令行参数
      */
     handleCommandLineArgs() {
-        const { shouldStartHidden } = this.autoStartManager.handleCommandLineArgs(process.argv);
-        if (shouldStartHidden) {
+        // 检查是否是首次运行
+        const isFirstRun = Config_1.config.get('firstRun');
+        const { shouldStartHidden, isAutoStart } = this.autoStartManager.handleCommandLineArgs(process.argv);
+        // 如果是首次运行，显示窗口并标记为非首次运行
+        if (isFirstRun) {
+            this.windowManager.show();
+            // 标记为非首次运行
+            Config_1.config.set('firstRun', false);
+            Logger_1.logger.info('First run detected, showing window and marking as not first run');
+        }
+        else if (shouldStartHidden) {
             this.windowManager.hide();
         }
         else {
             this.windowManager.show();
         }
-        Logger_1.logger.info('Command line arguments processed', { shouldStartHidden });
+        Logger_1.logger.info('Command line arguments processed', {
+            shouldStartHidden,
+            isAutoStart,
+            isFirstRun
+        });
     }
     /**
      * 应用启动完成

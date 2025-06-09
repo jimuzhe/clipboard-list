@@ -19,12 +19,11 @@ export class Config {
             Config.instance = new Config();
         }
         return Config.instance;
-    }
-
-    private getDefaultConfig(): AppConfig {
+    } private getDefaultConfig(): AppConfig {
         return {
             theme: 'light',
             autoStart: true,
+            firstRun: true,
             window: {
                 alwaysOnTop: false,
                 dockToSide: true,
@@ -66,15 +65,14 @@ export class Config {
         }
 
         return this.getDefaultConfig();
-    }
-
-    private mergeConfig(defaultConfig: AppConfig, userConfig: any): AppConfig {
+    } private mergeConfig(defaultConfig: AppConfig, userConfig: any): AppConfig {
         const merged = { ...defaultConfig };
 
         if (userConfig) {
             // 合并顶级属性
             if (userConfig.theme) merged.theme = userConfig.theme;
             if (typeof userConfig.autoStart === 'boolean') merged.autoStart = userConfig.autoStart;
+            if (typeof userConfig.firstRun === 'boolean') merged.firstRun = userConfig.firstRun;
 
             // 合并嵌套对象
             if (userConfig.window) {

@@ -4,6 +4,7 @@ export * from './notes';
 export interface AppConfig {
     theme: 'light' | 'dark' | 'blue' | 'green';
     autoStart: boolean;
+    firstRun: boolean;
     window: WindowConfig;
     clipboard: ClipboardConfig;
     pomodoro: PomodoroConfig;

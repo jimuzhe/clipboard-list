@@ -53,6 +53,7 @@ class Config {
         return {
             theme: 'light',
             autoStart: true,
+            firstRun: true,
             window: {
                 alwaysOnTop: false,
                 dockToSide: true,
@@ -101,6 +102,8 @@ class Config {
                 merged.theme = userConfig.theme;
             if (typeof userConfig.autoStart === 'boolean')
                 merged.autoStart = userConfig.autoStart;
+            if (typeof userConfig.firstRun === 'boolean')
+                merged.firstRun = userConfig.firstRun;
             // 合并嵌套对象
             if (userConfig.window) {
                 merged.window = { ...defaultConfig.window, ...userConfig.window };

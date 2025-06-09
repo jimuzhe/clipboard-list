@@ -299,14 +299,16 @@ export class ClipboardManager extends EventEmitter {
      */
     public getHistory(): ClipboardItem[] {
         return [...this.clipboardHistory];
-    }
-
-    /**
+    }    /**
      * 清空历史记录
      */
     public clearHistory(): void {
-        this.clipboardHistory = [];
-        logger.info('Clipboard history cleared');
+        // 保留置顶的项目，只清理非置顶项目
+        const pinnedItems = this.clipboardHistory.filter(item => item.isPinned);
+        this.clipboardHistory = pinnedItems;
+        logger.info('Clipboard history cleared, pinned items preserved', {
+            pinnedCount: pinnedItems.length
+        });
     }
 
     /**
