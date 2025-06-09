@@ -11,6 +11,7 @@ export interface ElectronAPI {
     setTheme: (theme: string) => Promise<void>;
     getTheme: () => Promise<string>;
     showNotification: (title: string, body: string) => Promise<void>;
+    openExternal: (url: string) => Promise<void>;
 }
 declare global {
     interface Window {

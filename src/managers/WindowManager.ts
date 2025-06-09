@@ -13,10 +13,10 @@ export class WindowManager extends EventEmitter {
 
     constructor(private config: WindowConfig) {
         super();
-    }
+    } createWindow(): BrowserWindow {
+        const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
 
-    createWindow(): BrowserWindow {
-        const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize; this.window = new BrowserWindow({
+        this.window = new BrowserWindow({
             width: this.config.width,
             height: Math.min(this.config.height, screenHeight - 100),
             x: screenWidth - this.config.width - 20,
@@ -32,6 +32,7 @@ export class WindowManager extends EventEmitter {
                 contextIsolation: true,
                 preload: path.join(__dirname, '../preload.js'),
                 backgroundThrottling: false, // 防止后台节流
+                webviewTag: true, // 启用webview标签支持
             },
         });
 
@@ -75,7 +76,9 @@ export class WindowManager extends EventEmitter {
         // 窗口获得焦点
         this.window.on('focus', () => {
             this.clearHideTimer();
-        });        // 窗口准备就绪
+        });
+
+        // 窗口准备就绪
         this.window.once('ready-to-show', () => {
             // 不自动显示窗口，让用户通过托盘或快捷键显示
             // 窗口显示逻辑现在由主进程的 handleCommandLineArgs 方法控制

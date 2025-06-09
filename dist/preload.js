@@ -19,8 +19,9 @@ electron_1.contextBridge.exposeInMainWorld('electronAPI', {
     loadData: () => electron_1.ipcRenderer.invoke('load-data'),
     // 主题相关
     setTheme: (theme) => electron_1.ipcRenderer.invoke('set-theme', theme),
-    getTheme: () => electron_1.ipcRenderer.invoke('get-theme'),
-    // 通知
+    getTheme: () => electron_1.ipcRenderer.invoke('get-theme'), // 通知
     showNotification: (title, body) => electron_1.ipcRenderer.invoke('show-notification', { title, body }),
+    // 外部链接
+    openExternal: (url) => electron_1.ipcRenderer.invoke('open-external', url),
 });
 //# sourceMappingURL=preload.js.map

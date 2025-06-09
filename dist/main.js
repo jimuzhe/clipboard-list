@@ -222,10 +222,20 @@ class ClipboardListApp {
         });
         this.ipcService.on('auto-start-disable', () => {
             this.autoStartManager.disable();
-        });
-        // 通知
+        }); // 通知
         this.ipcService.on('show-notification', ({ title, body, icon }) => {
             new electron_1.Notification({ title, body, icon }).show();
+        });
+        // 外部链接 - 直接使用 ipcMain.handle 注册
+        electron_1.ipcMain.handle('open-external', async (event, url) => {
+            try {
+                await electron_1.shell.openExternal(url);
+                Logger_1.logger.info(`Opened external URL: ${url}`);
+            }
+            catch (error) {
+                Logger_1.logger.error('Failed to open external URL:', error);
+                throw error;
+            }
         });
         // IPC广播处理
         this.ipcService.on('broadcast', ({ channel, data }) => {

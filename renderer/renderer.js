@@ -906,7 +906,8 @@ class TodoManager {
         if (todo) {
             this.showEditTodoModal(todo);
         }
-    }    showEditTodoModal(todo) {
+    }
+    showEditTodoModal(todo) {
         // 创建编辑模态框
         const modal = document.createElement('div');
         modal.className = 'modal active add-todo-modal';
@@ -1109,14 +1110,22 @@ class TodoManager {
             this.renderTodoList();
         }
     }
-
     startPomodoro(todo) {
         // 打开番茄时钟模态框
         const modal = document.getElementById('pomodoro-modal');
-        modal.classList.add('active');
+        if (modal) {
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('active'), 10);
 
-        // 设置当前任务
-        document.querySelector('.modal-header h3').textContent = `🍅 ${todo.title}`;
+            // 设置当前任务
+            const title = modal.querySelector('.modal-header h3');
+            if (title) {
+                title.textContent = `🍅 ${todo.title}`;
+            }
+
+            // 重置到初始状态
+            window.app.pomodoroManager.reset();
+        }
     }
     getPriorityText(priority) {
         const texts = {
@@ -1192,13 +1201,21 @@ class PomodoroManager {
             closeBtn.addEventListener('click', () => {
                 this.closeModal();
             });
-        }
-
-        // 高级设置切换
+        } // 高级设置切换
         const advancedToggle = document.getElementById('advanced-toggle');
         if (advancedToggle) {
             advancedToggle.addEventListener('change', (e) => {
                 this.toggleAdvancedSettings(e.target.checked);
+            });
+        }
+
+        // 点击模态框背景关闭
+        const modal = document.getElementById('pomodoro-modal');
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    this.closeModal();
+                }
             });
         }
 
@@ -1580,9 +1597,19 @@ class PomodoroManager {
             pauseBtn.style.display = 'none';
         }
     }
-
     closeModal() {
-        document.getElementById('pomodoro-modal').classList.remove('active');
+        const modal = document.getElementById('pomodoro-modal');
+        if (modal) {
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.style.display = 'none';
+                // 重置模态框标题
+                const title = modal.querySelector('.modal-header h3');
+                if (title) {
+                    title.textContent = '🍅 番茄专注计时器';
+                }
+            }, 300);
+        }
     }
 
     showNotification(title, body) {
@@ -2012,53 +2039,48 @@ class App {
             const isOnTop = await window.electronAPI.toggleAlwaysOnTop();
             document.getElementById('always-on-top-btn').style.background =
                 isOnTop ? 'var(--primary-color)' : 'transparent';
-        });
-
-        // 选项卡切换
+        }); // 选项卡切换
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 this.switchTab(e.target.dataset.tab);
             });
-        }); // 剪切板搜索
+        });
+
+        // 剪切板搜索
         document.getElementById('clipboard-search').addEventListener('input', (e) => {
             this.searchClipboard(e.target.value);
         }); // 清理剪切板按钮
         document.getElementById('clear-clipboard').addEventListener('click', () => {
             this.clipboardManager.clearClipboard();
-        });
-
-        // 社区功能按钮
-        document.getElementById('open-community').addEventListener('click', () => {
-            this.openCommunity();
-        });
-
-        document.getElementById('open-community-new-window').addEventListener('click', () => {
-            this.openCommunityNewWindow();
-        });
-
-        // 设置项监听
+        }); // 设置项监听
         this.setupSettingsListeners();
+
+        // 社区面板监听器
+        this.setupCommunityListeners();
+    }
+    setupCommunityListeners() {
+        // 这个方法在初始化时调用，但社区面板可能还没有渲染
+        // 实际的事件监听器会在 setupCommunityPanelListeners 中设置
     }
 
-    setupSettingsListeners() {
-        document.getElementById('auto-start').addEventListener('change', (e) => {
-            this.state.settings.autoStart = e.target.checked;
-            this.state.saveData();
-        });
+    setupCommunityPanelListeners() {
+        // 刷新社区页面
+        const refreshBtn = document.getElementById('refresh-community');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => {
+                console.log('刷新按钮被点击');
+                this.refreshCommunity();
+            });
+        }
 
-        document.getElementById('clipboard-monitor').addEventListener('change', (e) => {
-            this.state.settings.clipboardMonitor = e.target.checked;
-            this.state.saveData();
-        });
-
-        document.getElementById('max-clipboard-items').addEventListener('change', (e) => {
-            this.state.settings.maxClipboardItems = parseInt(e.target.value);
-            this.state.saveData();
-        });
-
-        document.getElementById('check-updates').addEventListener('click', () => {
-            this.checkUpdates();
-        });
+        // 在外部浏览器打开社区
+        const externalBtn = document.getElementById('open-external-community');
+        if (externalBtn) {
+            externalBtn.addEventListener('click', () => {
+                console.log('外部链接按钮被点击');
+                this.openExternalCommunity();
+            });
+        }
     }
 
     async initializeUI() {
@@ -2086,7 +2108,6 @@ class App {
         this.todoManager.renderTodoList();
         this.notesManager.renderNotesList();
     }
-
     switchTab(tabName) {
         // 更新选项卡按钮状态
         document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -2097,6 +2118,169 @@ class App {
         document.querySelectorAll('.panel').forEach(panel => {
             panel.classList.toggle('active', panel.id === `${tabName}-panel`);
         });
+
+        // 特殊处理社区选项卡
+        if (tabName === 'community') {
+            this.handleCommunityTab();
+        }
+    }
+    handleCommunityTab() {
+        const webview = document.getElementById('community-webview');
+        const loading = document.getElementById('community-loading');
+
+        if (!webview || !loading) return;
+
+        // 设置社区面板的事件监听器（如果还没设置）
+        if (!webview.dataset.buttonListenersAdded) {
+            this.setupCommunityPanelListeners();
+            webview.dataset.buttonListenersAdded = 'true';
+        }
+
+        // 如果webview已经有监听器，就不重复添加
+        if (webview.dataset.listenersAdded) {
+            // 检查webview是否已经加载完成
+            try {
+                if (webview.getWebContents && webview.getWebContents()) {
+                    loading.classList.add('hidden');
+                    return;
+                }
+            } catch (e) {
+                // webview可能还没准备好
+            }
+            return;
+        }
+
+        // 显示加载状态
+        loading.classList.remove('hidden');
+
+        // 监听webview加载完成
+        const handleDomReady = () => {
+            console.log('社区页面DOM加载完成');
+            setTimeout(() => {
+                loading.classList.add('hidden');
+            }, 500); // 延迟隐藏加载动画，确保页面完全加载
+        };
+
+        const handleLoadStart = () => {
+            console.log('社区页面开始加载');
+            loading.classList.remove('hidden');
+        };
+
+        const handleLoadStop = () => {
+            console.log('社区页面加载停止');
+            // 使用setTimeout确保页面内容已渲染
+            setTimeout(() => {
+                loading.classList.add('hidden');
+            }, 300);
+        };
+
+        const handleLoadCommit = () => {
+            console.log('社区页面加载提交');
+        };
+
+        // 监听加载失败
+        const handleLoadFail = (event) => {
+            console.error('社区页面加载失败:', event);
+            loading.innerHTML = `
+                <div class="loading-spinner">
+                    <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+                    <span>页面加载失败</span>
+                    <br>
+                    <button onclick="app.refreshCommunity()" 
+                            style="margin-top: 16px; padding: 8px 16px; background: var(--primary-color); color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        重新加载
+                    </button>
+                </div>
+            `;
+            loading.classList.remove('hidden');
+        };
+
+        // 添加事件监听器
+        webview.addEventListener('dom-ready', handleDomReady);
+        webview.addEventListener('did-start-loading', handleLoadStart);
+        webview.addEventListener('did-stop-loading', handleLoadStop);
+        webview.addEventListener('did-finish-load', handleLoadStop); // 备用事件
+        webview.addEventListener('did-fail-load', handleLoadFail);
+        webview.addEventListener('loadcommit', handleLoadCommit);
+
+        // 标记已添加监听器
+        webview.dataset.listenersAdded = 'true';
+
+        // 如果webview还没有src，设置它
+        if (!webview.src) {
+            webview.src = 'http://8.130.41.186:3000/';
+        } else {
+            // 如果已经有src但页面可能已经加载完成，手动检查
+            setTimeout(() => {
+                try {
+                    if (webview.getWebContents && webview.getWebContents()) {
+                        loading.classList.add('hidden');
+                    }
+                } catch (e) {
+                    // 页面可能还在加载
+                }
+            }, 1000);
+        }
+
+        // 设置一个超时，如果15秒后还在加载，显示错误信息
+        setTimeout(() => {
+            if (!loading.classList.contains('hidden')) {
+                console.warn('社区页面加载超时');
+                loading.innerHTML = `
+                    <div class="loading-spinner">
+                        <div style="font-size: 48px; margin-bottom: 16px;">⏱️</div>
+                        <span>页面加载超时</span>
+                        <br>
+                        <button onclick="app.refreshCommunity()" 
+                                style="margin-top: 16px; padding: 8px 16px; background: var(--primary-color); color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            重新加载
+                        </button>
+                        <button onclick="app.openExternalCommunity()" 
+                                style="margin-top: 8px; margin-left: 8px; padding: 8px 16px; background: var(--secondary-color); color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            外部打开
+                        </button>
+                    </div>
+                `;
+            }
+        }, 15000);
+    }
+    refreshCommunity() {
+        const webview = document.getElementById('community-webview');
+        const loading = document.getElementById('community-loading');
+
+        if (webview && loading) {
+            // 重置加载状态的HTML
+            loading.innerHTML = `
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <span>正在加载社区页面...</span>
+                </div>
+            `;
+            loading.classList.remove('hidden');
+
+            console.log('刷新社区页面');
+
+            // 重新加载webview
+            if (webview.reload) {
+                webview.reload();
+            } else {
+                // 如果reload方法不可用，重新设置src
+                const currentSrc = webview.src;
+                webview.src = '';
+                setTimeout(() => {
+                    webview.src = currentSrc || 'http://8.130.41.186:3000/';
+                }, 100);
+            }
+        }
+    }
+
+    openExternalCommunity() {
+        if (window.electronAPI && window.electronAPI.openExternal) {
+            window.electronAPI.openExternal('http://8.130.41.186:3000/');
+        } else {
+            // 备用方案
+            window.open('http://8.130.41.186:3000/', '_blank');
+        }
     }
 
     searchClipboard(query) {

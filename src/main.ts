@@ -1,4 +1,4 @@
-import { app, globalShortcut, Notification } from 'electron';
+import { app, globalShortcut, Notification, shell, ipcMain } from 'electron';
 import * as path from 'path';
 import { autoUpdater } from 'electron-updater';
 
@@ -222,11 +222,20 @@ class ClipboardListApp {
         });
         this.ipcService.on('auto-start-disable', () => {
             this.autoStartManager.disable();
-        });
-
-        // 通知
+        });        // 通知
         this.ipcService.on('show-notification', ({ title, body, icon }) => {
             new Notification({ title, body, icon }).show();
+        });
+
+        // 外部链接 - 直接使用 ipcMain.handle 注册
+        ipcMain.handle('open-external', async (event, url: string) => {
+            try {
+                await shell.openExternal(url);
+                logger.info(`Opened external URL: ${url}`);
+            } catch (error) {
+                logger.error('Failed to open external URL:', error);
+                throw error;
+            }
         });
 
         // IPC广播处理

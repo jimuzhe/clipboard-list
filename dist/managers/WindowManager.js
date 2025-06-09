@@ -66,6 +66,7 @@ class WindowManager extends events_1.EventEmitter {
                 contextIsolation: true,
                 preload: path.join(__dirname, '../preload.js'),
                 backgroundThrottling: false, // 防止后台节流
+                webviewTag: true, // 启用webview标签支持
             },
         });
         // 设置初始隐藏状态，因为窗口创建时 show: false
@@ -101,7 +102,8 @@ class WindowManager extends events_1.EventEmitter {
         // 窗口获得焦点
         this.window.on('focus', () => {
             this.clearHideTimer();
-        }); // 窗口准备就绪
+        });
+        // 窗口准备就绪
         this.window.once('ready-to-show', () => {
             // 不自动显示窗口，让用户通过托盘或快捷键显示
             // 窗口显示逻辑现在由主进程的 handleCommandLineArgs 方法控制

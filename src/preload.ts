@@ -21,11 +21,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     // 主题相关
     setTheme: (theme: string) => ipcRenderer.invoke('set-theme', theme),
-    getTheme: () => ipcRenderer.invoke('get-theme'),
-
-    // 通知
+    getTheme: () => ipcRenderer.invoke('get-theme'),    // 通知
     showNotification: (title: string, body: string) =>
         ipcRenderer.invoke('show-notification', { title, body }),
+
+    // 外部链接
+    openExternal: (url: string) => ipcRenderer.invoke('open-external', url),
 });
 
 // 类型声明
@@ -38,10 +39,10 @@ export interface ElectronAPI {
     readFromClipboard: () => Promise<string>;
     onClipboardChange: (callback: (item: any) => void) => void;
     saveData: (data: any) => Promise<void>;
-    loadData: () => Promise<any>;
-    setTheme: (theme: string) => Promise<void>;
+    loadData: () => Promise<any>; setTheme: (theme: string) => Promise<void>;
     getTheme: () => Promise<string>;
     showNotification: (title: string, body: string) => Promise<void>;
+    openExternal: (url: string) => Promise<void>;
 }
 
 declare global {
