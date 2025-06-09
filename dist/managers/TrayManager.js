@@ -71,6 +71,7 @@ class TrayManager extends events_1.EventEmitter {
                 icon.setTemplateImage(false);
             }
             this.tray = new electron_1.Tray(icon);
+            this.tray.setToolTip('移记 - 剪贴板和待办管理工具');
             this.setupTrayMenu();
             this.setupTrayEvents();
             Logger_1.logger.info('Tray created successfully');
@@ -115,28 +116,13 @@ class TrayManager extends events_1.EventEmitter {
             },
             { type: 'separator' },
             {
-                label: '快捷设置',
-                type: 'submenu',
-                submenu: [
-                    {
-                        label: '开机自启动',
-                        type: 'checkbox',
-                        checked: this.getAutoStartStatus(),
-                        click: (menuItem) => {
-                            this.emit('toggle-auto-start', menuItem.checked);
-                            Logger_1.logger.debug('Tray: Auto start toggled', { checked: menuItem.checked });
-                        }
-                    },
-                    {
-                        label: '窗口置顶',
-                        type: 'checkbox',
-                        checked: false, // 将由主进程更新
-                        click: (menuItem) => {
-                            this.emit('toggle-always-on-top', menuItem.checked);
-                            Logger_1.logger.debug('Tray: Always on top toggled', { checked: menuItem.checked });
-                        }
-                    }
-                ]
+                label: '开机自启动',
+                type: 'checkbox',
+                checked: this.getAutoStartStatus(),
+                click: (menuItem) => {
+                    this.emit('toggle-auto-start', menuItem.checked);
+                    Logger_1.logger.debug('Tray: Auto start toggled', { checked: menuItem.checked });
+                }
             },
             { type: 'separator' },
             {
@@ -150,7 +136,7 @@ class TrayManager extends events_1.EventEmitter {
             }
         ]);
         this.tray.setContextMenu(this.contextMenu);
-        this.tray.setToolTip('ClipBoard List - 智能剪切板管理工具');
+        this.tray.setToolTip('移记 - 剪贴板和待办管理工具');
     }
     /**
      * 设置托盘事件
@@ -186,36 +172,17 @@ class TrayManager extends events_1.EventEmitter {
             Logger_1.logger.warn('Failed to get auto-start status:', error);
             return false;
         }
-    }
-    /**
+    } /**
      * 更新自启动状态
      */
     updateAutoStartStatus(enabled) {
         if (!this.contextMenu)
             return;
-        const settingsMenu = this.contextMenu.items.find(item => item.label === '快捷设置');
-        if (settingsMenu && settingsMenu.submenu) {
-            const autoStartItem = settingsMenu.submenu.items.find(item => item.label === '开机自启动');
-            if (autoStartItem) {
-                autoStartItem.checked = enabled;
-            }
+        const autoStartItem = this.contextMenu.items.find(item => item.label === '开机自启动');
+        if (autoStartItem) {
+            autoStartItem.checked = enabled;
         }
-    }
-    /**
-     * 更新窗口置顶状态
-     */
-    updateAlwaysOnTopStatus(enabled) {
-        if (!this.contextMenu)
-            return;
-        const settingsMenu = this.contextMenu.items.find(item => item.label === '快捷设置');
-        if (settingsMenu && settingsMenu.submenu) {
-            const alwaysOnTopItem = settingsMenu.submenu.items.find(item => item.label === '窗口置顶');
-            if (alwaysOnTopItem) {
-                alwaysOnTopItem.checked = enabled;
-            }
-        }
-    }
-    /**
+    } /**
      * 刷新菜单状态
      */
     refreshMenu() {

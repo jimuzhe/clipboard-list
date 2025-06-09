@@ -34,9 +34,8 @@ export class TrayManager extends EventEmitter {
             // 调整图标大小适应系统托盘
             if (process.platform === 'win32') {
                 icon.setTemplateImage(false);
-            }
-
-            this.tray = new Tray(icon);
+            } this.tray = new Tray(icon);
+            this.tray.setToolTip('移记 - 剪贴板和待办管理工具');
             this.setupTrayMenu();
             this.setupTrayEvents();
 
@@ -72,9 +71,7 @@ export class TrayManager extends EventEmitter {
      * 设置托盘菜单（简化版）
      */
     private setupTrayMenu(): void {
-        if (!this.tray) return;
-
-        this.contextMenu = Menu.buildFromTemplate([
+        if (!this.tray) return; this.contextMenu = Menu.buildFromTemplate([
             {
                 label: '显示/隐藏',
                 type: 'normal',
@@ -85,28 +82,13 @@ export class TrayManager extends EventEmitter {
             },
             { type: 'separator' },
             {
-                label: '快捷设置',
-                type: 'submenu',
-                submenu: [
-                    {
-                        label: '开机自启动',
-                        type: 'checkbox',
-                        checked: this.getAutoStartStatus(),
-                        click: (menuItem) => {
-                            this.emit('toggle-auto-start', menuItem.checked);
-                            logger.debug('Tray: Auto start toggled', { checked: menuItem.checked });
-                        }
-                    },
-                    {
-                        label: '窗口置顶',
-                        type: 'checkbox',
-                        checked: false, // 将由主进程更新
-                        click: (menuItem) => {
-                            this.emit('toggle-always-on-top', menuItem.checked);
-                            logger.debug('Tray: Always on top toggled', { checked: menuItem.checked });
-                        }
-                    }
-                ]
+                label: '开机自启动',
+                type: 'checkbox',
+                checked: this.getAutoStartStatus(),
+                click: (menuItem) => {
+                    this.emit('toggle-auto-start', menuItem.checked);
+                    logger.debug('Tray: Auto start toggled', { checked: menuItem.checked });
+                }
             },
             { type: 'separator' },
             {
@@ -117,11 +99,10 @@ export class TrayManager extends EventEmitter {
                     this.emit('quit-app');
                     logger.info('Tray: Quit app clicked');
                 }
-            }
-        ]);
+            }]);
 
         this.tray.setContextMenu(this.contextMenu);
-        this.tray.setToolTip('ClipBoard List - 智能剪切板管理工具');
+        this.tray.setToolTip('移记 - 剪贴板和待办管理工具');
     }
 
     /**
@@ -160,39 +141,17 @@ export class TrayManager extends EventEmitter {
             logger.warn('Failed to get auto-start status:', error);
             return false;
         }
-    }
-
-    /**
+    }    /**
      * 更新自启动状态
      */
     updateAutoStartStatus(enabled: boolean): void {
         if (!this.contextMenu) return;
 
-        const settingsMenu = this.contextMenu.items.find(item => item.label === '快捷设置');
-        if (settingsMenu && settingsMenu.submenu) {
-            const autoStartItem = settingsMenu.submenu.items.find(item => item.label === '开机自启动');
-            if (autoStartItem) {
-                autoStartItem.checked = enabled;
-            }
+        const autoStartItem = this.contextMenu.items.find(item => item.label === '开机自启动');
+        if (autoStartItem) {
+            autoStartItem.checked = enabled;
         }
-    }
-
-    /**
-     * 更新窗口置顶状态
-     */
-    updateAlwaysOnTopStatus(enabled: boolean): void {
-        if (!this.contextMenu) return;
-
-        const settingsMenu = this.contextMenu.items.find(item => item.label === '快捷设置');
-        if (settingsMenu && settingsMenu.submenu) {
-            const alwaysOnTopItem = settingsMenu.submenu.items.find(item => item.label === '窗口置顶');
-            if (alwaysOnTopItem) {
-                alwaysOnTopItem.checked = enabled;
-            }
-        }
-    }
-
-    /**
+    }/**
      * 刷新菜单状态
      */
     refreshMenu(): void {

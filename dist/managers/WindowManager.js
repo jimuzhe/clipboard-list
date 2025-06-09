@@ -149,13 +149,19 @@ class WindowManager extends events_1.EventEmitter {
             return;
         const bounds = this.window.getBounds();
         const display = electron_1.screen.getDisplayMatching(bounds);
-        const { x: screenX, y: screenY, width: screenWidth, height: screenHeight } = display.workArea;
-        // 检查是否接近屏幕边缘
+        const { x: screenX, y: screenY, width: screenWidth, height: screenHeight } = display.workArea; // 检查是否接近屏幕边缘
         let shouldDock = false;
         let newX = bounds.x;
+        let newY = bounds.y;
         let newSide = this.dockSide;
+        // 检查顶部边缘（优先级最高）
+        if (bounds.y <= screenY + this.config.dockThreshold) {
+            newY = screenY - bounds.height + this.config.dockOffset;
+            newSide = 'top';
+            shouldDock = true;
+        }
         // 检查左边缘
-        if (bounds.x <= screenX + this.config.dockThreshold) {
+        else if (bounds.x <= screenX + this.config.dockThreshold) {
             newX = screenX - bounds.width + this.config.dockOffset;
             newSide = 'left';
             shouldDock = true;
@@ -167,7 +173,7 @@ class WindowManager extends events_1.EventEmitter {
             shouldDock = true;
         }
         if (shouldDock && (!this.isDocked || newSide !== this.dockSide)) {
-            this.dockToSide(newSide, newX, bounds.y);
+            this.dockToSide(newSide, newX, newY);
         }
         else if (!shouldDock && this.isDocked) {
             this.undock();
@@ -176,7 +182,7 @@ class WindowManager extends events_1.EventEmitter {
     dockToSide(side, x, y) {
         if (!this.window)
             return;
-        this.window.setBounds({ x, y });
+        this.window.setBounds({ x, y, width: this.window.getBounds().width, height: this.window.getBounds().height });
         this.isDocked = true;
         this.dockSide = side;
         // 吸附后自动隐藏窗口

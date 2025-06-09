@@ -2056,16 +2056,11 @@ class App {
         document.getElementById('minimize-btn').addEventListener('click', () => {
             window.electronAPI.minimizeWindow();
         });
-
         document.getElementById('close-btn').addEventListener('click', () => {
             window.electronAPI.closeWindow();
         });
 
-        document.getElementById('always-on-top-btn').addEventListener('click', async () => {
-            const isOnTop = await window.electronAPI.toggleAlwaysOnTop();
-            document.getElementById('always-on-top-btn').style.background =
-                isOnTop ? 'var(--primary-color)' : 'transparent';
-        }); // 选项卡切换
+        // 选项卡切换
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 this.switchTab(e.target.dataset.tab);
@@ -2116,15 +2111,6 @@ class App {
             document.getElementById('app-version').textContent = version;
         } catch (error) {
             console.error('Failed to get app version:', error);
-        }
-
-        // 初始化置顶按钮状态
-        try {
-            const isAlwaysOnTop = await window.electronAPI.getAlwaysOnTop();
-            document.getElementById('always-on-top-btn').style.background =
-                isAlwaysOnTop ? 'var(--primary-color)' : 'transparent';
-        } catch (error) {
-            console.error('Failed to get always on top status:', error);
         }
 
         // 应用设置

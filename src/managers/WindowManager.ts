@@ -126,15 +126,20 @@ export class WindowManager extends EventEmitter {
 
         const bounds = this.window.getBounds();
         const display = screen.getDisplayMatching(bounds);
-        const { x: screenX, y: screenY, width: screenWidth, height: screenHeight } = display.workArea;
-
-        // 检查是否接近屏幕边缘
+        const { x: screenX, y: screenY, width: screenWidth, height: screenHeight } = display.workArea;        // 检查是否接近屏幕边缘
         let shouldDock = false;
         let newX = bounds.x;
+        let newY = bounds.y;
         let newSide: 'left' | 'right' | 'top' = this.dockSide;
 
+        // 检查顶部边缘（优先级最高）
+        if (bounds.y <= screenY + this.config.dockThreshold) {
+            newY = screenY - bounds.height + this.config.dockOffset;
+            newSide = 'top';
+            shouldDock = true;
+        }
         // 检查左边缘
-        if (bounds.x <= screenX + this.config.dockThreshold) {
+        else if (bounds.x <= screenX + this.config.dockThreshold) {
             newX = screenX - bounds.width + this.config.dockOffset;
             newSide = 'left';
             shouldDock = true;
@@ -144,17 +149,15 @@ export class WindowManager extends EventEmitter {
             newX = screenX + screenWidth - this.config.dockOffset;
             newSide = 'right';
             shouldDock = true;
-        }
-
-        if (shouldDock && (!this.isDocked || newSide !== this.dockSide)) {
-            this.dockToSide(newSide, newX, bounds.y);
+        } if (shouldDock && (!this.isDocked || newSide !== this.dockSide)) {
+            this.dockToSide(newSide, newX, newY);
         } else if (!shouldDock && this.isDocked) {
             this.undock();
         }
     } private dockToSide(side: 'left' | 'right' | 'top', x: number, y: number): void {
         if (!this.window) return;
 
-        this.window.setBounds({ x, y });
+        this.window.setBounds({ x, y, width: this.window.getBounds().width, height: this.window.getBounds().height });
         this.isDocked = true;
         this.dockSide = side;
 

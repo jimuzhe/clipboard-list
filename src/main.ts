@@ -112,15 +112,7 @@ class ClipboardListApp {
             } else {
                 this.autoStartManager.disable();
             }
-            // 更新托盘菜单状态
-            this.trayManager.updateAutoStartStatus(enabled);
-        });
-
-        this.trayManager.on('toggle-always-on-top', (enabled: boolean) => {
-            // 切换窗口置顶状态
-            this.windowManager.setAlwaysOnTop(enabled);
-            // 更新托盘菜单状态
-            this.trayManager.updateAlwaysOnTopStatus(enabled);
+            // 更新托盘菜单状态            this.trayManager.updateAutoStartStatus(enabled);
         });
 
         this.trayManager.on('quit-app', () => {
@@ -157,17 +149,8 @@ class ClipboardListApp {
         // 窗口控制
         this.ipcService.on('window-minimize', () => this.windowManager.hide());
         this.ipcService.on('window-close', () => this.windowManager.hide());
-        this.ipcService.on('window-show', () => this.windowManager.show());
-        this.ipcService.on('window-hide', () => this.windowManager.hide()); this.ipcService.on('window-toggle-always-on-top', () => {
-            const result = this.windowManager.toggleAlwaysOnTop();
-            // 同步更新托盘菜单状态
-            this.trayManager.updateAlwaysOnTopStatus(result);
-            this.ipcService.emit('always-on-top-toggled', result);
-        });
-        this.ipcService.on('window-get-always-on-top', () => {
-            const result = this.windowManager.isAlwaysOnTop();
-            this.ipcService.emit('always-on-top-status-response', result);
-        });
+        this.ipcService.on('window-show', () => this.windowManager.show()); this.ipcService.on('window-hide', () => this.windowManager.hide());
+
         this.ipcService.on('window-get-bounds', () => {
             const bounds = this.windowManager.getBounds();
             this.ipcService.emit('window-bounds-response', bounds);
@@ -319,7 +302,7 @@ class ClipboardListApp {
    */
     private createTray(): void {
         this.trayManager.create();
-        this.trayManager.setToolTip('ClipBoard List - 智能剪切板管理工具');
+        this.trayManager.setToolTip('移记 - 记录好点子');
 
         // 初始化托盘菜单状态
         this.initializeTrayMenuState();
@@ -329,16 +312,14 @@ class ClipboardListApp {
 
     /**
      * 初始化托盘菜单状态
-     */
-    private initializeTrayMenuState(): void {
+     */    private initializeTrayMenuState(): void {
         try {
             // 更新自启动状态
             const autoStartStatus = this.autoStartManager.getStatusInfo();
-            this.trayManager.updateAutoStartStatus(autoStartStatus.enabled);            // 更新窗口置顶状态
-            const alwaysOnTop = this.windowManager.isAlwaysOnTop();
-            this.trayManager.updateAlwaysOnTopStatus(alwaysOnTop); logger.debug('Tray menu state initialized', {
-                autoStart: autoStartStatus.enabled,
-                alwaysOnTop
+            this.trayManager.updateAutoStartStatus(autoStartStatus.enabled);
+
+            logger.debug('Tray menu state initialized', {
+                autoStart: autoStartStatus.enabled
             });
         } catch (error) {
             logger.error('Failed to initialize tray menu state:', error);

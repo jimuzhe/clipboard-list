@@ -1,7 +1,8 @@
 {
-  "name": "clipboard-list",
+  "name": "quiver-note",
+  "productName": "移记",
   "version": "1.0.0",
-  "description": "智能剪切板管理工具 - 支持屏幕吸附、待办清单、笔记功能",
+  "description": "移记 - 智能剪切板管理工具，支持屏幕吸附、待办清单、笔记功能",
   "main": "dist/main.js",
   "scripts": {
     "build": "tsc",
@@ -17,18 +18,52 @@
     "todo",
     "notes",
     "productivity",
-    "windows"
+    "windows",
+    "quiver-note"
   ],
   "author": "LongDz",
   "license": "MIT",
-  "homepage": "https://github.com/longdz/clipboard-list",
+  "homepage": "https://github.com/longdz/quiver-note",
   "repository": {
     "type": "git",
-    "url": "https://github.com/longdz/clipboard-list.git"
+    "url": "https://github.com/longdz/quiver-note.git"
+  },
+  "build": {
+    "appId": "com.longdz.quiver-note",
+    "productName": "移记",
+    "directories": {
+      "buildResources": "assets",
+      "output": "dist-installer"
+    },
+    "files": [
+      "dist/**/*",
+      "renderer/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "assets/app-icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "installerIcon": "assets/app-icon.png",
+      "uninstallerIcon": "assets/app-icon.png",
+      "installerHeaderIcon": "assets/app-icon.png"
+    }
   },
   "devDependencies": {
     "@types/node": "^22.15.30",
     "electron": "^36.4.0",
+    "electron-builder": "^24.6.4",
     "typescript": "^5.8.3"
   },
   "dependencies": {

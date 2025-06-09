@@ -35,8 +35,6 @@ export declare class IPCService extends EventEmitter {
     private handleCloseWindow;
     private handleShowWindow;
     private handleHideWindow;
-    private handleToggleAlwaysOnTop;
-    private handleGetAlwaysOnTop;
     private handleSetWindowSize;
     private handleGetWindowBounds;
     private handleSetTriggerZoneWidth;

@@ -25,16 +25,10 @@ export declare class TrayManager extends EventEmitter {
     /**
      * 获取自启动状态
      */
-    private getAutoStartStatus;
-    /**
+    private getAutoStartStatus; /**
      * 更新自启动状态
      */
-    updateAutoStartStatus(enabled: boolean): void;
-    /**
-     * 更新窗口置顶状态
-     */
-    updateAlwaysOnTopStatus(enabled: boolean): void;
-    /**
+    updateAutoStartStatus(enabled: boolean): void; /**
      * 刷新菜单状态
      */
     refreshMenu(): void;

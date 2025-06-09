@@ -6,8 +6,6 @@ electron_1.contextBridge.exposeInMainWorld('electronAPI', {
     // 窗口控制
     minimizeWindow: () => electron_1.ipcRenderer.invoke('minimize-window'),
     closeWindow: () => electron_1.ipcRenderer.invoke('close-window'),
-    toggleAlwaysOnTop: () => electron_1.ipcRenderer.invoke('toggle-always-on-top'),
-    getAlwaysOnTop: () => electron_1.ipcRenderer.invoke('get-always-on-top'),
     // 应用信息
     getAppVersion: () => electron_1.ipcRenderer.invoke('get-app-version'), // 剪切板相关
     writeToClipboard: (text) => electron_1.ipcRenderer.invoke('write-clipboard', text),

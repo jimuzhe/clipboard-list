@@ -31,10 +31,7 @@ export class IPCService extends EventEmitter {
         this.registerHandler('window:minimize', this.handleMinimizeWindow.bind(this));
         this.registerHandler('window:close', this.handleCloseWindow.bind(this));
         this.registerHandler('window:show', this.handleShowWindow.bind(this));
-        this.registerHandler('window:hide', this.handleHideWindow.bind(this));
-        this.registerHandler('window:toggle-always-on-top', this.handleToggleAlwaysOnTop.bind(this));
-        this.registerHandler('window:get-always-on-top', this.handleGetAlwaysOnTop.bind(this));
-        this.registerHandler('window:set-size', this.handleSetWindowSize.bind(this));
+        this.registerHandler('window:hide', this.handleHideWindow.bind(this)); this.registerHandler('window:set-size', this.handleSetWindowSize.bind(this));
         this.registerHandler('window:get-bounds', this.handleGetWindowBounds.bind(this));
 
         // 边缘触发功能
@@ -88,10 +85,7 @@ export class IPCService extends EventEmitter {
         this.registerHandler('minimize-window', this.handleMinimizeWindow.bind(this));
         this.registerHandler('close-window', this.handleCloseWindow.bind(this));
         this.registerHandler('show-window', this.handleShowWindow.bind(this));
-        this.registerHandler('hide-window', this.handleHideWindow.bind(this));
-        this.registerHandler('toggle-always-on-top', this.handleToggleAlwaysOnTop.bind(this));
-        this.registerHandler('get-always-on-top', this.handleGetAlwaysOnTop.bind(this));
-        this.registerHandler('set-window-size', this.handleSetWindowSize.bind(this));
+        this.registerHandler('hide-window', this.handleHideWindow.bind(this)); this.registerHandler('set-window-size', this.handleSetWindowSize.bind(this));
         this.registerHandler('get-window-bounds', this.handleGetWindowBounds.bind(this));
 
         // ???????
@@ -194,22 +188,8 @@ export class IPCService extends EventEmitter {
 
     private async handleShowWindow(): Promise<void> {
         this.emit('window-show');
-    }
-
-    private async handleHideWindow(): Promise<void> {
+    } private async handleHideWindow(): Promise<void> {
         this.emit('window-hide');
-    }
-
-    private async handleToggleAlwaysOnTop(): Promise<boolean> {
-        return new Promise((resolve) => {
-            this.emit('window-toggle-always-on-top');
-            this.once('always-on-top-toggled', resolve);
-        });
-    } private async handleGetAlwaysOnTop(): Promise<boolean> {
-        return new Promise((resolve) => {
-            this.emit('window-get-always-on-top');
-            this.once('always-on-top-status-response', resolve);
-        });
     }
 
     private async handleSetWindowSize(event: IpcMainInvokeEvent, { width, height }: { width: number; height: number }): Promise<void> {
