@@ -91,14 +91,7 @@ class ClipboardListApp {
         });
         this.windowManager.on('window-minimized', () => {
             this.windowManager.hide();
-        }); // 托盘管理器事件
-        this.trayManager.on('show-window', () => {
-            this.windowManager.show();
-            this.windowManager.focus();
-        });
-        this.trayManager.on('hide-window', () => {
-            this.windowManager.hide();
-        });
+        }); // 托盘管理器事件（简化版）
         this.trayManager.on('toggle-window', () => {
             this.windowManager.toggle();
             if (this.windowManager.isVisible()) {
@@ -111,6 +104,35 @@ class ClipboardListApp {
             if (this.windowManager.isVisible()) {
                 this.windowManager.focus();
             }
+        });
+        this.trayManager.on('tray-double-clicked', () => {
+            // 双击托盘图标时显示窗口并置于最前
+            this.windowManager.show();
+            this.windowManager.focus();
+        });
+        this.trayManager.on('tray-right-clicked', () => {
+            // 右键点击时显示上下文菜单（已在TrayManager中处理）
+            Logger_1.logger.debug('Tray right-clicked - context menu shown');
+        });
+        this.trayManager.on('toggle-auto-start', (enabled) => {
+            // 切换自启动状态
+            if (enabled) {
+                this.autoStartManager.enable({
+                    openAsHidden: true,
+                    args: ['--hidden']
+                });
+            }
+            else {
+                this.autoStartManager.disable();
+            }
+            // 更新托盘菜单状态
+            this.trayManager.updateAutoStartStatus(enabled);
+        });
+        this.trayManager.on('toggle-always-on-top', (enabled) => {
+            // 切换窗口置顶状态
+            this.windowManager.setAlwaysOnTop(enabled);
+            // 更新托盘菜单状态
+            this.trayManager.updateAlwaysOnTopStatus(enabled);
         });
         this.trayManager.on('quit-app', () => {
             this.quit();
@@ -142,7 +164,13 @@ class ClipboardListApp {
         this.ipcService.on('window-hide', () => this.windowManager.hide());
         this.ipcService.on('window-toggle-always-on-top', () => {
             const result = this.windowManager.toggleAlwaysOnTop();
+            // 同步更新托盘菜单状态
+            this.trayManager.updateAlwaysOnTopStatus(result);
             this.ipcService.emit('always-on-top-toggled', result);
+        });
+        this.ipcService.on('window-get-always-on-top', () => {
+            const result = this.windowManager.isAlwaysOnTop();
+            this.ipcService.emit('always-on-top-status-response', result);
         });
         this.ipcService.on('window-get-bounds', () => {
             const bounds = this.windowManager.getBounds();
@@ -236,12 +264,28 @@ class ClipboardListApp {
                 Logger_1.logger.error('Failed to open external URL:', error);
                 throw error;
             }
-        });
-        // IPC广播处理
+        }); // IPC广播处理
         this.ipcService.on('broadcast', ({ channel, data }) => {
             if (this.windowManager.getWindow()) {
                 this.ipcService.sendToRenderer(this.windowManager.getWindow().webContents, channel, data);
             }
+        });
+        // 边缘触发功能
+        this.ipcService.on('window-set-trigger-zone-width', (width) => {
+            this.windowManager.setTriggerZoneWidth(width);
+            this.ipcService.emit('trigger-zone-width-set');
+        });
+        this.ipcService.on('window-get-trigger-zone-width', () => {
+            const width = this.windowManager.getTriggerZoneWidth();
+            this.ipcService.emit('trigger-zone-width-response', width);
+        });
+        this.ipcService.on('window-set-edge-trigger-enabled', (enabled) => {
+            this.windowManager.setEdgeTriggerEnabled(enabled);
+            this.ipcService.emit('edge-trigger-enabled-set');
+        });
+        this.ipcService.on('window-get-edge-trigger-enabled', () => {
+            const enabled = this.windowManager.isEdgeTriggerEnabled();
+            this.ipcService.emit('edge-trigger-enabled-response', enabled);
         });
     }
     /**
@@ -266,7 +310,28 @@ class ClipboardListApp {
     createTray() {
         this.trayManager.create();
         this.trayManager.setToolTip('ClipBoard List - 智能剪切板管理工具');
+        // 初始化托盘菜单状态
+        this.initializeTrayMenuState();
         Logger_1.logger.info('System tray created');
+    }
+    /**
+     * 初始化托盘菜单状态
+     */
+    initializeTrayMenuState() {
+        try {
+            // 更新自启动状态
+            const autoStartStatus = this.autoStartManager.getStatusInfo();
+            this.trayManager.updateAutoStartStatus(autoStartStatus.enabled); // 更新窗口置顶状态
+            const alwaysOnTop = this.windowManager.isAlwaysOnTop();
+            this.trayManager.updateAlwaysOnTopStatus(alwaysOnTop);
+            Logger_1.logger.debug('Tray menu state initialized', {
+                autoStart: autoStartStatus.enabled,
+                alwaysOnTop
+            });
+        }
+        catch (error) {
+            Logger_1.logger.error('Failed to initialize tray menu state:', error);
+        }
     }
     /**
      * 设置全局快捷键

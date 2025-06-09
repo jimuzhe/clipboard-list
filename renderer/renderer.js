@@ -317,7 +317,7 @@ class ClipboardManager {
         }
     }
 
-    showEditModal(item) {        // 创建编辑模态框
+    showEditModal(item) { // 创建编辑模态框
         const modal = document.createElement('div');
         modal.className = 'modal active edit-modal';
         modal.innerHTML = `
@@ -377,7 +377,7 @@ class ClipboardManager {
         const contentCounter = modal.querySelector('#edit-content-counter');
 
         // 初始化计数器
-        contentCounter.textContent = contentTextarea.value.length;        // 内容字符计数
+        contentCounter.textContent = contentTextarea.value.length; // 内容字符计数
         contentTextarea.addEventListener('input', () => {
             contentCounter.textContent = contentTextarea.value.length;
             // 移除字数限制，只显示当前字符数
@@ -2116,6 +2116,15 @@ class App {
             document.getElementById('app-version').textContent = version;
         } catch (error) {
             console.error('Failed to get app version:', error);
+        }
+
+        // 初始化置顶按钮状态
+        try {
+            const isAlwaysOnTop = await window.electronAPI.getAlwaysOnTop();
+            document.getElementById('always-on-top-btn').style.background =
+                isAlwaysOnTop ? 'var(--primary-color)' : 'transparent';
+        } catch (error) {
+            console.error('Failed to get always on top status:', error);
         }
 
         // 应用设置

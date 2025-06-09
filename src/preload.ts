@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     minimizeWindow: () => ipcRenderer.invoke('minimize-window'),
     closeWindow: () => ipcRenderer.invoke('close-window'),
     toggleAlwaysOnTop: () => ipcRenderer.invoke('toggle-always-on-top'),
+    getAlwaysOnTop: () => ipcRenderer.invoke('get-always-on-top'),
 
     // 应用信息
     getAppVersion: () => ipcRenderer.invoke('get-app-version'),    // 剪切板相关
@@ -34,6 +35,7 @@ export interface ElectronAPI {
     minimizeWindow: () => Promise<void>;
     closeWindow: () => Promise<void>;
     toggleAlwaysOnTop: () => Promise<boolean>;
+    getAlwaysOnTop: () => Promise<boolean>;
     getAppVersion: () => Promise<string>;
     writeToClipboard: (text: string) => Promise<void>;
     readFromClipboard: () => Promise<string>;

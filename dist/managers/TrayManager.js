@@ -38,12 +38,19 @@ const electron_1 = require("electron");
 const events_1 = require("events");
 const path = __importStar(require("path"));
 const Logger_1 = require("../utils/Logger");
+/**
+ * 托盘管理器 - 简化版，只包含核心功能
+ * 功能：显示/隐藏、快捷设置（自启动、窗口置顶）、退出
+ */
 class TrayManager extends events_1.EventEmitter {
     constructor() {
         super(...arguments);
         this.tray = null;
         this.contextMenu = null;
     }
+    /**
+     * 创建系统托盘
+     */
     create() {
         if (this.tray) {
             Logger_1.logger.warn('Tray already exists');
@@ -74,8 +81,10 @@ class TrayManager extends events_1.EventEmitter {
             throw error;
         }
     }
+    /**
+     * 获取托盘图标路径
+     */
     getIconPath() {
-        // 使用项目中的托盘图标
         const iconPath = path.join(__dirname, '../../assets/tray-icon.png');
         try {
             if (require('fs').existsSync(iconPath)) {
@@ -85,25 +94,13 @@ class TrayManager extends events_1.EventEmitter {
         catch (error) {
             Logger_1.logger.warn('Failed to access tray icon file:', error);
         }
-        // 如果文件不存在，创建默认图标
-        return this.createDefaultIcon();
+        // 如果文件不存在，返回空字符串使用默认图标
+        Logger_1.logger.warn('Using system default tray icon');
+        return '';
     }
-    createDefaultIcon() {
-        try {
-            // 尝试使用系统默认图标路径
-            const systemIconPath = process.platform === 'win32'
-                ? path.join(process.env.WINDIR || 'C:\\Windows', 'System32', 'shell32.dll')
-                : '';
-            // 如果是 Windows，返回空字符串让 Electron 使用默认图标
-            // 其他平台也返回空字符串
-            Logger_1.logger.warn('Using system default tray icon');
-            return '';
-        }
-        catch (error) {
-            Logger_1.logger.error('Failed to create default tray icon:', error);
-            return '';
-        }
-    }
+    /**
+     * 设置托盘菜单（简化版）
+     */
     setupTrayMenu() {
         if (!this.tray)
             return;
@@ -118,53 +115,9 @@ class TrayManager extends events_1.EventEmitter {
             },
             { type: 'separator' },
             {
-                label: '功能',
+                label: '快捷设置',
                 type: 'submenu',
                 submenu: [
-                    {
-                        label: '剪切板',
-                        type: 'normal',
-                        click: () => {
-                            this.emit('show-tab', 'clipboard');
-                        }
-                    },
-                    {
-                        label: '待办事项',
-                        type: 'normal',
-                        click: () => {
-                            this.emit('show-tab', 'todo');
-                        }
-                    },
-                    {
-                        label: '笔记',
-                        type: 'normal',
-                        click: () => {
-                            this.emit('show-tab', 'notes');
-                        }
-                    },
-                    { type: 'separator' },
-                    {
-                        label: '番茄时钟',
-                        type: 'normal',
-                        click: () => {
-                            this.emit('show-pomodoro');
-                        }
-                    }
-                ]
-            },
-            {
-                label: '设置',
-                type: 'submenu',
-                submenu: [
-                    {
-                        label: '偏好设置',
-                        type: 'normal',
-                        click: () => {
-                            this.emit('open-settings');
-                            Logger_1.logger.debug('Tray: Settings clicked');
-                        }
-                    },
-                    { type: 'separator' },
                     {
                         label: '开机自启动',
                         type: 'checkbox',
@@ -187,13 +140,6 @@ class TrayManager extends events_1.EventEmitter {
             },
             { type: 'separator' },
             {
-                label: '关于',
-                type: 'normal',
-                click: () => {
-                    this.emit('show-about');
-                }
-            },
-            {
                 label: '退出',
                 type: 'normal',
                 accelerator: 'CmdOrCtrl+Q',
@@ -206,38 +152,48 @@ class TrayManager extends events_1.EventEmitter {
         this.tray.setContextMenu(this.contextMenu);
         this.tray.setToolTip('ClipBoard List - 智能剪切板管理工具');
     }
+    /**
+     * 设置托盘事件
+     */
     setupTrayEvents() {
         if (!this.tray)
             return;
-        // 单击托盘图标
+        // 单击托盘图标 - 切换窗口显示
         this.tray.on('click', () => {
             this.emit('tray-clicked');
             Logger_1.logger.debug('Tray clicked');
         });
-        // 双击托盘图标
+        // 双击托盘图标 - 显示窗口
         this.tray.on('double-click', () => {
             this.emit('tray-double-clicked');
             Logger_1.logger.debug('Tray double-clicked');
         });
-        // 右击托盘图标（显示上下文菜单）
+        // 右击托盘图标 - 显示上下文菜单
         this.tray.on('right-click', () => {
             this.emit('tray-right-clicked');
             Logger_1.logger.debug('Tray right-clicked');
         });
-        // 气球提示点击
-        this.tray.on('balloon-click', () => {
-            this.emit('balloon-clicked');
-        });
     }
+    /**
+     * 获取自启动状态
+     */
     getAutoStartStatus() {
-        // 这里应该从配置中获取，暂时返回false
-        return false;
+        try {
+            const loginSettings = electron_1.app.getLoginItemSettings();
+            return loginSettings.openAtLogin;
+        }
+        catch (error) {
+            Logger_1.logger.warn('Failed to get auto-start status:', error);
+            return false;
+        }
     }
-    // 公共方法
+    /**
+     * 更新自启动状态
+     */
     updateAutoStartStatus(enabled) {
         if (!this.contextMenu)
             return;
-        const settingsMenu = this.contextMenu.items.find(item => item.label === '设置');
+        const settingsMenu = this.contextMenu.items.find(item => item.label === '快捷设置');
         if (settingsMenu && settingsMenu.submenu) {
             const autoStartItem = settingsMenu.submenu.items.find(item => item.label === '开机自启动');
             if (autoStartItem) {
@@ -245,10 +201,13 @@ class TrayManager extends events_1.EventEmitter {
             }
         }
     }
+    /**
+     * 更新窗口置顶状态
+     */
     updateAlwaysOnTopStatus(enabled) {
         if (!this.contextMenu)
             return;
-        const settingsMenu = this.contextMenu.items.find(item => item.label === '设置');
+        const settingsMenu = this.contextMenu.items.find(item => item.label === '快捷设置');
         if (settingsMenu && settingsMenu.submenu) {
             const alwaysOnTopItem = settingsMenu.submenu.items.find(item => item.label === '窗口置顶');
             if (alwaysOnTopItem) {
@@ -256,6 +215,17 @@ class TrayManager extends events_1.EventEmitter {
             }
         }
     }
+    /**
+     * 刷新菜单状态
+     */
+    refreshMenu() {
+        if (!this.tray)
+            return;
+        this.setupTrayMenu();
+    }
+    /**
+     * 显示气球提示
+     */
     showBalloon(title, content, icon) {
         if (!this.tray)
             return;
@@ -271,54 +241,17 @@ class TrayManager extends events_1.EventEmitter {
             Logger_1.logger.error('Failed to show balloon', error);
         }
     }
-    setTitle(title) {
-        if (this.tray) {
-            this.tray.setTitle(title);
-        }
-    }
+    /**
+     * 设置工具提示
+     */
     setToolTip(tooltip) {
         if (this.tray) {
             this.tray.setToolTip(tooltip);
         }
     }
-    // 更新托盘图标（比如显示状态指示）
-    updateIcon(iconType = 'normal') {
-        if (!this.tray)
-            return;
-        try {
-            let iconPath = this.getIconPath();
-            // 根据状态选择不同的图标
-            switch (iconType) {
-                case 'active':
-                    // 可以有一个激活状态的图标
-                    iconPath = iconPath.replace('.png', '-active.png');
-                    break;
-                case 'disabled':
-                    // 可以有一个禁用状态的图标
-                    iconPath = iconPath.replace('.png', '-disabled.png');
-                    break;
-            }
-            const icon = electron_1.nativeImage.createFromPath(iconPath);
-            this.tray.setImage(icon);
-        }
-        catch (error) {
-            Logger_1.logger.error('Failed to update tray icon', error);
-        }
-    }
-    // 闪烁托盘图标来吸引注意
-    flash(duration = 3000) {
-        if (!this.tray)
-            return;
-        let isHighlighted = false;
-        const interval = setInterval(() => {
-            this.updateIcon(isHighlighted ? 'normal' : 'active');
-            isHighlighted = !isHighlighted;
-        }, 500);
-        setTimeout(() => {
-            clearInterval(interval);
-            this.updateIcon('normal');
-        }, duration);
-    }
+    /**
+     * 销毁托盘
+     */
     destroy() {
         if (this.tray) {
             this.tray.destroy();
@@ -328,6 +261,9 @@ class TrayManager extends events_1.EventEmitter {
         }
         this.removeAllListeners();
     }
+    /**
+     * 检查托盘是否已销毁
+     */
     isDestroyed() {
         return this.tray === null || this.tray.isDestroyed();
     }

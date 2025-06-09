@@ -36,8 +36,13 @@ export declare class IPCService extends EventEmitter {
     private handleShowWindow;
     private handleHideWindow;
     private handleToggleAlwaysOnTop;
+    private handleGetAlwaysOnTop;
     private handleSetWindowSize;
     private handleGetWindowBounds;
+    private handleSetTriggerZoneWidth;
+    private handleGetTriggerZoneWidth;
+    private handleSetEdgeTriggerEnabled;
+    private handleGetEdgeTriggerEnabled;
     private handleReadClipboard;
     private handleWriteClipboard;
     private handleGetClipboardHistory;

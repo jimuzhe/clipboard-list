@@ -47,6 +47,11 @@ class WindowManager extends events_1.EventEmitter {
         this.dockSide = 'right';
         this.isHidden = false;
         this.mouseLeaveTimer = null;
+        this.alwaysOnTopTimer = null;
+        this.cursorMonitorTimer = null;
+        this.lastCursorPos = { x: 0, y: 0 };
+        this.triggerZoneWidth = 5; // 触发区域宽度（像素）
+        this.isInTriggerZone = false; // 跟踪鼠标是否在触发区域
     }
     createWindow() {
         const { width: screenWidth, height: screenHeight } = electron_1.screen.getPrimaryDisplay().workAreaSize;
@@ -68,11 +73,16 @@ class WindowManager extends events_1.EventEmitter {
                 backgroundThrottling: false, // 防止后台节流
                 webviewTag: true, // 启用webview标签支持
             },
-        });
-        // 设置初始隐藏状态，因为窗口创建时 show: false
+        }); // 设置初始隐藏状态，因为窗口创建时 show: false
         this.isHidden = true;
         this.setupWindowEvents();
         this.initDocking();
+        // 初始化强制置顶功能
+        this.enforceAlwaysOnTop();
+        // 启动光标监听（仅当启用吸附功能时）
+        if (this.config.dockToSide) {
+            this.startCursorMonitoring();
+        }
         Logger_1.logger.info('Window created successfully', {
             width: this.config.width,
             height: this.config.height,
@@ -169,6 +179,12 @@ class WindowManager extends events_1.EventEmitter {
         this.window.setBounds({ x, y });
         this.isDocked = true;
         this.dockSide = side;
+        // 吸附后自动隐藏窗口
+        if (this.config.autoHide) {
+            setTimeout(() => {
+                this.hideToEdge();
+            }, 1000); // 1秒后自动隐藏
+        }
         Logger_1.logger.debug(`Window docked to ${side}`, { x, y });
         this.emit('window-docked', { side, x, y });
     }
@@ -189,6 +205,293 @@ class WindowManager extends events_1.EventEmitter {
         if (this.mouseLeaveTimer) {
             clearTimeout(this.mouseLeaveTimer);
             this.mouseLeaveTimer = null;
+        }
+    } /**
+     * 启动光标位置监听（优化性能）
+     */
+    startCursorMonitoring() {
+        if (this.cursorMonitorTimer) {
+            clearInterval(this.cursorMonitorTimer);
+        }
+        // 优化检查频率：每30ms检查一次，在性能和响应性之间平衡
+        this.cursorMonitorTimer = setInterval(() => {
+            if (this.isDocked) {
+                this.checkCursorPosition();
+            }
+        }, 30);
+        Logger_1.logger.info('Cursor monitoring started with optimized interval');
+    }
+    /**
+     * 停止光标位置监听
+     */
+    stopCursorMonitoring() {
+        if (this.cursorMonitorTimer) {
+            clearInterval(this.cursorMonitorTimer);
+            this.cursorMonitorTimer = null;
+            Logger_1.logger.info('Cursor monitoring stopped');
+        }
+    } /**
+     * 检查光标位置是否触发显示条件
+     */
+    checkCursorPosition() {
+        if (!this.window || !this.isDocked)
+            return;
+        try {
+            // 获取当前光标位置
+            const cursorPos = electron_1.screen.getCursorScreenPoint();
+            // 获取主显示器信息
+            const display = electron_1.screen.getPrimaryDisplay();
+            const { x: screenX, y: screenY, width: screenWidth, height: screenHeight } = display.workArea;
+            // 获取窗口位置信息
+            const windowBounds = this.window.getBounds();
+            let isInTriggerZone = false;
+            // 根据吸附边检查触发条件
+            switch (this.dockSide) {
+                case 'left':
+                    // 检查光标是否接近左边缘
+                    if (cursorPos.x <= screenX + this.triggerZoneWidth &&
+                        cursorPos.y >= windowBounds.y &&
+                        cursorPos.y <= windowBounds.y + windowBounds.height) {
+                        isInTriggerZone = true;
+                    }
+                    break;
+                case 'right':
+                    // 检查光标是否接近右边缘
+                    if (cursorPos.x >= screenX + screenWidth - this.triggerZoneWidth &&
+                        cursorPos.y >= windowBounds.y &&
+                        cursorPos.y <= windowBounds.y + windowBounds.height) {
+                        isInTriggerZone = true;
+                    }
+                    break;
+                case 'top':
+                    // 检查光标是否接近顶部边缘
+                    if (cursorPos.y <= screenY + this.triggerZoneWidth &&
+                        cursorPos.x >= windowBounds.x &&
+                        cursorPos.x <= windowBounds.x + windowBounds.width) {
+                        isInTriggerZone = true;
+                    }
+                    break;
+            }
+            // 更新触发区域状态
+            const wasInTriggerZone = this.isInTriggerZone;
+            this.isInTriggerZone = isInTriggerZone;
+            // 只有当鼠标刚进入触发区域且窗口隐藏时才显示窗口
+            if (isInTriggerZone && !wasInTriggerZone && this.isHidden) {
+                this.showFromEdge();
+                Logger_1.logger.debug(`Window triggered by cursor at ${this.dockSide} edge`, cursorPos);
+            }
+            // 如果鼠标离开触发区域且窗口显示，开始监听鼠标离开
+            else if (!isInTriggerZone && wasInTriggerZone && !this.isHidden) {
+                this.startMouseLeaveMonitoring();
+                Logger_1.logger.debug(`Mouse left trigger zone, starting leave monitoring`);
+            }
+        }
+        catch (error) {
+            Logger_1.logger.error('Error checking cursor position:', error);
+        }
+    } /**
+     * 从边缘显示窗口（带动画效果）
+     */
+    showFromEdge() {
+        if (!this.window || !this.isHidden)
+            return;
+        // 使用动画版本提供更好的用户体验
+        this.showFromEdgeWithAnimation();
+        Logger_1.logger.debug('Window triggered from edge with animation');
+    } /**
+     * 从边缘快速显示窗口（带动画效果）
+     */
+    showFromEdgeWithAnimation() {
+        if (!this.window || !this.isHidden)
+            return;
+        try {
+            // 先设置窗口到隐藏位置
+            const currentBounds = this.window.getBounds();
+            const display = electron_1.screen.getDisplayMatching(currentBounds);
+            const { x: screenX, y: screenY, width: screenWidth, height: screenHeight } = display.workArea;
+            let startX = currentBounds.x;
+            let startY = currentBounds.y;
+            let targetX = currentBounds.x;
+            let targetY = currentBounds.y;
+            // 根据吸附方向计算起始和目标位置
+            switch (this.dockSide) {
+                case 'left':
+                    startX = screenX - currentBounds.width + this.config.dockOffset;
+                    targetX = screenX + 10; // 显示时稍微偏移一点
+                    break;
+                case 'right':
+                    startX = screenX + screenWidth - this.config.dockOffset;
+                    targetX = screenX + screenWidth - currentBounds.width - 10;
+                    break;
+                case 'top':
+                    startY = screenY - currentBounds.height + this.config.dockOffset;
+                    targetY = screenY + 10;
+                    break;
+            }
+            // 设置起始位置并显示窗口
+            this.window.setBounds({
+                x: startX,
+                y: startY,
+                width: currentBounds.width,
+                height: currentBounds.height
+            });
+            this.show(); // 显示窗口
+            // 快速滑入动画
+            const startTime = Date.now();
+            const duration = 150; // 显示动画稍慢一点，150ms
+            const deltaX = targetX - startX;
+            const deltaY = targetY - startY;
+            const animate = () => {
+                if (!this.window || this.window.isDestroyed() || this.isHidden)
+                    return;
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                // 使用easeOut缓动
+                const easeProgress = 1 - Math.pow(1 - progress, 2);
+                const currentX = startX + deltaX * easeProgress;
+                const currentY = startY + deltaY * easeProgress;
+                this.window.setBounds({
+                    x: Math.round(currentX),
+                    y: Math.round(currentY),
+                    width: currentBounds.width,
+                    height: currentBounds.height
+                });
+                if (progress < 1) {
+                    setImmediate(animate);
+                }
+                else {
+                    // 动画完成，开始监听鼠标离开
+                    this.startMouseLeaveMonitoring();
+                    Logger_1.logger.debug(`Window shown from ${this.dockSide} edge with animation in ${Date.now() - startTime}ms`);
+                }
+            };
+            animate();
+        }
+        catch (error) {
+            Logger_1.logger.error('Error in showFromEdgeWithAnimation:', error);
+            // 如果动画失败，直接显示
+            this.show();
+            this.startMouseLeaveMonitoring();
+        }
+    }
+    /**
+     * 开始监听鼠标离开窗口区域
+     */
+    startMouseLeaveMonitoring() {
+        if (!this.window || this.isHidden)
+            return;
+        // 使用定时器持续检查鼠标位置
+        const checkMousePosition = () => {
+            if (!this.window || this.isHidden)
+                return;
+            try {
+                const cursorPos = electron_1.screen.getCursorScreenPoint();
+                const windowBounds = this.window.getBounds();
+                // 检查光标是否在窗口区域内（减小缓冲区域，提高响应速度）
+                const buffer = 5; // 进一步减少缓冲区域到5像素，更快响应
+                const isInWindow = cursorPos.x >= windowBounds.x - buffer &&
+                    cursorPos.x <= windowBounds.x + windowBounds.width + buffer &&
+                    cursorPos.y >= windowBounds.y - buffer &&
+                    cursorPos.y <= windowBounds.y + windowBounds.height + buffer; // 如果鼠标不在窗口区域内，且也不在触发区域内，则开始隐藏倒计时
+                if (!isInWindow && !this.isInTriggerZone) {
+                    // 光标离开窗口区域且不在触发区域，立即开始快速隐藏
+                    this.startFastHideTimer();
+                }
+                else if (isInWindow || this.isInTriggerZone) {
+                    // 光标还在窗口区域或触发区域，清除隐藏倒计时
+                    this.clearHideTimer(); // 更频繁地检查，提高响应速度
+                    setTimeout(checkMousePosition, 15); // 从20ms改为15ms，更快响应
+                }
+            }
+            catch (error) {
+                Logger_1.logger.error('Error checking mouse leave:', error);
+            }
+        };
+        // 减少延迟，更快开始检查
+        setTimeout(checkMousePosition, 100); // 从500ms改为100ms
+    } /**
+     * 开始快速自动隐藏倒计时（更快响应）
+     */
+    startFastHideTimer() {
+        this.clearHideTimer();
+        this.mouseLeaveTimer = setTimeout(() => {
+            if (this.isDocked && !this.isHidden && this.config.autoHide) {
+                this.hideToEdgeWithAnimation();
+            }
+        }, 30); // 进一步减少到30ms，为动画留出时间
+    }
+    /**
+     * 隐藏窗口到边缘
+     */
+    hideToEdge() {
+        if (!this.window || this.isHidden)
+            return;
+        this.hide();
+        Logger_1.logger.debug('Window hidden to edge');
+    }
+    /**
+     * 带动画效果的快速隐藏到边缘
+     */
+    hideToEdgeWithAnimation() {
+        if (!this.window || this.isHidden)
+            return;
+        try {
+            const currentBounds = this.window.getBounds();
+            const display = electron_1.screen.getDisplayMatching(currentBounds);
+            const { x: screenX, y: screenY, width: screenWidth, height: screenHeight } = display.workArea;
+            let targetX = currentBounds.x;
+            let targetY = currentBounds.y;
+            // 根据吸附方向计算目标位置
+            switch (this.dockSide) {
+                case 'left':
+                    targetX = screenX - currentBounds.width + this.config.dockOffset;
+                    break;
+                case 'right':
+                    targetX = screenX + screenWidth - this.config.dockOffset;
+                    break;
+                case 'top':
+                    targetY = screenY - currentBounds.height + this.config.dockOffset;
+                    break;
+            }
+            // 快速动画：使用较少的帧数来达到50ms内完成
+            const startTime = Date.now();
+            const duration = 40; // 40ms动画持续时间，留10ms缓冲
+            const startX = currentBounds.x;
+            const startY = currentBounds.y;
+            const deltaX = targetX - startX;
+            const deltaY = targetY - startY;
+            const animate = () => {
+                if (!this.window || this.window.isDestroyed())
+                    return;
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                // 使用easeOut缓动函数，让动画开始快速，结束时减速
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
+                const currentX = startX + deltaX * easeProgress;
+                const currentY = startY + deltaY * easeProgress;
+                this.window.setBounds({
+                    x: Math.round(currentX),
+                    y: Math.round(currentY),
+                    width: currentBounds.width,
+                    height: currentBounds.height
+                });
+                if (progress < 1) {
+                    // 使用 setImmediate 而不是 setTimeout 来获得更高的帧率
+                    setImmediate(animate);
+                }
+                else {
+                    // 动画完成，隐藏窗口
+                    this.hide();
+                    Logger_1.logger.debug(`Window hidden to ${this.dockSide} edge with animation in ${Date.now() - startTime}ms`);
+                }
+            };
+            // 开始动画
+            animate();
+        }
+        catch (error) {
+            Logger_1.logger.error('Error in hideToEdgeWithAnimation:', error);
+            // 如果动画失败，直接隐藏
+            this.hideToEdge();
         }
     }
     // 公共方法
@@ -238,7 +541,26 @@ class WindowManager extends events_1.EventEmitter {
     }
     setAlwaysOnTop(flag) {
         if (this.window) {
-            this.window.setAlwaysOnTop(flag);
+            // 使用更强制的置顶方式
+            if (flag) {
+                // 设置为置顶，使用 'screen-saver' 级别确保真正置顶
+                this.window.setAlwaysOnTop(true, 'screen-saver');
+                // 确保窗口获得焦点
+                this.window.moveTop();
+                this.window.focus();
+                Logger_1.logger.info('Window set to always on top with screen-saver level');
+                // 启动强制置顶检查
+                this.enforceAlwaysOnTop();
+            }
+            else {
+                this.window.setAlwaysOnTop(false);
+                // 清理置顶检查定时器
+                if (this.alwaysOnTopTimer) {
+                    clearInterval(this.alwaysOnTopTimer);
+                    this.alwaysOnTopTimer = null;
+                }
+                Logger_1.logger.info('Window always on top disabled');
+            }
             this.config.alwaysOnTop = flag;
         }
     }
@@ -247,11 +569,23 @@ class WindowManager extends events_1.EventEmitter {
         this.setAlwaysOnTop(newValue);
         return newValue;
     }
+    isAlwaysOnTop() {
+        return this.config.alwaysOnTop;
+    }
     updateConfig(newConfig) {
         this.config = { ...this.config, ...newConfig };
         if (this.window) {
             if (newConfig.alwaysOnTop !== undefined) {
-                this.window.setAlwaysOnTop(newConfig.alwaysOnTop);
+                this.setAlwaysOnTop(newConfig.alwaysOnTop);
+            }
+            // 如果吸附设置发生变化，重新启动或停止光标监听
+            if (newConfig.dockToSide !== undefined) {
+                if (newConfig.dockToSide) {
+                    this.startCursorMonitoring();
+                }
+                else {
+                    this.stopCursorMonitoring();
+                }
             }
         }
         Logger_1.logger.info('Window config updated', newConfig);
@@ -270,6 +604,12 @@ class WindowManager extends events_1.EventEmitter {
     }
     destroy() {
         this.clearHideTimer();
+        this.stopCursorMonitoring();
+        // 清理置顶检查定时器
+        if (this.alwaysOnTopTimer) {
+            clearInterval(this.alwaysOnTopTimer);
+            this.alwaysOnTopTimer = null;
+        }
         if (this.window) {
             this.window.destroy();
             this.window = null;
@@ -279,6 +619,57 @@ class WindowManager extends events_1.EventEmitter {
     }
     getWindow() {
         return this.window;
+    }
+    /**
+     * 设置边缘触发区域宽度
+     */
+    setTriggerZoneWidth(width) {
+        this.triggerZoneWidth = Math.max(1, Math.min(width, 50)); // 限制在1-50像素之间
+        Logger_1.logger.info(`Trigger zone width set to ${this.triggerZoneWidth}px`);
+    }
+    /**
+     * 获取当前触发区域宽度
+     */
+    getTriggerZoneWidth() {
+        return this.triggerZoneWidth;
+    }
+    /**
+     * 启用/禁用边缘触发功能
+     */
+    setEdgeTriggerEnabled(enabled) {
+        if (enabled && this.config.dockToSide) {
+            this.startCursorMonitoring();
+        }
+        else {
+            this.stopCursorMonitoring();
+        }
+        Logger_1.logger.info(`Edge trigger ${enabled ? 'enabled' : 'disabled'}`);
+    }
+    /**
+     * 检查边缘触发功能是否启用
+     */
+    isEdgeTriggerEnabled() {
+        return this.cursorMonitorTimer !== null;
+    }
+    /**
+     * 强制窗口置顶并保持在最前面
+     */
+    enforceAlwaysOnTop() {
+        // 清除现有定时器
+        if (this.alwaysOnTopTimer) {
+            clearInterval(this.alwaysOnTopTimer);
+            this.alwaysOnTopTimer = null;
+        }
+        if (this.window && this.config.alwaysOnTop) {
+            // 定期检查并强制置顶
+            this.alwaysOnTopTimer = setInterval(() => {
+                if (this.window && !this.window.isDestroyed() && this.config.alwaysOnTop) {
+                    this.window.setAlwaysOnTop(true, 'screen-saver');
+                    this.window.moveTop();
+                }
+            }, 1000); // 每秒检查一次
+            Logger_1.logger.info('Always on top enforcement started');
+        }
     }
 }
 exports.WindowManager = WindowManager;

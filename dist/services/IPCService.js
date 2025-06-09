@@ -28,8 +28,14 @@ class IPCService extends events_1.EventEmitter {
         this.registerHandler('window:show', this.handleShowWindow.bind(this));
         this.registerHandler('window:hide', this.handleHideWindow.bind(this));
         this.registerHandler('window:toggle-always-on-top', this.handleToggleAlwaysOnTop.bind(this));
+        this.registerHandler('window:get-always-on-top', this.handleGetAlwaysOnTop.bind(this));
         this.registerHandler('window:set-size', this.handleSetWindowSize.bind(this));
         this.registerHandler('window:get-bounds', this.handleGetWindowBounds.bind(this));
+        // 边缘触发功能
+        this.registerHandler('window:set-trigger-zone-width', this.handleSetTriggerZoneWidth.bind(this));
+        this.registerHandler('window:get-trigger-zone-width', this.handleGetTriggerZoneWidth.bind(this));
+        this.registerHandler('window:set-edge-trigger-enabled', this.handleSetEdgeTriggerEnabled.bind(this));
+        this.registerHandler('window:get-edge-trigger-enabled', this.handleGetEdgeTriggerEnabled.bind(this));
         // ĺŞĺćżç¸ĺ?
         this.registerHandler('clipboard:read', this.handleReadClipboard.bind(this));
         this.registerHandler('clipboard:write', this.handleWriteClipboard.bind(this));
@@ -65,13 +71,13 @@ class IPCService extends events_1.EventEmitter {
         this.registerHandler('get-app-version', this.handleGetAppVersion.bind(this));
         this.registerHandler('get-config', this.handleGetConfig.bind(this));
         this.registerHandler('set-config', this.handleSetConfig.bind(this));
-        this.registerHandler('show-notification', this.handleShowNotification.bind(this));
-        // ??????
+        this.registerHandler('show-notification', this.handleShowNotification.bind(this)); // 窗口相关
         this.registerHandler('minimize-window', this.handleMinimizeWindow.bind(this));
         this.registerHandler('close-window', this.handleCloseWindow.bind(this));
         this.registerHandler('show-window', this.handleShowWindow.bind(this));
         this.registerHandler('hide-window', this.handleHideWindow.bind(this));
         this.registerHandler('toggle-always-on-top', this.handleToggleAlwaysOnTop.bind(this));
+        this.registerHandler('get-always-on-top', this.handleGetAlwaysOnTop.bind(this));
         this.registerHandler('set-window-size', this.handleSetWindowSize.bind(this));
         this.registerHandler('get-window-bounds', this.handleGetWindowBounds.bind(this));
         // ???????
@@ -172,6 +178,12 @@ class IPCService extends events_1.EventEmitter {
             this.once('always-on-top-toggled', resolve);
         });
     }
+    async handleGetAlwaysOnTop() {
+        return new Promise((resolve) => {
+            this.emit('window-get-always-on-top');
+            this.once('always-on-top-status-response', resolve);
+        });
+    }
     async handleSetWindowSize(event, { width, height }) {
         this.emit('window-set-size', { width, height });
     }
@@ -179,6 +191,31 @@ class IPCService extends events_1.EventEmitter {
         return new Promise((resolve) => {
             this.emit('window-get-bounds');
             this.once('window-bounds-response', resolve);
+        });
+    }
+    // === 边缘触发功能相关处理程序 ===
+    async handleSetTriggerZoneWidth(event, width) {
+        return new Promise((resolve) => {
+            this.emit('window-set-trigger-zone-width', width);
+            this.once('trigger-zone-width-set', resolve);
+        });
+    }
+    async handleGetTriggerZoneWidth() {
+        return new Promise((resolve) => {
+            this.emit('window-get-trigger-zone-width');
+            this.once('trigger-zone-width-response', resolve);
+        });
+    }
+    async handleSetEdgeTriggerEnabled(event, enabled) {
+        return new Promise((resolve) => {
+            this.emit('window-set-edge-trigger-enabled', enabled);
+            this.once('edge-trigger-enabled-set', resolve);
+        });
+    }
+    async handleGetEdgeTriggerEnabled() {
+        return new Promise((resolve) => {
+            this.emit('window-get-edge-trigger-enabled');
+            this.once('edge-trigger-enabled-response', resolve);
         });
     }
     // === ĺŞĺćżç¸ĺłĺ¤çç¨ĺş?===

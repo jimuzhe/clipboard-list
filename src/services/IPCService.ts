@@ -33,8 +33,15 @@ export class IPCService extends EventEmitter {
         this.registerHandler('window:show', this.handleShowWindow.bind(this));
         this.registerHandler('window:hide', this.handleHideWindow.bind(this));
         this.registerHandler('window:toggle-always-on-top', this.handleToggleAlwaysOnTop.bind(this));
+        this.registerHandler('window:get-always-on-top', this.handleGetAlwaysOnTop.bind(this));
         this.registerHandler('window:set-size', this.handleSetWindowSize.bind(this));
         this.registerHandler('window:get-bounds', this.handleGetWindowBounds.bind(this));
+
+        // 边缘触发功能
+        this.registerHandler('window:set-trigger-zone-width', this.handleSetTriggerZoneWidth.bind(this));
+        this.registerHandler('window:get-trigger-zone-width', this.handleGetTriggerZoneWidth.bind(this));
+        this.registerHandler('window:set-edge-trigger-enabled', this.handleSetEdgeTriggerEnabled.bind(this));
+        this.registerHandler('window:get-edge-trigger-enabled', this.handleGetEdgeTriggerEnabled.bind(this));
 
         // ĺŞĺćżç¸ĺ?
         this.registerHandler('clipboard:read', this.handleReadClipboard.bind(this));
@@ -77,14 +84,13 @@ export class IPCService extends EventEmitter {
         this.registerHandler('get-app-version', this.handleGetAppVersion.bind(this));
         this.registerHandler('get-config', this.handleGetConfig.bind(this));
         this.registerHandler('set-config', this.handleSetConfig.bind(this));
-        this.registerHandler('show-notification', this.handleShowNotification.bind(this));
-
-        // ??????
+        this.registerHandler('show-notification', this.handleShowNotification.bind(this));        // 窗口相关
         this.registerHandler('minimize-window', this.handleMinimizeWindow.bind(this));
         this.registerHandler('close-window', this.handleCloseWindow.bind(this));
         this.registerHandler('show-window', this.handleShowWindow.bind(this));
         this.registerHandler('hide-window', this.handleHideWindow.bind(this));
         this.registerHandler('toggle-always-on-top', this.handleToggleAlwaysOnTop.bind(this));
+        this.registerHandler('get-always-on-top', this.handleGetAlwaysOnTop.bind(this));
         this.registerHandler('set-window-size', this.handleSetWindowSize.bind(this));
         this.registerHandler('get-window-bounds', this.handleGetWindowBounds.bind(this));
 
@@ -199,16 +205,48 @@ export class IPCService extends EventEmitter {
             this.emit('window-toggle-always-on-top');
             this.once('always-on-top-toggled', resolve);
         });
+    } private async handleGetAlwaysOnTop(): Promise<boolean> {
+        return new Promise((resolve) => {
+            this.emit('window-get-always-on-top');
+            this.once('always-on-top-status-response', resolve);
+        });
     }
 
     private async handleSetWindowSize(event: IpcMainInvokeEvent, { width, height }: { width: number; height: number }): Promise<void> {
         this.emit('window-set-size', { width, height });
-    }
-
-    private async handleGetWindowBounds(): Promise<any> {
+    } private async handleGetWindowBounds(): Promise<any> {
         return new Promise((resolve) => {
             this.emit('window-get-bounds');
             this.once('window-bounds-response', resolve);
+        });
+    }
+
+    // === 边缘触发功能相关处理程序 ===
+    private async handleSetTriggerZoneWidth(event: IpcMainInvokeEvent, width: number): Promise<void> {
+        return new Promise((resolve) => {
+            this.emit('window-set-trigger-zone-width', width);
+            this.once('trigger-zone-width-set', resolve);
+        });
+    }
+
+    private async handleGetTriggerZoneWidth(): Promise<number> {
+        return new Promise((resolve) => {
+            this.emit('window-get-trigger-zone-width');
+            this.once('trigger-zone-width-response', resolve);
+        });
+    }
+
+    private async handleSetEdgeTriggerEnabled(event: IpcMainInvokeEvent, enabled: boolean): Promise<void> {
+        return new Promise((resolve) => {
+            this.emit('window-set-edge-trigger-enabled', enabled);
+            this.once('edge-trigger-enabled-set', resolve);
+        });
+    }
+
+    private async handleGetEdgeTriggerEnabled(): Promise<boolean> {
+        return new Promise((resolve) => {
+            this.emit('window-get-edge-trigger-enabled');
+            this.once('edge-trigger-enabled-response', resolve);
         });
     }
 

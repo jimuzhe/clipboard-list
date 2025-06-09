@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>边界触发测试</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: rgba(30, 30, 30, 0.95);
+            color: white;
+            height: 100vh;
+            box-sizing: border-box;
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header h1 {
+            margin: 0;
+            color: #4CAF50;
+            font-size: 24px;
+        }
+
+        .status {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .instructions {
+            background: rgba(33, 150, 243, 0.2);
+            border: 1px solid #2196F3;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .instructions h3 {
+            margin-top: 0;
+            color: #2196F3;
+        }
+
+        .instructions ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin: 8px 0;
+            line-height: 1.4;
+        }
+
+        .cursor-info {
+            background: rgba(255, 152, 0, 0.2);
+            border: 1px solid #FF9800;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .cursor-info h4 {
+            margin-top: 0;
+            color: #FF9800;
+        }
+
+        .cursor-pos {
+            font-family: 'Consolas', monospace;
+            font-size: 14px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(244, 67, 54, 0.8);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .close-btn:hover {
+            background: rgba(244, 67, 54, 1);
+        }
+
+        .version {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 12px;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+
+<body>
+    <button class="close-btn" onclick="window.close()">✕</button>
+
+    <div class="header">
+        <h1>🎯 边界触发测试</h1>
+        <p>Clipboard List - 窗口边界触发功能测试</p>
+    </div>
+
+    <div class="status">
+        <strong>✅ 测试窗口已启动</strong>
+        <p>当前状态: 窗口已吸附到右边缘并隐藏</p>
+    </div>
+    <div class="instructions">
+        <h3>📋 测试说明</h3>
+        <ul>
+            <li><strong>触发显示:</strong> 将鼠标移动到屏幕右边缘 (最右侧5像素)</li>
+            <li><strong>保持显示:</strong> 鼠标在边缘或窗口内时，窗口保持显示</li>
+            <li><strong>自动隐藏:</strong> 鼠标离开窗口且不在边缘时30ms后自动隐藏</li>
+            <li><strong>触发区域:</strong> 仅在窗口高度范围内有效</li>
+            <li><strong>退出测试:</strong> 关闭此窗口或按 Ctrl+C</li>
+        </ul>
+    </div>
+
+    <div class="cursor-info">
+        <h4>🖱️ 光标信息</h4>
+        <p>实时光标位置和状态:</p>
+        <div class="cursor-pos" id="cursorPos">
+            正在获取光标位置...
+        </div>
+    </div>
+
+    <div class="version">
+        v1.0.0 - Edge Trigger Test
+    </div>
+
+    <script>
+        // 如果在 Electron 环境中，显示光标位置信息
+        if (typeof require !== 'undefined') {
+            try {
+                const {
+                    screen
+                } = require('electron');
+                const screenInfo = screen.getPrimaryDisplay().workAreaSize;
+
+                function updateCursorInfo() {
+                    try {
+                        const cursorPos = screen.getCursorScreenPoint();
+                        const isInTriggerZone = cursorPos.x >= screenInfo.width - 5;
+
+                        document.getElementById('cursorPos').innerHTML = `
+                            <strong>光标位置:</strong> (${cursorPos.x}, ${cursorPos.y})<br>
+                            <strong>屏幕尺寸:</strong> ${screenInfo.width} × ${screenInfo.height}<br>
+                            <strong>触发区域:</strong> x >= ${screenInfo.width - 5}<br>
+                            <strong>触发状态:</strong> ${isInTriggerZone ? '🟢 在触发区域' : '🔴 不在触发区域'}
+                        `;
+                    } catch (error) {
+                        console.error('获取光标位置失败:', error);
+                    }
+                }
+
+                // 每100ms更新一次光标位置
+                setInterval(updateCursorInfo, 100);
+
+            } catch (error) {
+                console.error('初始化光标监听失败:', error);
+                document.getElementById('cursorPos').textContent = '无法获取光标位置 (非 Electron 环境)';
+            }
+        } else {
+            document.getElementById('cursorPos').textContent = '无法获取光标位置 (非 Electron 环境)';
+        }
+    </script>
+</body>
+
+</html>
