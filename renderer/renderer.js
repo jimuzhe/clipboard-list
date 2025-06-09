@@ -317,46 +317,72 @@ class ClipboardManager {
         }
     }
 
-    showEditModal(item) {
-        // 创建编辑模态框
+    showEditModal(item) {        // 创建编辑模态框
         const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
+        modal.className = 'modal active edit-modal';
         modal.innerHTML = `
-            <div class="modal-content edit-modal">
+            <div class="modal-content">
                 <div class="modal-header">
-                    <h3>编辑剪切板内容</h3>
+                    <div class="modal-title">
+                        <span class="modal-icon">✏️</span>
+                        <h3>编辑剪切板内容</h3>
+                    </div>
                     <button class="modal-close">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
-                        <label>内容类型：</label>
-                        <select id="edit-content-type">
-                            <option value="text" ${item.type === 'text' ? 'selected' : ''}>文本</option>
-                            <option value="code" ${item.type === 'code' ? 'selected' : ''}>代码</option>
-                            <option value="url" ${item.type === 'url' ? 'selected' : ''}>链接</option>
-                            <option value="email" ${item.type === 'email' ? 'selected' : ''}>邮箱</option>
-                            <option value="image" ${item.type === 'image' ? 'selected' : ''}>图片</option>
+                        <label for="edit-content-type" class="form-label">
+                            <span class="label-icon">🏷️</span>
+                            内容类型
+                        </label>
+                        <select id="edit-content-type" class="form-select">
+                            <option value="text" ${item.type === 'text' ? 'selected' : ''}>📄 文本</option>
+                            <option value="code" ${item.type === 'code' ? 'selected' : ''}>💻 代码</option>
+                            <option value="url" ${item.type === 'url' ? 'selected' : ''}>🔗 链接</option>
+                            <option value="email" ${item.type === 'email' ? 'selected' : ''}>📧 邮箱</option>
+                            <option value="image" ${item.type === 'image' ? 'selected' : ''}>🖼️ 图片</option>
                         </select>
-                    </div>
-                    <div class="form-group">
-                        <label>内容：</label>
-                        <textarea id="edit-content" rows="6" placeholder="输入内容...">${item.content}</textarea>
+                    </div>                    <div class="form-group">
+                        <label for="edit-content" class="form-label">
+                            <span class="label-icon">📝</span>
+                            内容 <span class="required">*</span>
+                        </label>
+                        <textarea id="edit-content" class="form-textarea" rows="6" 
+                                  placeholder="输入内容..." required>${this.escapeHtml(item.content)}</textarea>
+                        <div class="char-counter">
+                            <span id="edit-content-counter">0</span> 字符
+                        </div>
                     </div>
                     <div class="form-group checkbox-group">
-                        <label>
-                            <input type="checkbox" id="edit-pinned" ${item.pinned ? 'checked' : ''}>
-                            置顶显示
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="edit-pinned" class="form-checkbox" ${item.pinned ? 'checked' : ''}>
+                            <span class="checkbox-custom"></span>
+                            <span class="checkbox-text">
+                                <span class="feature-icon">📌</span>
+                                置顶显示
+                            </span>
                         </label>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary" id="cancel-edit">取消</button>
-                    <button class="btn btn-primary" id="save-edit">保存</button>
-                </div>
+                    <button class="btn btn-primary" id="save-edit">💾 保存</button>                </div>
             </div>
         `;
 
         document.body.appendChild(modal);
+
+        // 设置字符计数器
+        const contentTextarea = modal.querySelector('#edit-content');
+        const contentCounter = modal.querySelector('#edit-content-counter');
+
+        // 初始化计数器
+        contentCounter.textContent = contentTextarea.value.length;        // 内容字符计数
+        contentTextarea.addEventListener('input', () => {
+            contentCounter.textContent = contentTextarea.value.length;
+            // 移除字数限制，只显示当前字符数
+            contentCounter.style.color = 'var(--text-secondary)';
+        });
 
         // 添加事件监听
         modal.querySelector('.modal-close').addEventListener('click', () => {
