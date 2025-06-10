@@ -3,6 +3,22 @@ export * from './clipboard';
 export * from './todo';
 export * from './notes';
 
+// 预设网站接口
+export interface PresetWebsite {
+    id: string;
+    name: string;
+    url: string;
+    icon?: string;
+    description?: string;
+}
+
+// 在线访问配置接口
+export interface OnlineConfig {
+    currentUrl: string;
+    presetWebsites: PresetWebsite[];
+    showPresetButtons: boolean;
+}
+
 // 应用配置接口
 export interface AppConfig {
     theme: 'light' | 'dark' | 'blue' | 'green';
@@ -11,6 +27,7 @@ export interface AppConfig {
     window: WindowConfig;
     clipboard: ClipboardConfig;
     pomodoro: PomodoroConfig;
+    online: OnlineConfig;
 }
 
 // 窗口配置接口

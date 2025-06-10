@@ -15,6 +15,7 @@ export declare class Config {
     getWindowConfig(): import("../types").WindowConfig;
     getClipboardConfig(): import("../types").ClipboardConfig;
     getPomodoroConfig(): import("../types").PomodoroConfig;
+    getOnlineConfig(): import("../types").OnlineConfig;
     private saveConfig;
     reset(): void;
     validate(): boolean;

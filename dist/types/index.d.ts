@@ -1,6 +1,18 @@
 export * from './clipboard';
 export * from './todo';
 export * from './notes';
+export interface PresetWebsite {
+    id: string;
+    name: string;
+    url: string;
+    icon?: string;
+    description?: string;
+}
+export interface OnlineConfig {
+    currentUrl: string;
+    presetWebsites: PresetWebsite[];
+    showPresetButtons: boolean;
+}
 export interface AppConfig {
     theme: 'light' | 'dark' | 'blue' | 'green';
     autoStart: boolean;
@@ -8,6 +20,7 @@ export interface AppConfig {
     window: WindowConfig;
     clipboard: ClipboardConfig;
     pomodoro: PomodoroConfig;
+    online: OnlineConfig;
 }
 export interface WindowConfig {
     alwaysOnTop: boolean;

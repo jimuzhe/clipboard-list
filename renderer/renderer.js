@@ -11,7 +11,43 @@ class AppState {
             autoStart: true,
             clipboardMonitor: true,
             maxClipboardItems: 100,
-            communityUrl: 'http://8.130.41.186:3000/'
+            communityUrl: 'http://8.130.41.186:3000/',
+            online: {
+                currentUrl: 'http://8.130.41.186:3000/',
+                showPresetButtons: true,
+                presetWebsites: [{
+                        id: 'default',
+                        name: '移记社区',
+                        url: 'http://8.130.41.186:3000/',
+                        icon: '🏠',
+                        description: '默认社区页面'
+                    }, {
+                        id: 'yuanbao',
+                        name: '元宝',
+                        url: 'https://yuanbao.tencent.com/chat/',
+                        icon: '🐙',
+                        description: 'ai'
+                    }, {
+                        id: 'doubao',
+                        name: '豆包',
+                        url: 'https://www.doubao.com/chat/',
+                        icon: '📚',
+                        description: 'ai'
+                    }, {
+                        id: 'baidu',
+                        name: '百度',
+                        url: 'https://www.baidu.com/',
+                        icon: '📖',
+                        description: '搜索'
+                    }, {
+                        id: 'chatgpt',
+                        name: 'ChatGPT',
+                        url: 'https://chat.openai.com',
+                        icon: '🤖',
+                        description: 'ai'
+                    }
+                ]
+            }
         };
         this.pomodoroTimer = {
             workDuration: 25,
@@ -2297,42 +2333,49 @@ class ThemeManager {
 
     init() {
         this.applyTheme(this.appState.settings.theme);
-        this.setupEventListeners();
-    }
-
-    setupEventListeners() {
-        document.getElementById('theme-select').addEventListener('change', (e) => {
-            this.setTheme(e.target.value);
-        });
-
-        document.getElementById('glass-effect').addEventListener('change', (e) => {
-            this.appState.settings.glassEffect = e.target.checked;
-            this.applyGlassEffect(e.target.checked);
-            this.appState.saveData();
-        });
-    }
-
-    setTheme(theme) {
-        this.appState.settings.theme = theme;
-        this.applyTheme(theme);
-        this.appState.saveData();
+        this.applyGlassEffect(this.appState.settings.glassEffect);
     }
 
     applyTheme(theme) {
-        if (theme === 'auto') {
-            const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            theme = isDark ? 'dark' : 'light';
-        }
+        document.body.dataset.theme = theme;
 
-        document.documentElement.setAttribute('data-theme', theme);
-        document.getElementById('theme-select').value = this.appState.settings.theme;
+        // 更新CSS变量
+        const root = document.documentElement;
+
+        switch (theme) {
+            case 'dark':
+                root.style.setProperty('--bg-primary', 'rgba(30, 30, 30, 0.95)');
+                root.style.setProperty('--bg-secondary', 'rgba(40, 40, 40, 0.9)');
+                root.style.setProperty('--bg-glass', 'rgba(0, 0, 0, 0.2)');
+                root.style.setProperty('--text-primary', '#ffffff');
+                root.style.setProperty('--text-secondary', '#b0b0b0');
+                root.style.setProperty('--border-color', 'rgba(255, 255, 255, 0.1)');
+                break;
+            case 'blue':
+                root.style.setProperty('--primary-color', '#0078d4');
+                root.style.setProperty('--bg-primary', 'rgba(240, 248, 255, 0.95)');
+                break;
+            case 'green':
+                root.style.setProperty('--primary-color', '#107c10');
+                root.style.setProperty('--bg-primary', 'rgba(240, 255, 240, 0.95)');
+                break;
+            default: // light
+                root.style.setProperty('--bg-primary', 'rgba(255, 255, 255, 0.95)');
+                root.style.setProperty('--bg-secondary', 'rgba(248, 249, 250, 0.9)');
+                root.style.setProperty('--bg-glass', 'rgba(255, 255, 255, 0.1)');
+                root.style.setProperty('--text-primary', '#333');
+                root.style.setProperty('--text-secondary', '#6c757d');
+                root.style.setProperty('--border-color', 'rgba(0, 0, 0, 0.1)');
+                root.style.setProperty('--primary-color', '#007acc');
+        }
     }
 
     applyGlassEffect(enabled) {
-        const elements = document.querySelectorAll('.panel, .title-bar, .modal-content');
-        elements.forEach(element => {
-            element.classList.toggle('glass-effect', enabled);
-        });
+        if (enabled) {
+            document.body.classList.add('glass-effect');
+        } else {
+            document.body.classList.remove('glass-effect');
+        }
     }
 }
 
@@ -2342,6 +2385,8 @@ class App {
         this.state = new AppState();
         // 将实例赋值给全局变量，以便其他类可以访问统一的删除确认对话框
         window.app = this;
+        // 标记是否是第一次访问社区页面
+        this.isFirstCommunityVisit = true;
         this.init();
     }
 
@@ -2800,32 +2845,304 @@ class App {
                 console.log('社区webview初始化为:', this.state.settings.communityUrl);
             }
         }
+
+        // 渲染预设网站按钮
+        this.renderPresetWebsites();
     }
 
-    // 更新URL预设选择框
-    updateUrlPresetSelection(currentUrl) {
-        const urlPreset = document.getElementById('url-preset');
-        if (!urlPreset) return;
+    // 渲染预设网站按钮
+    renderPresetWebsites() {
+        const container = document.getElementById('preset-websites');
+        if (!container) return;
 
-        // 检查当前URL是否匹配预设选项
-        const options = urlPreset.options;
-        let foundMatch = false;
-
-        for (let i = 0; i < options.length; i++) {
-            if (options[i].value === currentUrl) {
-                urlPreset.selectedIndex = i;
-                foundMatch = true;
-                break;
-            }
+        const onlineConfig = this.state.settings.online;
+        if (!onlineConfig || !onlineConfig.showPresetButtons) {
+            container.style.display = 'none';
+            return;
         }
 
-        // 如果没有找到匹配的预设，选择"自定义"
-        if (!foundMatch) {
-            const customOption = Array.from(options).find(option => option.value === 'custom');
-            if (customOption) {
-                urlPreset.value = 'custom';
+        container.style.display = 'flex';
+        container.innerHTML = '';
+
+        // 添加预设网站按钮
+        onlineConfig.presetWebsites.forEach(website => {
+            const button = document.createElement('button');
+            button.className = 'preset-website-btn';
+            button.dataset.url = website.url;
+            button.dataset.id = website.id;
+            button.title = website.description || website.name;
+
+            // 检查是否为当前激活的网站
+            const currentUrl = this.state.settings.online.currentUrl || this.state.settings.communityUrl;
+            if (website.url === currentUrl) {
+                button.classList.add('active');
             }
+
+            button.innerHTML = `
+                <span class="icon">${website.icon || '🌐'}</span>
+                <span class="name">${website.name}</span>
+            `;
+
+            button.addEventListener('click', () => {
+                this.switchToPresetWebsite(website);
+            });
+
+            container.appendChild(button);
+        });
+
+        // 添加管理预设按钮
+        const manageBtn = document.createElement('button');
+        manageBtn.className = 'manage-presets-btn';
+        manageBtn.title = '管理预设网站';
+        manageBtn.innerHTML = '⚙️';
+        manageBtn.addEventListener('click', () => {
+            this.showPresetWebsitesManager();
+        });
+
+        container.appendChild(manageBtn);
+    }
+
+    // 切换到预设网站
+    switchToPresetWebsite(website) {
+        const webview = document.getElementById('community-webview');
+        const loading = document.getElementById('community-loading');
+
+        if (!webview) return;
+
+        // 更新当前URL
+        this.state.settings.online.currentUrl = website.url;
+        this.state.settings.communityUrl = website.url; // 保持兼容性
+
+        // 显示加载状态
+        if (loading) {
+            loading.classList.remove('hidden');
+            loading.innerHTML = `
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <span>正在加载 ${website.name}...</span>
+                </div>
+            `;
         }
+
+        // 更新webview URL
+        webview.src = website.url;
+
+        // 更新按钮状态
+        document.querySelectorAll('.preset-website-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.id === website.id) {
+                btn.classList.add('active');
+            }
+        });
+
+        // 保存设置
+        this.state.saveData();
+
+        console.log('切换到预设网站:', website.name, website.url);
+    }
+
+    // 显示预设网站管理器
+    showPresetWebsitesManager() {
+        // 创建模态对话框
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content preset-manager-modal">
+                <div class="modal-header">
+                    <h3>🌐 管理预设网站</h3>
+                    <button class="modal-close-btn">✖️</button>
+                </div>
+                <div class="modal-body">
+                    <div class="preset-list" id="preset-manager-list">
+                        <!-- 预设网站列表将在这里生成 -->
+                    </div>
+                    <div class="preset-actions">
+                        <button class="btn btn-primary" id="add-preset-btn">➕ 添加网站</button>
+                        <button class="btn btn-secondary" id="reset-presets-btn">🔄 重置默认</button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary modal-cancel">取消</button>
+                    <button class="btn btn-primary modal-confirm">保存</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        this.renderPresetManagerList();
+        this.setupPresetManagerEvents(modal);
+    }
+
+    // 渲染预设管理器列表
+    renderPresetManagerList() {
+        const list = document.getElementById('preset-manager-list');
+        if (!list) return;
+
+        const presets = this.state.settings.online.presetWebsites;
+        list.innerHTML = '';
+
+        presets.forEach((preset, index) => {
+            const item = document.createElement('div');
+            item.className = 'preset-item';
+            item.innerHTML = `
+                <div class="preset-item-info">
+                    <input type="text" class="preset-icon" value="${preset.icon || '🌐'}" maxlength="2" placeholder="图标">
+                    <input type="text" class="preset-name" value="${preset.name}" placeholder="网站名称">
+                    <input type="url" class="preset-url" value="${preset.url}" placeholder="网站URL">
+                    <input type="text" class="preset-description" value="${preset.description || ''}" placeholder="描述（可选）">
+                </div>
+                <div class="preset-item-actions">
+                    <button class="btn btn-sm btn-secondary move-up" data-index="${index}" ${index === 0 ? 'disabled' : ''}>↑</button>
+                    <button class="btn btn-sm btn-secondary move-down" data-index="${index}" ${index === presets.length - 1 ? 'disabled' : ''}>↓</button>
+                    <button class="btn btn-sm btn-danger delete-preset" data-index="${index}">🗑️</button>
+                </div>
+            `;
+            list.appendChild(item);
+        });
+    }
+
+    // 设置预设管理器事件
+    setupPresetManagerEvents(modal) {
+        // 关闭模态框
+        modal.querySelector('.modal-close-btn').addEventListener('click', () => {
+            document.body.removeChild(modal);
+        });
+
+        modal.querySelector('.modal-cancel').addEventListener('click', () => {
+            document.body.removeChild(modal);
+        });
+
+        // 保存设置
+        modal.querySelector('.modal-confirm').addEventListener('click', () => {
+            this.savePresetSettings();
+            document.body.removeChild(modal);
+            this.renderPresetWebsites(); // 重新渲染预设按钮
+        });
+
+        // 添加新预设
+        modal.querySelector('#add-preset-btn').addEventListener('click', () => {
+            this.addNewPreset();
+        });
+
+        // 重置默认预设
+        modal.querySelector('#reset-presets-btn').addEventListener('click', () => {
+            if (confirm('确定要重置为默认预设网站吗？这将清除所有自定义设置。')) {
+                this.resetDefaultPresets();
+            }
+        });
+
+        // 设置列表项事件委托
+        modal.querySelector('#preset-manager-list').addEventListener('click', (e) => {
+            const index = parseInt(e.target.dataset.index);
+
+            if (e.target.classList.contains('move-up')) {
+                this.movePreset(index, -1);
+            } else if (e.target.classList.contains('move-down')) {
+                this.movePreset(index, 1);
+            } else if (e.target.classList.contains('delete-preset')) {
+                if (confirm('确定要删除这个预设网站吗？')) {
+                    this.deletePreset(index);
+                }
+            }
+        });
+    }
+
+    // 添加新预设
+    addNewPreset() {
+        const newPreset = {
+            id: 'custom_' + Date.now(),
+            name: '新网站',
+            url: 'https://example.com',
+            icon: '🌐',
+            description: ''
+        };
+
+        this.state.settings.online.presetWebsites.push(newPreset);
+        this.renderPresetManagerList();
+    }
+
+    // 移动预设位置
+    movePreset(index, direction) {
+        const presets = this.state.settings.online.presetWebsites;
+        const newIndex = index + direction;
+
+        if (newIndex >= 0 && newIndex < presets.length) {
+            [presets[index], presets[newIndex]] = [presets[newIndex], presets[index]];
+            this.renderPresetManagerList();
+        }
+    }
+
+    // 删除预设
+    deletePreset(index) {
+        this.state.settings.online.presetWebsites.splice(index, 1);
+        this.renderPresetManagerList();
+    }
+
+    // 重置默认预设
+    resetDefaultPresets() {
+        this.state.settings.online.presetWebsites = [{
+                id: 'default',
+                name: '移记社区',
+                url: 'http://8.130.41.186:3000/',
+                icon: '🏠',
+                description: '默认社区页面'
+            },
+            {
+                id: 'github',
+                name: 'GitHub',
+                url: 'https://github.com',
+                icon: '📁',
+                description: '代码托管平台'
+            },
+            {
+                id: 'stackoverflow',
+                name: 'Stack Overflow',
+                url: 'https://stackoverflow.com',
+                icon: '❓',
+                description: '编程问答社区'
+            },
+            {
+                id: 'chatgpt',
+                name: 'ChatGPT',
+                url: 'https://chat.openai.com',
+                icon: '🤖',
+                description: 'AI 助手'
+            },
+            {
+                id: 'translate',
+                name: '谷歌翻译',
+                url: 'https://translate.google.com',
+                icon: '🌐',
+                description: '在线翻译工具'
+            }
+        ];
+        this.renderPresetManagerList();
+    }
+
+    // 保存预设设置
+    savePresetSettings() {
+        const items = document.querySelectorAll('.preset-item');
+        const newPresets = [];
+
+        items.forEach((item, index) => {
+            const icon = item.querySelector('.preset-icon').value.trim();
+            const name = item.querySelector('.preset-name').value.trim();
+            const url = item.querySelector('.preset-url').value.trim();
+            const description = item.querySelector('.preset-description').value.trim();
+
+            if (name && url) {
+                newPresets.push({
+                    id: this.state.settings.online.presetWebsites[index] ?.id || `custom_${Date.now()}_${index}`,
+                    name,
+                    url,
+                    icon: icon || '🌐',
+                    description
+                });
+            }
+        });
+
+        this.state.settings.online.presetWebsites = newPresets;
+        this.state.saveData();
     }
 
     // 通用删除确认对话框
@@ -2940,5 +3257,36 @@ class App {
 
 // 应用启动
 document.addEventListener('DOMContentLoaded', () => {
-    new App();
+    console.log('DOM已加载，启动应用...');
+
+    // 创建应用实例并启动
+    window.app = new App();
+
+    console.log('应用启动完成');
+});
+
+// 监听页面卸载，清理资源
+window.addEventListener('beforeunload', () => {
+    if (window.app && window.app.state) {
+        // 保存应用状态
+        window.app.state.saveData();
+    }
+});
+
+// 全局错误处理
+window.addEventListener('error', (event) => {
+    console.error('应用发生错误:', event.error);
+
+    // 如果有通知API，显示错误通知
+    if (window.electronAPI && window.electronAPI.showNotification) {
+        window.electronAPI.showNotification('应用错误', '应用发生了意外错误，请检查控制台');
+    }
+});
+
+// 全局未处理Promise rejection处理
+window.addEventListener('unhandledrejection', (event) => {
+    console.error('未处理的Promise rejection:', event.reason);
+
+    // 防止错误传播到控制台（可选）
+    event.preventDefault();
 });

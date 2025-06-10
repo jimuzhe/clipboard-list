@@ -39,14 +39,47 @@ export class Config {
                 enableNotification: true,
                 excludedApps: [],
                 enableCodeDetection: true
-            },
-            pomodoro: {
+            }, pomodoro: {
                 workDuration: 25,
                 breakDuration: 5,
                 longBreakDuration: 15,
                 soundEnabled: true,
                 autoStartBreak: false,
                 sessionsBeforeLongBreak: 4
+            },
+            online: {
+                currentUrl: 'http://8.130.41.186:3000/',
+                presetWebsites: [
+                    {
+                        id: 'yuanbao',
+                        name: '元宝',
+                        url: 'https://yuanbao.tencent.com/chat/',
+                        icon: '🐙',
+                        description: 'ai'
+                    },
+                    {
+                        id: 'doubao',
+                        name: '豆包',
+                        url: 'https://www.doubao.com/chat/',
+                        icon: '📚',
+                        description: 'ai'
+                    },
+                    {
+                        id: 'baidu',
+                        name: '百度',
+                        url: 'https://www.baidu.com/',
+                        icon: '📖',
+                        description: '搜索'
+                    },
+                    {
+                        id: 'chatgpt',
+                        name: 'ChatGPT',
+                        url: 'https://chat.openai.com',
+                        icon: '🤖',
+                        description: 'ai'
+                    }
+                ],
+                showPresetButtons: true
             }
         };
     }
@@ -80,9 +113,15 @@ export class Config {
             }
             if (userConfig.clipboard) {
                 merged.clipboard = { ...defaultConfig.clipboard, ...userConfig.clipboard };
-            }
-            if (userConfig.pomodoro) {
+            } if (userConfig.pomodoro) {
                 merged.pomodoro = { ...defaultConfig.pomodoro, ...userConfig.pomodoro };
+            }
+            if (userConfig.online) {
+                merged.online = {
+                    ...defaultConfig.online,
+                    ...userConfig.online,
+                    presetWebsites: userConfig.online.presetWebsites || defaultConfig.online.presetWebsites
+                };
             }
         }
 
@@ -114,10 +153,12 @@ export class Config {
 
     getClipboardConfig() {
         return this.config.clipboard;
+    } getPomodoroConfig() {
+        return this.config.pomodoro;
     }
 
-    getPomodoroConfig() {
-        return this.config.pomodoro;
+    getOnlineConfig() {
+        return this.config.online;
     }
 
     private saveConfig(): void {

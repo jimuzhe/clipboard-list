@@ -68,9 +68,9 @@
             <div class="panel-header">
                 <h3>Markdown 编辑器</h3>
                 <div class="header-controls">
-                    <button id="open-workspace-folder" class="btn btn-secondary" title="打开工作文件夹">📂 打开文件夹</button>
+                    <button id="open-workspace-folder" class="btn btn-secondary" title="打开工作文件夹">📂</button>
                     <button id="toggle-sidebar" class="btn btn-secondary" title="收起/展开侧边栏">📁</button>
-                    <button id="new-note" class="btn btn-primary">新建笔记</button>
+                    <button id="new-note" class="btn btn-primary">➕新建笔记</button>
                     <button id="toggle-preview" class="btn btn-secondary">👁️ 预览</button>
                     <div class="auto-save-status" id="auto-save-status">
                         <span class="save-indicator">✅ 已保存</span>
@@ -102,13 +102,14 @@
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- 社区面板 -->
+        </div> <!-- 社区面板 -->
         <div id="community-panel" class="panel">
             <div class="panel-header">
                 <h3>在线访问</h3>
                 <div class="header-controls">
+                    <div class="preset-websites" id="preset-websites">
+                        <!-- 预设网站按钮将在这里动态生成 -->
+                    </div>
                     <button id="refresh-community" class="btn btn-secondary" title="刷新页面">🔄</button>
                     <button id="open-external-community" class="btn btn-secondary" title="在外部浏览器打开">🔗</button>
                 </div>
@@ -136,86 +137,126 @@
             </div>
             <div class="settings-content">
                 <div class="setting-group">
-                    <h4>外观设置</h4>
+                    <h4><span class="group-icon">🎨</span> 外观设置</h4>
                     <div class="setting-item">
-                        <label for="theme-select">主题选择：</label>
+                        <label for="theme-select" class="setting-label">
+                            <span class="setting-icon">🌓</span>
+                            主题选择
+                        </label>
                         <select id="theme-select" class="setting-select">
-                            <option value="light">浅色主题</option>
-                            <option value="dark">深色主题</option>
-                            <option value="auto">跟随系统</option>
+                            <option value="light">☀️ 浅色主题</option>
+                            <option value="dark">🌙 深色主题</option>
+                            <option value="auto">🔄 跟随系统</option>
                         </select>
                     </div>
                     <div class="setting-item">
-                        <label>
-                            <input type="checkbox" id="glass-effect" checked>
-                            启用毛玻璃效果
+                        <label class="setting-label checkbox-setting">
+                            <span class="setting-icon">✨</span>
+                            <span class="setting-text">启用毛玻璃效果</span>
+                            <input type="checkbox" id="glass-effect" checked class="setting-checkbox">
+                            <span class="checkbox-slider"></span>
                         </label>
                     </div>
                 </div>
                 <div class="setting-group">
-                    <h4>功能设置</h4>
+                    <h4><span class="group-icon">⚙️</span> 功能设置</h4>
                     <div class="setting-item">
-                        <label>
-                            <input type="checkbox" id="auto-start" checked>
-                            开机自启动
+                        <label class="setting-label checkbox-setting">
+                            <span class="setting-icon">🚀</span>
+                            <span class="setting-text">开机自启动</span>
+                            <input type="checkbox" id="auto-start" checked class="setting-checkbox">
+                            <span class="checkbox-slider"></span>
                         </label>
                     </div>
                     <div class="setting-item">
-                        <label>
-                            <input type="checkbox" id="clipboard-monitor" checked>
-                            监控剪切板变化
+                        <label class="setting-label checkbox-setting">
+                            <span class="setting-icon">📋</span>
+                            <span class="setting-text">监控剪切板变化</span>
+                            <input type="checkbox" id="clipboard-monitor" checked class="setting-checkbox">
+                            <span class="checkbox-slider"></span>
                         </label>
                     </div>
                     <div class="setting-item">
-                        <label for="max-clipboard-items">剪切板历史数量：</label>
-                        <input type="number" id="max-clipboard-items" value="100" min="10" max="1000"
-                            class="setting-input">
+                        <label for="max-clipboard-items" class="setting-label">
+                            <span class="setting-icon">📊</span>
+                            剪切板历史数量
+                        </label>
+                        <div class="number-input-group">
+                            <input type="number" id="max-clipboard-items" value="100" min="10" max="1000"
+                                class="setting-input number-input">
+                            <span class="input-unit">条</span>
+                        </div>
                     </div>
-                    <div class="setting-item">
-                        <label for="community-url">在线页面地址：</label>
-                        <div class="url-preset-group">
-                            <select id="url-preset" class="setting-select">
-                                <option value="">选择预设页面</option>
-                                <option value="http://8.130.41.186:3000/">默认社区</option>
-                                <option value="https://www.doubao.com/chat/">豆包</option>
-                                <option value="https://chat.openai.com/">ChatGPT</option>
-                                <option value="https://yuanbao.tencent.com/chat/">元宝</option>
-                                <option value="https://grok.dairoot.cn/">Grok</option>
-                                <option value="https://gemini.google.com/">Gemini</option>
-                                <option value="https://www.bing.com/">必应</option>
-                                <option value="https://www.google.com/">Google</option>
-
-                                <option value="custom">自定义...</option>
-                            </select>
+                    <div class="setting-item url-setting-item">
+                        <div class="setting-label-section">
+                            <label for="community-url" class="setting-main-label">
+                                <span class="setting-icon">🌐</span>
+                                在线页面地址
+                            </label>
+                            <p class="setting-description">选择或自定义在线页面访问地址</p>
                         </div>
-                        <div class="url-input-group">
-                            <input type="url" id="community-url" value="http://8.130.41.186:3000/"
-                                placeholder="请输入在线页面的URL..." class="setting-input url-input">
-                            <button id="apply-community-url" class="btn btn-secondary btn-small" title="应用新地址">
-                                <span>应用</span>
-                            </button>
-                        </div>
-                        <div class="setting-hint">
-                            修改后点击"应用"按钮生效，支持 http:// 和 https:// 协议
+                        <div class="setting-control-section">
+                            <div class="url-preset-group">
+                                <label for="url-preset" class="preset-label">快速选择：</label>
+                                <select id="url-preset" class="setting-select preset-select">
+                                    <option value="">选择预设页面</option>
+                                    <option value="http://8.130.41.186:3000/">🏠 默认社区</option>
+                                    <option value="https://www.doubao.com/chat/">🤖 豆包 AI</option>
+                                    <option value="https://chat.openai.com/">💬 ChatGPT</option>
+                                    <option value="https://yuanbao.tencent.com/chat/">💎 腾讯元宝</option>
+                                    <option value="https://grok.dairoot.cn/">🚀 Grok</option>
+                                    <option value="https://gemini.google.com/">💫 Gemini</option>
+                                    <option value="https://www.bing.com/">🔍 必应</option>
+                                    <option value="https://www.google.com/">🌏 Google</option>
+                                    <option value="custom">✏️ 自定义...</option>
+                                </select>
+                            </div>
+                            <div class="url-input-container">
+                                <label for="community-url" class="url-label">自定义地址：</label>
+                                <div class="url-input-group">
+                                    <input type="url" id="community-url" value="http://8.130.41.186:3000/"
+                                        placeholder="请输入完整的URL地址（包含 http:// 或 https://）"
+                                        class="setting-input url-input">
+                                    <button id="apply-community-url" class="btn btn-primary btn-small apply-btn"
+                                        title="应用新地址">
+                                        <span class="btn-icon">✓</span>
+                                        <span>应用</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="setting-hint">
+                                <span class="hint-icon">💡</span>
+                                修改后点击"应用"按钮生效，支持 http:// 和 https:// 协议
+                            </div>
                         </div>
                     </div>
                 </div>
-
                 <div class="setting-group">
-                    <h4>快捷键</h4>
+                    <h4><span class="group-icon">⌨️</span> 快捷键</h4>
                     <div class="setting-item">
-                        <label>显示/隐藏窗口：</label>
+                        <label class="setting-label">
+                            <span class="setting-icon">👁️</span>
+                            显示/隐藏窗口
+                        </label>
                         <span class="shortcut-display">Ctrl + Shift + V</span>
                     </div>
                 </div>
 
                 <div class="setting-group">
-                    <h4>关于</h4>
+                    <h4><span class="group-icon">ℹ️</span> 关于</h4>
                     <div class="setting-item">
-                        <span>版本：<span id="app-version">1.0.0</span></span>
+                        <label class="setting-label">
+                            <span class="setting-icon">📦</span>
+                            应用版本
+                        </label>
+                        <span class="version-display">v<span id="app-version">1.0.0</span></span>
                     </div>
                     <div class="setting-item">
-                        <button id="check-updates" class="btn btn-primary">检查更新</button>
+                        <div class="setting-label">
+                            <span class="setting-icon">🔄</span>
+                            检查更新
+                        </div>
+                        <button id="check-updates" class="btn btn-primary btn-small">检查更新</button>
                     </div>
                 </div>
             </div>
