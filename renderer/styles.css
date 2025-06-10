@@ -3008,6 +3008,11 @@ html, body {
   filter: url(#glow);
 }
 
+/* 深色主题使用不同的光效 */
+[data-theme="dark"] .progress-ring-fill {
+  filter: url(#glow-dark);
+}
+
 .time-display {
   position: absolute;
   font-size: 42px;

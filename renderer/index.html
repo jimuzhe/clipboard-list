@@ -79,7 +79,8 @@
             </div>
             <div class="notes-container">
                 <div class="notes-sidebar">
-                    <!-- 工作区信息 -->                    <div class="workspace-info" id="workspace-info" style="display: none;">
+                    <!-- 工作区信息 -->
+                    <div class="workspace-info" id="workspace-info" style="display: none;">
                         <div class="workspace-header">
                             <h4>工作文件夹</h4>
                         </div>
@@ -103,7 +104,8 @@
         </div> <!-- 社区面板 -->
         <div id="community-panel" class="panel">
             <div class="panel-header">
-                <h3>在线访问</h3>                <div class="header-controls">
+                <h3>在线访问</h3>
+                <div class="header-controls">
                     <div class="preset-websites" id="preset-websites">
                         <!-- 预设网站按钮将在这里动态生成 -->
                     </div>
@@ -391,6 +393,18 @@
                                     </linearGradient>
                                     <filter id="glow">
                                         <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                                        <feMerge>
+                                            <feMergeNode in="coloredBlur" />
+                                            <feMergeNode in="SourceGraphic" />
+                                        </feMerge>
+                                    </filter>
+                                    <!-- 深色主题光效 -->
+                                    <filter id="glow-dark">
+                                        <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+                                        <feColorMatrix in="coloredBlur" type="matrix" values="0.6 0.4 0.9 0 0
+                                             0.4 0.3 0.8 0 0
+                                             0.8 0.6 1 0 0
+                                             0 0 0 1 0" />
                                         <feMerge>
                                             <feMergeNode in="coloredBlur" />
                                             <feMergeNode in="SourceGraphic" />

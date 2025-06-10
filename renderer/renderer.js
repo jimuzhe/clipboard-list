@@ -1778,7 +1778,7 @@ class NotesManager {
                     }
                 }, 1000);
             }
-        }        // 打开工作文件夹
+        } // 打开工作文件夹
         document.getElementById('open-workspace-folder').addEventListener('click', () => {
             this.openWorkspaceFolder();
         });
@@ -1897,26 +1897,16 @@ class NotesManager {
         const workspaceName = document.getElementById('workspace-name');
         const workspacePath = document.getElementById('workspace-path');
         const closeWorkspaceBtn = document.getElementById('close-workspace');
-
         if (this.workspacePath) {
             const folderName = this.workspacePath.split('\\').pop();
             workspaceName.textContent = folderName;
-            workspacePath.textContent = folderName; // 只显示文件夹名称，不显示完整路径
+            workspacePath.textContent = this.workspacePath; // 显示完整路径
+            workspacePath.title = this.workspacePath; // 悬停提示显示完整路径
 
             // 检查是否为默认工作目录
             const isDefaultWorkspace = this.workspacePath.endsWith('\\notes');
             if (isDefaultWorkspace) {
-                workspacePath.title = '默认笔记工作目录: ' + this.workspacePath;
-                if (closeWorkspaceBtn) {
-                    closeWorkspaceBtn.title = '关闭工作目录模式';
-                    closeWorkspaceBtn.textContent = '✕';
-                }
-            } else {
-                workspacePath.title = '自定义工作目录: ' + this.workspacePath;
-                if (closeWorkspaceBtn) {
-                    closeWorkspaceBtn.title = '回到默认工作目录';
-                    closeWorkspaceBtn.textContent = '🏠';
-                }
+                workspacePath.textContent = '默认工作目录'; // 默认工作目录显示友好名称
             }
 
             workspaceInfo.style.display = 'block';
@@ -2391,15 +2381,15 @@ class NotesManager {
         // 切换到设置面板
         const tabButtons = document.querySelectorAll('.tab-btn');
         const panels = document.querySelectorAll('.panel');
-        
+
         // 移除所有活动状态
         tabButtons.forEach(btn => btn.classList.remove('active'));
         panels.forEach(panel => panel.classList.remove('active'));
-        
+
         // 激活设置面板
         const settingsTab = document.querySelector('[data-tab="settings"]');
         const settingsPanel = document.getElementById('settings-panel');
-        
+
         if (settingsTab && settingsPanel) {
             settingsTab.classList.add('active');
             settingsPanel.classList.add('active');
@@ -2412,11 +2402,11 @@ class NotesManager {
 
         if (sidebar.classList.contains('collapsed')) {
             sidebar.classList.remove('collapsed');
-            toggleBtn.textContent = '📁';
+            toggleBtn.textContent = '◀️';
             toggleBtn.title = '收起侧边栏';
         } else {
             sidebar.classList.add('collapsed');
-            toggleBtn.textContent = '📂';
+            toggleBtn.textContent = '▶️';
             toggleBtn.title = '展开侧边栏';
         }
     }
@@ -2938,7 +2928,8 @@ class App {
             // 备用方案
             window.open(url, '_blank');
         }
-    }    searchClipboard(query) {
+    }
+    searchClipboard(query) {
         const items = document.querySelectorAll('.clipboard-item');
         items.forEach(item => {
             // 检查是否是图片类型，如果是图片则跳过搜索
@@ -2947,7 +2938,7 @@ class App {
                 item.style.display = 'block'; // 图片始终显示
                 return;
             }
-            
+
             const content = item.querySelector('.clipboard-item-content').textContent;
             const matches = content.toLowerCase().includes(query.toLowerCase());
             item.style.display = matches ? 'block' : 'none';
@@ -3055,20 +3046,8 @@ class App {
             button.addEventListener('click', () => {
                 this.switchToPresetWebsite(website);
             });
-
             container.appendChild(button);
         });
-
-        // 添加管理预设按钮
-        const manageBtn = document.createElement('button');
-        manageBtn.className = 'manage-presets-btn';
-        manageBtn.title = '管理预设网站';
-        manageBtn.innerHTML = '⚙️';
-        manageBtn.addEventListener('click', () => {
-            this.showPresetWebsitesManager();
-        });
-
-        container.appendChild(manageBtn);
     }
 
     // 切换到预设网站
