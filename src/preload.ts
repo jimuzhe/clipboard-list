@@ -39,7 +39,7 @@ export interface ElectronAPI {
     readFromClipboard: () => Promise<string>;
     onClipboardChange: (callback: (item: any) => void) => void;
     saveData: (data: any) => Promise<void>;
-    loadData: () => Promise<any>;setTheme: (theme: string) => Promise<void>;
+    loadData: () => Promise<any>; setTheme: (theme: string) => Promise<void>;
     getTheme: () => Promise<string>;
     showNotification: (title: string, body: string) => Promise<void>;
     openExternal: (url: string) => Promise<void>;

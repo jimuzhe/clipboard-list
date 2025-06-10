@@ -622,7 +622,7 @@ export class AdvancedClipboardManager extends EventEmitter {
 
     public isMonitoringActive(): boolean {
         return this.isMonitoring;
-    }    public destroy(): void {
+    } public destroy(): void {
         this.stopMonitoring();
 
         this.clipboardHistory = [];
@@ -639,22 +639,22 @@ export class AdvancedClipboardManager extends EventEmitter {
             const buffer = image.toPNG();
             const base64 = buffer.toString('base64');
             const dataUrl = `data:image/png;base64,${base64}`;
-            
+
             // 检查图片大小（限制在5MB以内）
             const imageSizeKB = Math.round(buffer.length / 1024);
             if (imageSizeKB > 5120) { // 5MB
                 logger.warn('Image too large, skipping', { sizeKB: imageSizeKB });
                 return;
             }
-            
+
             // 创建图片的唯一标识符
             const imageHash = this.generateImageHash(buffer);
-            
+
             // 检查是否已经存在相同的图片
-            const existingItem = this.clipboardHistory.find(item => 
+            const existingItem = this.clipboardHistory.find(item =>
                 item.type === 'image' && item.content === imageHash
             );
-            
+
             if (existingItem) {
                 logger.debug('Image already exists in history');
                 return;

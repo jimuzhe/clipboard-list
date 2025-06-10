@@ -108,7 +108,7 @@ class ClipboardManager {
             // 检查是否与上次内容相同
             if (clipboardItem.content === this.lastClipboardContent) return;
 
-            this.lastClipboardContent = clipboardItem.content;            // 转换为渲染进程的格式
+            this.lastClipboardContent = clipboardItem.content; // 转换为渲染进程的格式
             const item = {
                 id: clipboardItem.id || Date.now(),
                 content: clipboardItem.content,
@@ -217,17 +217,24 @@ class ClipboardManager {
         if (pinnedItems.length > 0 && unpinnedItems.length > 0) {
             this.addPinnedSeparator(container, pinnedItems.length);
         }
-    }    createClipboardItemElement(item) {
+    }
+    createClipboardItemElement(item) {
         const div = document.createElement('div');
         div.className = `clipboard-item ${item.pinned ? 'pinned' : ''}`;
         div.dataset.id = item.id;
 
         const typeIcon = this.getTypeIcon(item.type);
-        const timeAgo = this.formatTimeAgo(item.timestamp);        // 根据类型显示不同的内容
+        const timeAgo = this.formatTimeAgo(item.timestamp); // 根据类型显示不同的内容
         let contentHtml = '';
         if (item.type === 'image' && item.imageData) {
             // 图片显示
-            const { width, height } = item.imageSize || { width: 0, height: 0 };
+            const {
+                width,
+                height
+            } = item.imageSize || {
+                width: 0,
+                height: 0
+            };
             contentHtml = `
                 <div class="clipboard-image-container">
                     <img src="${item.imageData}" 
@@ -266,7 +273,8 @@ class ClipboardManager {
         this.addClipboardItemEventListeners(div, item);
 
         return div;
-    }    addClipboardItemEventListeners(element, item) {
+    }
+    addClipboardItemEventListeners(element, item) {
         // 点击复制
         element.addEventListener('click', (e) => {
             if (!e.target.classList.contains('control-btn')) {
@@ -297,7 +305,8 @@ class ClipboardManager {
             e.stopPropagation();
             this.deleteClipboardItem(item.id);
         });
-    }async copyToClipboard(content, item = null) {
+    }
+    async copyToClipboard(content, item = null) {
         try {
             // 如果是图片类型，需要特殊处理
             if (item && item.type === 'image' && item.imageData) {
@@ -2148,7 +2157,7 @@ class App {
 
         // 应用主题
         this.themeManager.applyTheme(this.state.settings.theme);
-              
+
 
         // 渲染数据
         this.clipboardManager.renderClipboardList();

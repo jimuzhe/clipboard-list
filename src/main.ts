@@ -486,12 +486,12 @@ class ClipboardListApp {
             // 从data URL中提取base64数据
             const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
             const buffer = Buffer.from(base64Data, 'base64');
-            
+
             // 创建NativeImage并写入剪切板
             const { nativeImage, clipboard } = require('electron');
             const image = nativeImage.createFromBuffer(buffer);
             clipboard.writeImage(image);
-            
+
             logger.info('Image written to clipboard successfully');
         } catch (error) {
             logger.error('Failed to write image to clipboard:', error);
