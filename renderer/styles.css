@@ -1785,6 +1785,32 @@ body {
   padding: 0;
   background: var(--bg-primary);
   overflow-y: auto;
+  max-height: calc(100vh - 120px);
+}
+
+/* 番茄时钟模态框滚动条样式 */
+.pomodoro-modal .modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.pomodoro-modal .modal-body::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 4px;
+}
+
+.pomodoro-modal .modal-body::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.pomodoro-modal .modal-body::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #ee5a52 0%, #d63031 100%);
+  transform: scaleY(1.1);
+}
+
+.pomodoro-modal .modal-body::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(135deg, #d63031 0%, #b2bec3 100%);
 }
 
 .pomodoro-display {
