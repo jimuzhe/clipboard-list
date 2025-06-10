@@ -68,8 +68,8 @@
             <div class="panel-header">
                 <h3>Markdown 编辑器</h3>
                 <div class="header-controls">
-                    <button id="open-workspace-folder" class="btn btn-primary" title="打开工作文件夹">📂</button>
-                    <button id="toggle-sidebar" class="btn btn-primary" title="收起/展开侧边栏">📁</button>
+                    <button id="open-workspace-folder" class="btn btn-primary" title="选择其他工作文件夹">📂</button>
+                    <button id="toggle-sidebar" class="btn btn-primary" title="收起/展开侧边栏">↔️</button>
                     <button id="new-note" class="btn btn-primary" title="新建笔记">➕</button>
                     <button id="toggle-preview" class="btn btn-primary" title="预览/编辑">👁️</button>
                     <div class="auto-save-status" id="auto-save-status">
@@ -79,11 +79,9 @@
             </div>
             <div class="notes-container">
                 <div class="notes-sidebar">
-                    <!-- 工作区信息 -->
-                    <div class="workspace-info" id="workspace-info" style="display: none;">
+                    <!-- 工作区信息 -->                    <div class="workspace-info" id="workspace-info" style="display: none;">
                         <div class="workspace-header">
                             <h4>工作文件夹</h4>
-                            <button id="close-workspace" class="btn btn-small" title="关闭工作文件夹">✕</button>
                         </div>
                         <div class="workspace-name" id="workspace-name"></div>
                         <div class="workspace-path" id="workspace-path"></div>
@@ -105,11 +103,11 @@
         </div> <!-- 社区面板 -->
         <div id="community-panel" class="panel">
             <div class="panel-header">
-                <h3>在线访问</h3>
-                <div class="header-controls">
+                <h3>在线访问</h3>                <div class="header-controls">
                     <div class="preset-websites" id="preset-websites">
                         <!-- 预设网站按钮将在这里动态生成 -->
                     </div>
+                    <button id="settings-preview" class="btn btn-secondary" title="设置预览页面">⚙️</button>
                     <button id="refresh-community" class="btn btn-secondary" title="刷新页面">🔄</button>
                     <button id="open-external-community" class="btn btn-secondary" title="在外部浏览器打开">🔗</button>
                 </div>

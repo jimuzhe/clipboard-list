@@ -25,8 +25,8 @@ electron_1.contextBridge.exposeInMainWorld('electronAPI', {
      * 通过IPC调用主进程打开外部链接
      * @param url - 要打开的外部链接地址
      */
-    openExternal: (url) => electron_1.ipcRenderer.invoke('open-external', url),
-    // 文件夹和文件操作
+    openExternal: (url) => electron_1.ipcRenderer.invoke('open-external', url), // 文件夹和文件操作
+    getDefaultNotesFolder: () => electron_1.ipcRenderer.invoke('get-default-notes-folder'),
     openFolderDialog: (options) => electron_1.ipcRenderer.invoke('open-folder-dialog', options),
     listMarkdownFiles: (folderPath) => electron_1.ipcRenderer.invoke('list-markdown-files', folderPath),
     readFile: (filePath) => electron_1.ipcRenderer.invoke('read-file', filePath),

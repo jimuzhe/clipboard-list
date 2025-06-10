@@ -1,4 +1,4 @@
-import { ipcMain, IpcMainInvokeEvent, WebContents, dialog, shell } from 'electron';
+import { ipcMain, IpcMainInvokeEvent, WebContents, dialog, shell, app } from 'electron';
 import { EventEmitter } from 'events';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -9,7 +9,7 @@ import { Note } from '../types/notes';
 import { AppConfig } from '../types';
 
 /**
- * IPCćĺĄ - č´č´Łä¸ťčżç¨ĺć¸˛ćčżç¨äšé´çĺŽĺ¨éäżĄ
+ * IPC服务 - 负责主进程和渲染进程之间的安全通信
  */
 export class IPCService extends EventEmitter {
     private handlers: Map<string, Function> = new Map();
@@ -20,20 +20,21 @@ export class IPCService extends EventEmitter {
     }
 
     /**
-     * čŽžç˝ŽIPCĺ¤çç¨ĺş
+     * 设置IPC处理程序
      */
     private setupHandlers(): void {
-        // ĺşç¨ç¸ĺł
+        // 应用相关
         this.registerHandler('app:get-version', this.handleGetAppVersion.bind(this));
         this.registerHandler('app:get-config', this.handleGetConfig.bind(this));
         this.registerHandler('app:set-config', this.handleSetConfig.bind(this));
         this.registerHandler('app:show-notification', this.handleShowNotification.bind(this));
 
-        // çŞĺŁć§ĺś
+        // 窗口控制
         this.registerHandler('window:minimize', this.handleMinimizeWindow.bind(this));
         this.registerHandler('window:close', this.handleCloseWindow.bind(this));
         this.registerHandler('window:show', this.handleShowWindow.bind(this));
-        this.registerHandler('window:hide', this.handleHideWindow.bind(this)); this.registerHandler('window:set-size', this.handleSetWindowSize.bind(this));
+        this.registerHandler('window:hide', this.handleHideWindow.bind(this));
+        this.registerHandler('window:set-size', this.handleSetWindowSize.bind(this));
         this.registerHandler('window:get-bounds', this.handleGetWindowBounds.bind(this));
 
         // 边缘触发功能
@@ -42,7 +43,7 @@ export class IPCService extends EventEmitter {
         this.registerHandler('window:set-edge-trigger-enabled', this.handleSetEdgeTriggerEnabled.bind(this));
         this.registerHandler('window:get-edge-trigger-enabled', this.handleGetEdgeTriggerEnabled.bind(this));
 
-        // ĺŞĺćżç¸ĺ?
+        // 剪切板相关
         this.registerHandler('clipboard:read', this.handleReadClipboard.bind(this));
         this.registerHandler('clipboard:write', this.handleWriteClipboard.bind(this));
         this.registerHandler('clipboard:get-history', this.handleGetClipboardHistory.bind(this));
@@ -50,7 +51,7 @@ export class IPCService extends EventEmitter {
         this.registerHandler('clipboard:toggle-pin', this.handleToggleClipboardPin.bind(this));
         this.registerHandler('clipboard:remove-item', this.handleRemoveClipboardItem.bind(this));
 
-        // ć°ćŽćäšĺ?
+        // 数据存储相关
         this.registerHandler('data:save', this.handleSaveData.bind(this));
         this.registerHandler('data:load', this.handleLoadData.bind(this));
         this.registerHandler('data:save-todos', this.handleSaveTodos.bind(this));
@@ -58,17 +59,18 @@ export class IPCService extends EventEmitter {
         this.registerHandler('data:save-notes', this.handleSaveNotes.bind(this));
         this.registerHandler('data:load-notes', this.handleLoadNotes.bind(this));
 
-        // ä¸ťé˘ç¸ĺł
+        // 主题相关
         this.registerHandler('theme:get', this.handleGetTheme.bind(this));
         this.registerHandler('theme:set', this.handleSetTheme.bind(this));
 
-        // čŞĺŻĺ¨ç¸ĺ?
+        // 自启动相关
         this.registerHandler('auto-start:get-status', this.handleGetAutoStartStatus.bind(this));
         this.registerHandler('auto-start:toggle', this.handleToggleAutoStart.bind(this));
         this.registerHandler('auto-start:enable', this.handleEnableAutoStart.bind(this));
         this.registerHandler('auto-start:disable', this.handleDisableAutoStart.bind(this));
 
         // 文件和文件夹操作
+        this.registerHandler('get-default-notes-folder', this.handleGetDefaultNotesFolder.bind(this));
         this.registerHandler('open-folder-dialog', this.handleOpenFolderDialog.bind(this));
         this.registerHandler('list-markdown-files', this.handleListMarkdownFiles.bind(this));
         this.registerHandler('read-file', this.handleReadFile.bind(this));
@@ -76,27 +78,31 @@ export class IPCService extends EventEmitter {
         this.registerHandler('delete-file', this.handleDeleteFile.bind(this));
         this.registerHandler('open-external', this.handleOpenExternal.bind(this));
 
-        // ??????????? - ??????????API??
+        // 兼容性别名
         this.setupCompatibilityAliases();
 
         logger.info('IPC handlers registered');
     }
 
     /**
-     * ???????????
-     * ??????????API??????????????
+     * 设置兼容性别名
      */
     private setupCompatibilityAliases(): void {
-        // ??????
+        // 应用相关
         this.registerHandler('get-app-version', this.handleGetAppVersion.bind(this));
         this.registerHandler('get-config', this.handleGetConfig.bind(this));
         this.registerHandler('set-config', this.handleSetConfig.bind(this));
-        this.registerHandler('show-notification', this.handleShowNotification.bind(this));        // 窗口相关
+        this.registerHandler('show-notification', this.handleShowNotification.bind(this));
+
+        // 窗口相关
         this.registerHandler('minimize-window', this.handleMinimizeWindow.bind(this));
         this.registerHandler('close-window', this.handleCloseWindow.bind(this));
         this.registerHandler('show-window', this.handleShowWindow.bind(this));
-        this.registerHandler('hide-window', this.handleHideWindow.bind(this)); this.registerHandler('set-window-size', this.handleSetWindowSize.bind(this));
-        this.registerHandler('get-window-bounds', this.handleGetWindowBounds.bind(this));        // ???????
+        this.registerHandler('hide-window', this.handleHideWindow.bind(this));
+        this.registerHandler('set-window-size', this.handleSetWindowSize.bind(this));
+        this.registerHandler('get-window-bounds', this.handleGetWindowBounds.bind(this));
+
+        // 剪切板相关
         this.registerHandler('read-clipboard', this.handleReadClipboard.bind(this));
         this.registerHandler('write-clipboard', this.handleWriteClipboard.bind(this));
         this.registerHandler('write-image-clipboard', this.handleWriteImageClipboard.bind(this));
@@ -105,7 +111,7 @@ export class IPCService extends EventEmitter {
         this.registerHandler('toggle-clipboard-pin', this.handleToggleClipboardPin.bind(this));
         this.registerHandler('remove-clipboard-item', this.handleRemoveClipboardItem.bind(this));
 
-        // ???????
+        // 数据存储相关
         this.registerHandler('save-data', this.handleSaveData.bind(this));
         this.registerHandler('load-data', this.handleLoadData.bind(this));
         this.registerHandler('save-todos', this.handleSaveTodos.bind(this));
@@ -113,11 +119,11 @@ export class IPCService extends EventEmitter {
         this.registerHandler('save-notes', this.handleSaveNotes.bind(this));
         this.registerHandler('load-notes', this.handleLoadNotes.bind(this));
 
-        // ??????
+        // 主题相关
         this.registerHandler('get-theme', this.handleGetTheme.bind(this));
         this.registerHandler('set-theme', this.handleSetTheme.bind(this));
 
-        // ???????
+        // 自启动相关
         this.registerHandler('get-auto-start-status', this.handleGetAutoStartStatus.bind(this));
         this.registerHandler('toggle-auto-start', this.handleToggleAutoStart.bind(this));
         this.registerHandler('enable-auto-start', this.handleEnableAutoStart.bind(this));
@@ -127,7 +133,7 @@ export class IPCService extends EventEmitter {
     }
 
     /**
-     * ćł¨ĺIPCĺ¤çç¨ĺş
+     * 注册IPC处理程序
      */
     private registerHandler(channel: string, handler: Function): void {
         this.handlers.set(channel, handler);
@@ -147,7 +153,7 @@ export class IPCService extends EventEmitter {
     }
 
     /**
-     * ĺéćśćŻĺ°ć¸˛ćčżç¨
+     * 发送消息到渲染进程
      */
     public sendToRenderer(webContents: WebContents, channel: string, data?: any): void {
         try {
@@ -159,15 +165,14 @@ export class IPCService extends EventEmitter {
     }
 
     /**
-     * ĺšżć­ćśćŻĺ°ććć¸˛ćčżç¨?
+     * 广播消息到所有渲染进程
      */
     public broadcast(channel: string, data?: any): void {
         this.emit('broadcast', { channel, data });
     }
 
-    // === ĺşç¨ç¸ĺłĺ¤çç¨ĺş ===
+    // === 应用相关处理程序 ===
     private async handleGetAppVersion(): Promise<string> {
-        const { app } = require('electron');
         return app.getVersion();
     }
 
@@ -186,7 +191,7 @@ export class IPCService extends EventEmitter {
         this.emit('show-notification', { title, body, icon });
     }
 
-    // === çŞĺŁć§ĺśĺ¤çç¨ĺş ===
+    // === 窗口控制处理程序 ===
     private async handleMinimizeWindow(): Promise<void> {
         this.emit('window-minimize');
     }
@@ -197,13 +202,17 @@ export class IPCService extends EventEmitter {
 
     private async handleShowWindow(): Promise<void> {
         this.emit('window-show');
-    } private async handleHideWindow(): Promise<void> {
+    }
+
+    private async handleHideWindow(): Promise<void> {
         this.emit('window-hide');
     }
 
     private async handleSetWindowSize(event: IpcMainInvokeEvent, { width, height }: { width: number; height: number }): Promise<void> {
         this.emit('window-set-size', { width, height });
-    } private async handleGetWindowBounds(): Promise<any> {
+    }
+
+    private async handleGetWindowBounds(): Promise<any> {
         return new Promise((resolve) => {
             this.emit('window-get-bounds');
             this.once('window-bounds-response', resolve);
@@ -239,7 +248,7 @@ export class IPCService extends EventEmitter {
         });
     }
 
-    // === ĺŞĺćżç¸ĺłĺ¤çç¨ĺş?===
+    // === 剪切板相关处理程序 ===
     private async handleReadClipboard(): Promise<string> {
         return new Promise((resolve) => {
             this.emit('clipboard-read');
@@ -280,7 +289,7 @@ export class IPCService extends EventEmitter {
         });
     }
 
-    // === ć°ćŽćäšĺĺ¤çç¨ĺş?===
+    // === 数据存储处理程序 ===
     private async handleSaveData(event: IpcMainInvokeEvent, data: any): Promise<void> {
         this.emit('data-save', data);
     }
@@ -314,7 +323,7 @@ export class IPCService extends EventEmitter {
         });
     }
 
-    // === ä¸ťé˘ç¸ĺłĺ¤çç¨ĺş ===
+    // === 主题相关处理程序 ===
     private async handleGetTheme(): Promise<string> {
         return new Promise((resolve) => {
             this.emit('theme-get');
@@ -326,7 +335,7 @@ export class IPCService extends EventEmitter {
         this.emit('theme-set', theme);
     }
 
-    // === čŞĺŻĺ¨ç¸ĺłĺ¤çç¨ĺş?===
+    // === 自启动相关处理程序 ===
     private async handleGetAutoStartStatus(): Promise<any> {
         return new Promise((resolve) => {
             this.emit('auto-start-get-status');
@@ -350,13 +359,39 @@ export class IPCService extends EventEmitter {
     }
 
     // === 文件和文件夹操作处理程序 ===
-    private async handleOpenFolderDialog(event: IpcMainInvokeEvent, options?: any): Promise<any> {
+    private async handleGetDefaultNotesFolder(event: IpcMainInvokeEvent): Promise<{ folderPath: string }> {
         try {
-            const result = await dialog.showOpenDialog({
+            const userDataPath = app.getPath('userData');
+            const notesFolder = path.join(userDataPath, 'notes');
+
+            // 确保 notes 文件夹存在
+            await fs.mkdir(notesFolder, { recursive: true });
+
+            return { folderPath: notesFolder };
+        } catch (error) {
+            logger.error('Get default notes folder error:', error);
+            throw error;
+        }
+    } private async handleOpenFolderDialog(event: IpcMainInvokeEvent, options?: any): Promise<any> {
+        try {
+            // 构建对话框选项，确保 defaultPath 是字符串或不传递
+            const dialogOptions: any = {
                 properties: ['openDirectory'],
-                title: options?.title || '选择文件夹',
-                ...options
-            });
+                title: options?.title || '选择文件夹'
+            };
+
+            // 只有当 defaultPath 是有效字符串时才添加
+            if (options?.defaultPath && typeof options.defaultPath === 'string') {
+                dialogOptions.defaultPath = options.defaultPath;
+            }
+
+            // 添加其他选项（排除已处理的 title 和 defaultPath）
+            if (options) {
+                const { title, defaultPath, ...otherOptions } = options;
+                Object.assign(dialogOptions, otherOptions);
+            }
+
+            const result = await dialog.showOpenDialog(dialogOptions);
             return result;
         } catch (error) {
             logger.error('Open folder dialog error:', error);
@@ -410,20 +445,22 @@ export class IPCService extends EventEmitter {
         }
     }
 
-    private async handleWriteFile(event: IpcMainInvokeEvent, filePath: string, content: string): Promise<void> {
+    private async handleWriteFile(event: IpcMainInvokeEvent, filePath: string, content: string): Promise<any> {
         try {
             await fs.writeFile(filePath, content, 'utf-8');
             logger.info(`File written: ${filePath}`);
+            return { filePath };
         } catch (error) {
             logger.error('Write file error:', error);
             throw error;
         }
     }
 
-    private async handleDeleteFile(event: IpcMainInvokeEvent, filePath: string): Promise<void> {
+    private async handleDeleteFile(event: IpcMainInvokeEvent, filePath: string): Promise<any> {
         try {
             await fs.unlink(filePath);
             logger.info(`File deleted: ${filePath}`);
+            return { filePath };
         } catch (error) {
             logger.error('Delete file error:', error);
             throw error;
@@ -441,7 +478,7 @@ export class IPCService extends EventEmitter {
     }
 
     /**
-     * ç§ťé¤ĺ¤çç¨ĺş
+     * 移除处理程序
      */
     public removeHandler(channel: string): void {
         if (this.handlers.has(channel)) {
@@ -451,9 +488,10 @@ export class IPCService extends EventEmitter {
         }
     }
 
-  /**
-   * ç§ťé¤ććĺ?
-   */  public removeAllHandlers(): void {
+    /**
+     * 移除所有处理程序
+     */
+    public removeAllHandlers(): void {
         Array.from(this.handlers.keys()).forEach(channel => {
             ipcMain.removeHandler(channel);
         });
@@ -462,14 +500,14 @@ export class IPCService extends EventEmitter {
     }
 
     /**
-     * čˇĺĺˇ˛ćł¨ĺçĺ¤çç¨ĺşĺčĄ¨
+     * 获取已注册的处理程序列表
      */
     public getRegisteredHandlers(): string[] {
         return Array.from(this.handlers.keys());
     }
 
     /**
-     * éćŻćĺ?
+     * 销毁服务
      */
     public destroy(): void {
         this.removeAllHandlers();

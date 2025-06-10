@@ -12,6 +12,7 @@ export interface ElectronAPI {
     getTheme: () => Promise<string>;
     showNotification: (title: string, body: string) => Promise<void>;
     openExternal: (url: string) => Promise<void>;
+    getDefaultNotesFolder: () => Promise<any>;
     openFolderDialog: (options?: any) => Promise<any>;
     listMarkdownFiles: (folderPath: string) => Promise<any>;
     readFile: (filePath: string) => Promise<any>;

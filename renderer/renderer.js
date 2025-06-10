@@ -16,37 +16,36 @@ class AppState {
                 currentUrl: 'http://8.130.41.186:3000/',
                 showPresetButtons: true,
                 presetWebsites: [{
-                        id: 'default',
-                        name: '移记社区',
-                        url: 'http://8.130.41.186:3000/',
-                        icon: '🏠',
-                        description: '默认社区页面'
-                    }, {
-                        id: 'yuanbao',
-                        name: '元宝',
-                        url: 'https://yuanbao.tencent.com/chat/',
-                        icon: '🐙',
-                        description: 'ai'
-                    }, {
-                        id: 'doubao',
-                        name: '豆包',
-                        url: 'https://www.doubao.com/chat/',
-                        icon: '📚',
-                        description: 'ai'
-                    }, {
-                        id: 'baidu',
-                        name: '百度',
-                        url: 'https://www.baidu.com/',
-                        icon: '📖',
-                        description: '搜索'
-                    }, {
-                        id: 'chatgpt',
-                        name: 'ChatGPT',
-                        url: 'https://chat.openai.com',
-                        icon: '🤖',
-                        description: 'ai'
-                    }
-                ]
+                    id: 'default',
+                    name: '移记社区',
+                    url: 'http://8.130.41.186:3000/',
+                    icon: '🏠',
+                    description: '默认社区页面'
+                }, {
+                    id: 'yuanbao',
+                    name: '元宝',
+                    url: 'https://yuanbao.tencent.com/chat/',
+                    icon: '🐙',
+                    description: 'ai'
+                }, {
+                    id: 'doubao',
+                    name: '豆包',
+                    url: 'https://www.doubao.com/chat/',
+                    icon: '📚',
+                    description: 'ai'
+                }, {
+                    id: 'baidu',
+                    name: '百度',
+                    url: 'https://www.baidu.com/',
+                    icon: '📖',
+                    description: '搜索'
+                }, {
+                    id: 'chatgpt',
+                    name: 'ChatGPT',
+                    url: 'https://chat.openai.com',
+                    icon: '🤖',
+                    description: 'ai'
+                }]
             }
         };
         this.pomodoroTimer = {
@@ -1688,34 +1687,109 @@ class NotesManager {
         this.currentFilePath = null; // 当前编辑的文件路径
         this.init();
     }
-
-    init() {
+    async init() {
         this.renderFilesList();
-        this.setupEventListeners();
-    }
+        // 确保DOM已经准备好再设置事件监听器
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                this.setupEventListeners();
+            });
+        } else {
+            // DOM已经准备好，直接设置
+            this.setupEventListeners();
+        }
+        // 自动设置默认工作目录为应用的 notes 文件夹
+        await this.initializeDefaultWorkspace();
+    } // 初始化默认工作区
+    async initializeDefaultWorkspace() {
+        try {
+            const response = await window.electronAPI.getDefaultNotesFolder();
 
+            if (response.success && response.data && response.data.folderPath) {
+                this.workspacePath = response.data.folderPath;
+
+                // 显示工作区信息
+                this.updateWorkspaceInfo();
+
+                // 加载默认工作文件夹中的文件
+                await this.refreshWorkspaceFiles();
+
+                console.log('默认工作文件夹已设置:', this.workspacePath);
+            }
+        } catch (error) {
+            console.error('初始化默认工作文件夹失败:', error);
+            // 如果失败，保持原有的内存笔记模式
+        }
+    }
     setupEventListeners() {
         // 新建笔记
-        document.getElementById('new-note').addEventListener('click', () => {
-            this.createNewNote();
-        });
+        console.log('开始设置新建笔记事件监听器...');
 
-        // 打开工作文件夹
+        // 直接尝试查找按钮
+        const newNoteBtn = document.getElementById('new-note');
+        console.log('新建笔记按钮元素:', newNoteBtn);
+        console.log('DOM readyState:', document.readyState);
+
+        if (newNoteBtn) {
+            console.log('找到新建笔记按钮，设置事件监听器');
+            newNoteBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('新建笔记按钮被点击了！');
+                this.createNewNote();
+            });
+            console.log('新建笔记按钮事件监听器已添加');
+        } else {
+            console.error('找不到新建笔记按钮元素！');
+            // 使用querySelctor 作为备选
+            const backupBtn = document.querySelector('#new-note');
+            console.log('使用querySelector查找按钮:', backupBtn);
+
+            if (backupBtn) {
+                console.log('通过querySelector找到按钮，设置事件监听器');
+                backupBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('新建笔记按钮被点击了！(backup)');
+                    this.createNewNote();
+                });
+            } else {
+                // 延迟重试
+                setTimeout(() => {
+                    const retryBtn = document.getElementById('new-note');
+                    console.log('延迟重试查找按钮:', retryBtn);
+                    if (retryBtn) {
+                        retryBtn.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log('新建笔记按钮被点击了！(重试)');
+                            this.createNewNote();
+                        });
+                        console.log('新建笔记按钮事件监听器已添加(重试)');
+                    } else {
+                        console.error('重试后仍然找不到新建笔记按钮元素！');
+                        // 打印所有按钮供调试
+                        const allButtons = document.querySelectorAll('button');
+                        console.log('页面中的所有按钮:', Array.from(allButtons).map(btn => ({
+                            id: btn.id,
+                            className: btn.className,
+                            textContent: btn.textContent
+                        })));
+                    }
+                }, 1000);
+            }
+        }        // 打开工作文件夹
         document.getElementById('open-workspace-folder').addEventListener('click', () => {
             this.openWorkspaceFolder();
         });
 
-        // 关闭工作文件夹
-        const closeWorkspaceBtn = document.getElementById('close-workspace');
-        if (closeWorkspaceBtn) {
-            closeWorkspaceBtn.addEventListener('click', () => {
-                this.closeWorkspace();
-            });
-        }
-
         // 预览按钮切换
         document.getElementById('toggle-preview').addEventListener('click', () => {
             this.togglePreview();
+            // 自动收起侧边栏
+            if (this.currentMode === 'preview') {
+                this.collapseSidebar();
+            }
         });
 
         // 编辑器内容变化 - 自动保存
@@ -1743,11 +1817,17 @@ class NotesManager {
         document.getElementById('toggle-sidebar').addEventListener('click', () => {
             this.toggleSidebar();
         });
+
+        // 设置预览页面按钮事件
+        document.getElementById('settings-preview').addEventListener('click', () => {
+            this.openSettingsPreview();
+        });
     } // 打开工作文件夹
     async openWorkspaceFolder() {
         try {
             const response = await window.electronAPI.openFolderDialog({
-                title: '选择Markdown工作文件夹'
+                title: '选择Markdown工作文件夹',
+                defaultPath: this.workspacePath // 如果已有工作目录，设为默认路径
             });
 
             // 检查IPC调用是否成功
@@ -1760,7 +1840,15 @@ class NotesManager {
                 return;
             }
 
-            this.workspacePath = result.filePaths[0];
+            const newPath = result.filePaths[0];
+
+            // 如果选择的是同一个文件夹，不需要重新加载
+            if (newPath === this.workspacePath) {
+                this.showNotification('提示', '已经是当前工作文件夹');
+                return;
+            }
+
+            this.workspacePath = newPath;
 
             // 显示工作区信息
             this.updateWorkspaceInfo();
@@ -1768,16 +1856,22 @@ class NotesManager {
             // 加载工作文件夹中的文件
             await this.refreshWorkspaceFiles();
 
-            this.showNotification('工作文件夹打开成功', `已打开: ${this.workspacePath}`);
+            this.showNotification('工作文件夹切换成功', `已切换到: ${this.workspacePath}`);
 
         } catch (error) {
             console.error('打开工作文件夹失败:', error);
             this.showNotification('打开失败', error.message || '无法打开文件夹');
         }
-    }
+    } // 关闭工作区
+    async closeWorkspace() {
+        // 如果当前不是默认工作目录，则切换回默认工作目录
+        if (this.workspacePath && !this.workspacePath.endsWith('\\notes')) {
+            await this.initializeDefaultWorkspace();
+            this.showNotification('已切换回默认工作目录', '已回到应用的 notes 文件夹');
+            return;
+        }
 
-    // 关闭工作区
-    closeWorkspace() {
+        // 如果已经是默认工作目录，则完全关闭工作区
         this.workspacePath = null;
         this.workspaceFiles = [];
         this.currentFilePath = null;
@@ -1794,7 +1888,6 @@ class NotesManager {
 
         // 恢复原有笔记列表
         this.renderFilesList();
-
         this.showNotification('工作文件夹已关闭', '已切换回普通笔记模式');
     }
 
@@ -1803,11 +1896,29 @@ class NotesManager {
         const workspaceInfo = document.getElementById('workspace-info');
         const workspaceName = document.getElementById('workspace-name');
         const workspacePath = document.getElementById('workspace-path');
+        const closeWorkspaceBtn = document.getElementById('close-workspace');
 
         if (this.workspacePath) {
             const folderName = this.workspacePath.split('\\').pop();
             workspaceName.textContent = folderName;
-            workspacePath.textContent = this.workspacePath;
+            workspacePath.textContent = folderName; // 只显示文件夹名称，不显示完整路径
+
+            // 检查是否为默认工作目录
+            const isDefaultWorkspace = this.workspacePath.endsWith('\\notes');
+            if (isDefaultWorkspace) {
+                workspacePath.title = '默认笔记工作目录: ' + this.workspacePath;
+                if (closeWorkspaceBtn) {
+                    closeWorkspaceBtn.title = '关闭工作目录模式';
+                    closeWorkspaceBtn.textContent = '✕';
+                }
+            } else {
+                workspacePath.title = '自定义工作目录: ' + this.workspacePath;
+                if (closeWorkspaceBtn) {
+                    closeWorkspaceBtn.title = '回到默认工作目录';
+                    closeWorkspaceBtn.textContent = '🏠';
+                }
+            }
+
             workspaceInfo.style.display = 'block';
         } else {
             workspaceInfo.style.display = 'none';
@@ -1860,8 +1971,8 @@ class NotesManager {
 
         container.innerHTML = '';
 
+        // 即使没有文件也不显示提示信息，保持空白
         if (this.workspaceFiles.length === 0) {
-            container.innerHTML = '<div class="no-files">文件夹中没有Markdown文件</div>';
             return;
         }
 
@@ -1871,7 +1982,9 @@ class NotesManager {
                 container.appendChild(element);
             }
         });
-    } // 渲染内存中的笔记（原有功能）
+    }
+
+    // 渲染内存中的笔记（原有功能）
     renderMemoryNotes() {
         const container = document.getElementById('notes-list');
         if (!container) return;
@@ -1883,8 +1996,8 @@ class NotesManager {
             this.appState.notes = [];
         }
 
+        // 即使没有笔记也不显示提示信息，保持空白
         if (this.appState.notes.length === 0) {
-            container.innerHTML = '<div class="no-files">暂无笔记</div>';
             return;
         }
 
@@ -1966,12 +2079,12 @@ class NotesManager {
         });
 
         return div;
-    }
-
-    // 检查是否为当前打开的文件
+    } // 检查是否为当前打开的文件
     isCurrentFile(file) {
         return this.currentFilePath === file.path;
-    } // 打开工作区文件
+    }
+
+    // 打开工作区文件
     async openWorkspaceFile(file) {
         try {
             const response = await window.electronAPI.readFile(file.path);
@@ -2018,9 +2131,14 @@ class NotesManager {
 
     // 创建新笔记
     createNewNote() {
+        console.log('创建新笔记被调用');
+        console.log('当前工作路径:', this.workspacePath);
+
         if (this.workspacePath) {
+            console.log('在工作区中创建新文件');
             this.createNewFileInWorkspace();
         } else {
+            console.log('创建内存笔记');
             this.createNewMemoryNote();
         }
     }
@@ -2028,6 +2146,9 @@ class NotesManager {
     // 在工作文件夹中创建新文件
     async createNewFileInWorkspace() {
         if (!this.workspacePath) {
+
+
+
             this.showNotification('错误', '请先选择工作文件夹');
             return;
         }
@@ -2103,9 +2224,10 @@ class NotesManager {
             // 保存到内存笔记
             this.saveMemoryNote(content);
         }
-
         this.showSaveStatus('✅ 已保存');
-    } // 保存到工作区文件
+    }
+
+    // 保存到工作区文件
     async saveToWorkspaceFile(content) {
         if (!this.currentFilePath) return;
 
@@ -2137,37 +2259,48 @@ class NotesManager {
         this.appState.currentNote.content = content;
         this.appState.currentNote.title = title.substring(0, 50);
         this.appState.currentNote.updatedAt = new Date();
-
         this.appState.saveData();
         this.renderFilesList();
     }
 
     // 删除工作区文件
     async deleteWorkspaceFile(file) {
-        const confirmed = confirm(`确定要删除文件吗？\n${file.name}\n\n此操作不可撤销！`);
-        if (!confirmed) return;
+        // 使用统一的删除确认对话框
+        window.app.showDeleteConfirmDialog({
+            title: '删除文件',
+            itemName: file.name,
+            itemType: 'Markdown文件',
+            onConfirm: async () => {
+                try {
+                    // 调用删除文件API
+                    const response = await window.electronAPI.deleteFile(file.path);
 
-        try {
-            // 这里需要添加删除文件的API，暂时提示用户手动删除
-            this.showNotification('删除功能', '请在文件管理器中手动删除文件');
+                    // 检查IPC调用是否成功
+                    if (!response.success) {
+                        throw new Error(response.error || '删除文件失败');
+                    }
 
-            // 如果删除的是当前文件，清空编辑器
-            if (this.isCurrentFile(file)) {
-                this.currentFilePath = null;
-                document.getElementById('markdown-editor').value = '';
-                const preview = document.getElementById('markdown-preview');
-                if (preview) {
-                    preview.innerHTML = '<p class="no-content">请选择一个文件开始编辑</p>';
+                    // 如果删除的是当前文件，清空编辑器
+                    if (this.isCurrentFile(file)) {
+                        this.currentFilePath = null;
+                        document.getElementById('markdown-editor').value = '';
+                        const preview = document.getElementById('markdown-preview');
+                        if (preview) {
+                            preview.innerHTML = '<p class="no-content">请选择一个文件开始编辑</p>';
+                        }
+                    }
+
+                    // 刷新文件列表
+                    await this.refreshWorkspaceFiles();
+
+                    this.showNotification('删除成功', `文件 "${file.name}" 已删除`);
+
+                } catch (error) {
+                    console.error('删除文件失败:', error);
+                    this.showNotification('删除失败', error.message || '无法删除文件');
                 }
             }
-
-            // 刷新文件列表
-            await this.refreshWorkspaceFiles();
-
-        } catch (error) {
-            console.error('删除文件失败:', error);
-            this.showNotification('删除失败', error.message || '无法删除文件');
-        }
+        });
     }
 
     // 删除内存笔记
@@ -2241,6 +2374,37 @@ class NotesManager {
         }
     }
 
+    // 强制收起侧边栏
+    collapseSidebar() {
+        const sidebar = document.querySelector('.notes-sidebar');
+        const toggleBtn = document.getElementById('toggle-sidebar');
+
+        if (!sidebar.classList.contains('collapsed')) {
+            sidebar.classList.add('collapsed');
+            toggleBtn.textContent = '📂';
+            toggleBtn.title = '展开侧边栏';
+        }
+    }
+
+    // 打开设置预览页面
+    openSettingsPreview() {
+        // 切换到设置面板
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const panels = document.querySelectorAll('.panel');
+        
+        // 移除所有活动状态
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        panels.forEach(panel => panel.classList.remove('active'));
+        
+        // 激活设置面板
+        const settingsTab = document.querySelector('[data-tab="settings"]');
+        const settingsPanel = document.getElementById('settings-panel');
+        
+        if (settingsTab && settingsPanel) {
+            settingsTab.classList.add('active');
+            settingsPanel.classList.add('active');
+        }
+    }
     // 切换侧边栏
     toggleSidebar() {
         const sidebar = document.querySelector('.notes-sidebar');
@@ -2774,11 +2938,16 @@ class App {
             // 备用方案
             window.open(url, '_blank');
         }
-    }
-
-    searchClipboard(query) {
+    }    searchClipboard(query) {
         const items = document.querySelectorAll('.clipboard-item');
         items.forEach(item => {
+            // 检查是否是图片类型，如果是图片则跳过搜索
+            const isImage = item.classList.contains('image-type');
+            if (isImage) {
+                item.style.display = 'block'; // 图片始终显示
+                return;
+            }
+            
             const content = item.querySelector('.clipboard-item-content').textContent;
             const matches = content.toLowerCase().includes(query.toLowerCase());
             item.style.display = matches ? 'block' : 'none';

@@ -22,14 +22,22 @@
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 深色主题 */
+/* 深色主题 - 黑紫色调优化 */
 [data-theme="dark"] {
-  --bg-primary: rgba(30, 30, 30, 0.95);
-  --bg-secondary: rgba(40, 40, 40, 0.9);
-  --bg-glass: rgba(0, 0, 0, 0.2);
+  --bg-primary: rgba(20, 15, 35, 0.95);
+  --bg-secondary: rgba(35, 25, 50, 0.9);
+  --bg-glass: rgba(15, 10, 30, 0.3);
   --text-primary: #ffffff;
-  --text-secondary: #b0b0b0;
-  --border-color: rgba(255, 255, 255, 0.1);
+  --text-secondary: #c8b8e0;
+  --border-color: rgba(180, 150, 220, 0.15);
+  
+  /* 紫色系渐变颜色 */
+  --purple-primary: #6a4c93;
+  --purple-secondary: #9d8df1;
+  --purple-accent: #b19cd9;
+  --purple-light: rgba(157, 141, 241, 0.3);
+  --purple-dark: rgba(106, 76, 147, 0.5);
+  --purple-glass: rgba(157, 141, 241, 0.1);
 }
 
 /* 基础重置 */
@@ -74,13 +82,13 @@ html, body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  background: rgba(128, 128, 128, 0.5);
   border-radius: 4px;
   transition: all 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+  background: rgba(128, 128, 128, 0.7);
 }
 
 ::-webkit-scrollbar-corner {
@@ -222,24 +230,116 @@ html, body {
   display: flex;
 }
 
+/* 面板头部优化 */
 .panel-header {
-  padding: 16px;
+  padding: 16px 20px;
   border-bottom: 1px solid var(--border-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--bg-secondary);
+  background: linear-gradient(135deg, 
+    rgba(0, 122, 204, 0.03) 0%, 
+    var(--bg-secondary) 30%, 
+    rgba(255, 255, 255, 0.95) 100%);
+  min-height: 60px;
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 深色主题的面板头部 */
+[data-theme="dark"] .panel-header {
+  background: linear-gradient(135deg, 
+    var(--purple-glass) 0%, 
+    var(--bg-secondary) 30%, 
+    var(--bg-primary) 100%);
+}
+
+.panel-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    var(--primary-color) 0%, 
+    transparent 50%, 
+    var(--primary-color) 100%);
+  opacity: 0.6;
 }
 
 .panel-header h3 {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .header-controls {
   display: flex;
   gap: 8px;
   align-items: center;
+  flex-wrap: nowrap;
+}
+
+/* 自动保存状态样式优化 */
+.auto-save-status {
+  display: flex;
+  align-items: center;
+  margin-left: 12px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, 
+    rgba(40, 167, 69, 0.1) 0%, 
+    rgba(255, 255, 255, 0.8) 100%);
+  border: 1px solid rgba(40, 167, 69, 0.2);
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.15);
+}
+
+/* 深色主题的自动保存状态 */
+[data-theme="dark"] .auto-save-status {
+  background: linear-gradient(135deg, 
+    rgba(40, 167, 69, 0.15) 0%, 
+    var(--bg-secondary) 100%);
+  border-color: rgba(40, 167, 69, 0.3);
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
+}
+
+.auto-save-status.saving {
+  background: linear-gradient(135deg, 
+    rgba(255, 193, 7, 0.15) 0%, 
+    rgba(255, 255, 255, 0.8) 100%);
+  border-color: rgba(255, 193, 7, 0.3);
+  box-shadow: 0 2px 8px rgba(255, 193, 7, 0.2);
+}
+
+/* 深色主题的保存中状态 */
+[data-theme="dark"] .auto-save-status.saving {
+  background: linear-gradient(135deg, 
+    rgba(255, 193, 7, 0.2) 0%, 
+    var(--bg-secondary) 100%);
+  border-color: rgba(255, 193, 7, 0.4);
+  box-shadow: 0 2px 8px rgba(255, 193, 7, 0.25);
+}
+
+.save-indicator {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--success-color);
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.auto-save-status.saving .save-indicator {
+  color: var(--warning-color);
 }
 
 /* 预设网站样式 */
@@ -488,55 +588,106 @@ html, body {
   50% { opacity: 0.6; }
 }
 
-/* 按钮样式 */
+/* 按钮样式优化 - 统一设计 */
 .btn {
-  padding: 6px 12px;
+  padding: 8px 14px;
   border: none;
-  border-radius: var(--border-radius);
+  border-radius: 8px;
   cursor: pointer;
   font-size: 12px;
-  font-weight: 500;
-  transition: var(--transition);
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  gap: 6px;
+  position: relative;
+  overflow: hidden;
+  min-height: 36px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-transform: none;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+/* 深色主题的按钮光效 */
+[data-theme="dark"] .btn::before {
+  background: linear-gradient(90deg, transparent, var(--purple-light), transparent);
+}
+
+.btn:hover::before {
+  left: 100%;
 }
 
 .btn-primary {
-  background: var(--primary-color);
+  background: linear-gradient(135deg, var(--primary-color), #0066a3);
   color: white;
+  border: 1px solid var(--primary-color);
 }
 
 .btn-primary:hover {
-  background: #0066a3;
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, #0066a3, var(--primary-color));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 122, 204, 0.4);
 }
 
 .btn-secondary {
-  background: var(--secondary-color);
-  color: white;
+  background: linear-gradient(135deg, var(--bg-secondary), rgba(255, 255, 255, 0.9));
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+/* 深色主题的次要按钮 */
+[data-theme="dark"] .btn-secondary {
+  background: linear-gradient(135deg, var(--purple-dark), var(--bg-secondary));
+  border-color: var(--border-color);
 }
 
 .btn-secondary:hover {
-  background: hsl(210, 12%, 58%);
+  background: linear-gradient(135deg, rgba(0, 122, 204, 0.1), var(--bg-primary));
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 122, 204, 0.15);
+}
+
+/* 深色主题的次要按钮悬停 */
+[data-theme="dark"] .btn-secondary:hover {
+  background: linear-gradient(135deg, var(--purple-glass), var(--bg-primary));
+  border-color: var(--purple-accent);
+  box-shadow: 0 6px 20px var(--purple-light);
 }
 
 .btn-success {
-  background: var(--success-color);
+  background: linear-gradient(135deg, var(--success-color), #1e7e34);
   color: white;
+  border: 1px solid var(--success-color);
 }
 
 .btn-success:hover {
-  background: #218838;
+  background: linear-gradient(135deg, #1e7e34, var(--success-color));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
 }
 
 .btn-danger {
-  background: var(--danger-color);
+  background: linear-gradient(135deg, var(--danger-color), #c82333);
   color: white;
+  border: 1px solid var(--danger-color);
 }
 
 .btn-danger:hover {
-  background: #c82333;
+  background: linear-gradient(135deg, #c82333, var(--danger-color));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
 }
 
 /* 输入框样式 */
@@ -882,6 +1033,11 @@ html, body {
   pointer-events: none;
 }
 
+/* 深色主题的卡片光效 */
+[data-theme="dark"] .todo-item::after {
+  background: linear-gradient(135deg, var(--purple-glass), transparent);
+}
+
 .todo-item:hover {
   transform: translateY(-4px) scale(1.02);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
@@ -940,8 +1096,19 @@ html, body {
   box-shadow: 0 4px 20px rgba(220, 53, 69, 0.1);
 }
 
+/* 深色主题的高优先级 */
+[data-theme="dark"] .todo-item.high-priority {
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.15), var(--bg-secondary));
+  box-shadow: 0 4px 20px rgba(220, 53, 69, 0.2);
+}
+
 .todo-item.high-priority:hover {
   box-shadow: 0 12px 40px rgba(220, 53, 69, 0.2);
+}
+
+/* 深色主题的高优先级悬停 */
+[data-theme="dark"] .todo-item.high-priority:hover {
+  box-shadow: 0 12px 40px rgba(220, 53, 69, 0.3);
 }
 
 .todo-item.medium-priority {
@@ -950,8 +1117,19 @@ html, body {
   box-shadow: 0 4px 20px rgba(255, 193, 7, 0.1);
 }
 
+/* 深色主题的中优先级 */
+[data-theme="dark"] .todo-item.medium-priority {
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.12), var(--bg-secondary));
+  box-shadow: 0 4px 20px rgba(255, 193, 7, 0.15);
+}
+
 .todo-item.medium-priority:hover {
   box-shadow: 0 12px 40px rgba(255, 193, 7, 0.2);
+}
+
+/* 深色主题的中优先级悬停 */
+[data-theme="dark"] .todo-item.medium-priority:hover {
+  box-shadow: 0 12px 40px rgba(255, 193, 7, 0.25);
 }
 
 .todo-item.low-priority {
@@ -960,8 +1138,19 @@ html, body {
   box-shadow: 0 4px 20px rgba(40, 167, 69, 0.1);
 }
 
+/* 深色主题的低优先级 */
+[data-theme="dark"] .todo-item.low-priority {
+  background: linear-gradient(135deg, rgba(40, 167, 69, 0.12), var(--bg-secondary));
+  box-shadow: 0 4px 20px rgba(40, 167, 69, 0.15);
+}
+
 .todo-item.low-priority:hover {
   box-shadow: 0 12px 40px rgba(40, 167, 69, 0.2);
+}
+
+/* 深色主题的低优先级悬停 */
+[data-theme="dark"] .todo-item.low-priority:hover {
+  box-shadow: 0 12px 40px rgba(40, 167, 69, 0.25);
 }
 
 /* 待办事项头部 */
@@ -1116,6 +1305,11 @@ html, body {
   backdrop-filter: blur(10px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   position: relative;
+}
+
+/* 深色主题的描述文本 */
+[data-theme="dark"] .todo-item-description {
+  background: linear-gradient(135deg, var(--bg-secondary), var(--purple-glass));
 }
 
 .todo-item-description::before {
@@ -1277,7 +1471,7 @@ html, body {
 }
 
 .notes-sidebar {
-  width: 200px;
+  width: 220px;
   border-right: 1px solid var(--border-color);
   background: var(--bg-secondary);
   display: flex;
@@ -1292,38 +1486,234 @@ html, body {
   min-width: 0;
 }
 
-.notes-sidebar.collapsed .search-input,
+.notes-sidebar.collapsed .workspace-info,
 .notes-sidebar.collapsed .notes-list {
   opacity: 0;
   pointer-events: none;
 }
 
+/* 工作区信息样式 - 优化版 */
+.workspace-info {
+  padding: 16px;
+  border-bottom: 1px solid var(--border-color);
+  background: linear-gradient(135deg, 
+    rgba(0, 122, 204, 0.05) 0%, 
+    var(--bg-secondary) 50%, 
+    rgba(255, 255, 255, 0.8) 100%);
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 深色主题的工作区信息 */
+[data-theme="dark"] .workspace-info {
+  background: linear-gradient(135deg, 
+    var(--purple-glass) 0%, 
+    var(--bg-secondary) 50%, 
+    var(--bg-primary) 100%);
+}
+
+.workspace-info::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary-color), transparent, var(--primary-color));
+  opacity: 0.6;
+}
+
+.workspace-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.workspace-header h4 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.workspace-header h4::before {
+  content: "🗂️";
+  font-size: 14px;
+}
+
+.workspace-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: rgba(0, 122, 204, 0.08);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 122, 204, 0.1);
+  transition: var(--transition);
+}
+
+.workspace-name::before {
+  content: "📁";
+  font-size: 14px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+.workspace-name:hover {
+  background: rgba(0, 122, 204, 0.12);
+  border-color: rgba(0, 122, 204, 0.2);
+  transform: translateY(-1px);
+}
+
+.workspace-path {
+  font-size: 11px;
+  color: var(--text-secondary);
+  opacity: 0.9;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  cursor: help;
+  transition: var(--transition);
+  font-weight: 500;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.workspace-path:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.6);
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 122, 204, 0.15);
+}
+
+/* 工作区按钮优化 */
+#close-workspace {
+  padding: 6px 8px;
+  font-size: 11px;
+  border-radius: 6px;
+  min-width: unset;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(255, 193, 7, 0.1));
+  border: 1px solid rgba(220, 53, 69, 0.2);
+  color: var(--danger-color);
+  font-weight: 600;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+#close-workspace::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+#close-workspace:hover {
+  background: linear-gradient(135deg, var(--danger-color), #c82333);
+  border-color: var(--danger-color);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 12px rgba(220, 53, 69, 0.3);
+}
+
+#close-workspace:hover::before {
+  left: 100%;
+}
+
 .notes-list {
   flex: 1;
   overflow-y: auto;
-  padding: 8px;
+  padding: 12px;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.02) 0%, 
+    var(--bg-secondary) 30%, 
+    rgba(0, 122, 204, 0.02) 100%);
 }
 
+/* 深色主题的笔记列表 */
+[data-theme="dark"] .notes-list {
+  background: linear-gradient(135deg, 
+    var(--purple-glass) 0%, 
+    var(--bg-secondary) 30%, 
+    var(--purple-dark) 100%);
+}
+
+/* 笔记项目卡片优化 */
 .note-item {
-  padding: 8px;
-  margin-bottom: 4px;
-  border-radius: var(--border-radius);
+  padding: 14px;
+  margin-bottom: 8px;
+  border-radius: 12px;
   cursor: pointer;
-  transition: var(--transition);
-  font-size: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 13px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   position: relative;
+  border: 1px solid transparent;
+  background: linear-gradient(135deg, 
+    var(--bg-primary) 0%, 
+    rgba(255, 255, 255, 0.8) 50%, 
+    var(--bg-secondary) 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+
+.note-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(135deg, var(--primary-color), #0066a3);
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .note-item:hover {
-  background: var(--bg-glass);
+  background: linear-gradient(135deg, 
+    rgba(0, 122, 204, 0.05) 0%, 
+    var(--bg-primary) 30%, 
+    rgba(255, 255, 255, 0.9) 100%);
+  border-color: rgba(0, 122, 204, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 122, 204, 0.15);
+}
+
+.note-item:hover::before {
+  opacity: 1;
 }
 
 .note-item.active {
-  background: var(--primary-color);
+  background: linear-gradient(135deg, var(--primary-color), #0066a3);
   color: white;
+  border-color: var(--primary-color);
+  box-shadow: 0 8px 25px rgba(0, 122, 204, 0.4);
+  transform: translateY(-1px);
+}
+
+.note-item.active::before {
+  opacity: 1;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.6));
 }
 
 .note-content {
@@ -1331,46 +1721,137 @@ html, body {
   min-width: 0;
 }
 
+/* 笔记内容样式优化 */
 .note-title {
-  font-weight: 500;
-  margin-bottom: 2px;
+  font-weight: 600;
+  margin-bottom: 6px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.note-title::before {
+  content: "📄";
+  font-size: 12px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+  flex-shrink: 0;
 }
 
 .note-date {
+  font-size: 11px;
+  opacity: 0.75;
+  line-height: 1.3;
+  font-weight: 500;
+  padding: 2px 6px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  display: inline-block;
+  margin-bottom: 4px;
+}
+
+.note-item.active .note-date {
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.note-file-path {
   font-size: 10px;
-  opacity: 0.7;
+  opacity: 0.65;
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-secondary);
+  background: rgba(0, 0, 0, 0.03);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  border-left: 2px solid var(--primary-color);
+}
+
+.note-item.active .note-file-path {
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.1);
+  border-left-color: rgba(255, 255, 255, 0.4);
 }
 
 .note-item-actions {
   display: flex;
   align-items: center;
   opacity: 0;
-  transition: opacity 0.2s ease;
-  margin-left: 8px;
+  transition: all 0.3s ease;
+  margin-left: 10px;
+  flex-shrink: 0;
 }
 
 .note-item:hover .note-item-actions {
   opacity: 1;
+  transform: translateX(-2px);
 }
 
+/* 删除按钮优化 */
 .note-item-actions .delete-btn {
-  background: none;
-  border: none;
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(220, 53, 69, 0.05));
+  border: 1px solid rgba(220, 53, 69, 0.2);
   cursor: pointer;
-  padding: 2px 4px;
-  border-radius: 4px;
+  padding: 6px 8px;
+  border-radius: 6px;
   font-size: 12px;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   color: var(--danger-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  font-weight: 600;
+  position: relative;
+  overflow: hidden;
+}
+
+.note-item-actions .delete-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
 }
 
 .note-item-actions .delete-btn:hover {
-  background: var(--danger-color);
+  background: linear-gradient(135deg, var(--danger-color), #c82333);
+  border-color: var(--danger-color);
   color: white;
   transform: scale(1.1);
+  box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+}
+
+.note-item-actions .delete-btn:hover::before {
+  left: 100%;
+}
+
+.note-item.active .note-item-actions .delete-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.note-item.active .note-item-actions .delete-btn:hover {
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.9), #c82333);
+  border-color: rgba(220, 53, 69, 0.8);
+  color: white;
+}
+
+.note-item.active .note-item-actions .delete-btn:hover {
+  background: rgba(220, 53, 69, 0.9);
+  color: white;
 }
 
 .notes-editor {
@@ -1540,6 +2021,11 @@ html, body {
   overflow-y: auto;
   padding: 20px;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.01) 100%);
+}
+
+/* 深色主题的设置面板 */
+[data-theme="dark"] .settings-content {
+  background: linear-gradient(135deg, var(--purple-glass) 0%, var(--bg-primary) 100%);
 }
 
 .setting-group {
@@ -3095,7 +3581,7 @@ html, body {
 }
 
 /* 社区面板按钮样式 */
-#refresh-community, #open-external-community {
+#settings-preview, #refresh-community, #open-external-community {
   min-width: 40px;
   height: 32px;
   padding: 0 8px;
@@ -3106,7 +3592,7 @@ html, body {
   transition: var(--transition);
 }
 
-#refresh-community:hover, #open-external-community:hover {
+#settings-preview:hover, #refresh-community:hover, #open-external-community:hover {
   background: var(--bg-glass);
   transform: translateY(-1px);
 }
@@ -3337,14 +3823,16 @@ html, body {
   font-style: italic;
 }
 
+/* 小尺寸按钮样式 */
 .btn-small {
-  padding: 8px 16px;
-  font-size: 13px;
-  min-height: 40px;
+  padding: 6px 12px;
+  font-size: 11px;
+  min-height: 32px;
   white-space: nowrap;
-  border-radius: 8px;
-  font-weight: 500;
-  transition: var(--transition);
+  border-radius: 6px;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
 }
 
 .btn-small:hover {
@@ -3389,6 +3877,83 @@ html, body {
   background: rgba(0, 0, 0, 0.3);
   border-color: rgba(255, 255, 255, 0.2);
   color: #66b3ff;
+}
+
+/* 剪切板面板 - 与待办页面样式保持一致 */
+#clipboard-panel .header-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: nowrap; /* 防止换行 */
+}
+
+/* 清理按钮使用与待办添加按钮相同的样式 */
+#clipboard-panel .header-controls #clear-clipboard {
+  /* 继承 .btn .btn-secondary 的样式 */
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  position: relative;
+  overflow: hidden;
+  min-height: 36px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-transform: none;
+  
+  /* 具体的 secondary 样式 */
+  background: linear-gradient(135deg, var(--bg-secondary), rgba(255, 255, 255, 0.9));
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+#clipboard-panel .header-controls #clear-clipboard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+#clipboard-panel .header-controls #clear-clipboard:hover::before {
+  left: 100%;
+}
+
+#clipboard-panel .header-controls #clear-clipboard:hover {
+  background: linear-gradient(135deg, rgba(0, 122, 204, 0.1), var(--bg-primary));
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 122, 204, 0.15);
+}
+
+/* 搜索框使用与筛选栏相同的样式 */
+#clipboard-panel .header-controls #clipboard-search {
+  flex: 1; /* 占用剩余空间 */
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 12px;
+  transition: var(--transition);
+  min-height: 36px;
+  box-sizing: border-box;
+}
+
+#clipboard-panel .header-controls #clipboard-search:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 122, 204, 0.15);
 }
 
 

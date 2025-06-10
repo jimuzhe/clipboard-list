@@ -28,9 +28,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
      * 通过IPC调用主进程打开外部链接
      * @param url - 要打开的外部链接地址
      */
-    openExternal: (url: string) => ipcRenderer.invoke('open-external', url),
-
-    // 文件夹和文件操作
+    openExternal: (url: string) => ipcRenderer.invoke('open-external', url),    // 文件夹和文件操作
+    getDefaultNotesFolder: () => ipcRenderer.invoke('get-default-notes-folder'),
     openFolderDialog: (options?: any) => ipcRenderer.invoke('open-folder-dialog', options),
     listMarkdownFiles: (folderPath: string) => ipcRenderer.invoke('list-markdown-files', folderPath),
     readFile: (filePath: string) => ipcRenderer.invoke('read-file', filePath),
@@ -52,6 +51,7 @@ export interface ElectronAPI {
     getTheme: () => Promise<string>;
     showNotification: (title: string, body: string) => Promise<void>;
     openExternal: (url: string) => Promise<void>;
+    getDefaultNotesFolder: () => Promise<any>;
     openFolderDialog: (options?: any) => Promise<any>;
     listMarkdownFiles: (folderPath: string) => Promise<any>;
     readFile: (filePath: string) => Promise<any>;

@@ -1,30 +1,29 @@
 import { WebContents } from 'electron';
 import { EventEmitter } from 'events';
 /**
- * IPCćĺĄ - č´č´Łä¸ťčżç¨ĺć¸˛ćčżç¨äšé´çĺŽĺ¨éäżĄ
+ * IPC服务 - 负责主进程和渲染进程之间的安全通信
  */
 export declare class IPCService extends EventEmitter {
     private handlers;
     constructor();
     /**
-     * čŽžç˝ŽIPCĺ¤çç¨ĺş
+     * 设置IPC处理程序
      */
     private setupHandlers;
     /**
-     * ???????????
-     * ??????????API??????????????
+     * 设置兼容性别名
      */
     private setupCompatibilityAliases;
     /**
-     * ćł¨ĺIPCĺ¤çç¨ĺş
+     * 注册IPC处理程序
      */
     private registerHandler;
     /**
-     * ĺéćśćŻĺ°ć¸˛ćčżç¨
+     * 发送消息到渲染进程
      */
     sendToRenderer(webContents: WebContents, channel: string, data?: any): void;
     /**
-     * ĺšżć­ćśćŻĺ°ććć¸˛ćčżç¨?
+     * 广播消息到所有渲染进程
      */
     broadcast(channel: string, data?: any): void;
     private handleGetAppVersion;
@@ -60,6 +59,7 @@ export declare class IPCService extends EventEmitter {
     private handleToggleAutoStart;
     private handleEnableAutoStart;
     private handleDisableAutoStart;
+    private handleGetDefaultNotesFolder;
     private handleOpenFolderDialog;
     private handleListMarkdownFiles;
     private handleReadFile;
@@ -67,18 +67,19 @@ export declare class IPCService extends EventEmitter {
     private handleDeleteFile;
     private handleOpenExternal;
     /**
-     * ç§ťé¤ĺ¤çç¨ĺş
+     * 移除处理程序
      */
     removeHandler(channel: string): void;
     /**
-     * ç§ťé¤ććĺ?
-     */ removeAllHandlers(): void;
+     * 移除所有处理程序
+     */
+    removeAllHandlers(): void;
     /**
-     * čˇĺĺˇ˛ćł¨ĺçĺ¤çç¨ĺşĺčĄ¨
+     * 获取已注册的处理程序列表
      */
     getRegisteredHandlers(): string[];
     /**
-     * éćŻćĺ?
+     * 销毁服务
      */
     destroy(): void;
 }

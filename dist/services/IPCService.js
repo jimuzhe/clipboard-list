@@ -40,7 +40,7 @@ const fs = __importStar(require("fs/promises"));
 const path = __importStar(require("path"));
 const Logger_1 = require("../utils/Logger");
 /**
- * IPCćĺĄ - č´č´Łä¸ťčżç¨ĺć¸˛ćčżç¨äšé´çĺŽĺ¨éäżĄ
+ * IPC服务 - 负责主进程和渲染进程之间的安全通信
  */
 class IPCService extends events_1.EventEmitter {
     constructor() {
@@ -49,15 +49,15 @@ class IPCService extends events_1.EventEmitter {
         this.setupHandlers();
     }
     /**
-     * čŽžç˝ŽIPCĺ¤çç¨ĺş
+     * 设置IPC处理程序
      */
     setupHandlers() {
-        // ĺşç¨ç¸ĺł
+        // 应用相关
         this.registerHandler('app:get-version', this.handleGetAppVersion.bind(this));
         this.registerHandler('app:get-config', this.handleGetConfig.bind(this));
         this.registerHandler('app:set-config', this.handleSetConfig.bind(this));
         this.registerHandler('app:show-notification', this.handleShowNotification.bind(this));
-        // çŞĺŁć§ĺś
+        // 窗口控制
         this.registerHandler('window:minimize', this.handleMinimizeWindow.bind(this));
         this.registerHandler('window:close', this.handleCloseWindow.bind(this));
         this.registerHandler('window:show', this.handleShowWindow.bind(this));
@@ -69,55 +69,57 @@ class IPCService extends events_1.EventEmitter {
         this.registerHandler('window:get-trigger-zone-width', this.handleGetTriggerZoneWidth.bind(this));
         this.registerHandler('window:set-edge-trigger-enabled', this.handleSetEdgeTriggerEnabled.bind(this));
         this.registerHandler('window:get-edge-trigger-enabled', this.handleGetEdgeTriggerEnabled.bind(this));
-        // ĺŞĺćżç¸ĺ?
+        // 剪切板相关
         this.registerHandler('clipboard:read', this.handleReadClipboard.bind(this));
         this.registerHandler('clipboard:write', this.handleWriteClipboard.bind(this));
         this.registerHandler('clipboard:get-history', this.handleGetClipboardHistory.bind(this));
         this.registerHandler('clipboard:clear-history', this.handleClearClipboardHistory.bind(this));
         this.registerHandler('clipboard:toggle-pin', this.handleToggleClipboardPin.bind(this));
         this.registerHandler('clipboard:remove-item', this.handleRemoveClipboardItem.bind(this));
-        // ć°ćŽćäšĺ?
+        // 数据存储相关
         this.registerHandler('data:save', this.handleSaveData.bind(this));
         this.registerHandler('data:load', this.handleLoadData.bind(this));
         this.registerHandler('data:save-todos', this.handleSaveTodos.bind(this));
         this.registerHandler('data:load-todos', this.handleLoadTodos.bind(this));
         this.registerHandler('data:save-notes', this.handleSaveNotes.bind(this));
         this.registerHandler('data:load-notes', this.handleLoadNotes.bind(this));
-        // ä¸ťé˘ç¸ĺł
+        // 主题相关
         this.registerHandler('theme:get', this.handleGetTheme.bind(this));
         this.registerHandler('theme:set', this.handleSetTheme.bind(this));
-        // čŞĺŻĺ¨ç¸ĺ?
+        // 自启动相关
         this.registerHandler('auto-start:get-status', this.handleGetAutoStartStatus.bind(this));
         this.registerHandler('auto-start:toggle', this.handleToggleAutoStart.bind(this));
         this.registerHandler('auto-start:enable', this.handleEnableAutoStart.bind(this));
         this.registerHandler('auto-start:disable', this.handleDisableAutoStart.bind(this));
         // 文件和文件夹操作
+        this.registerHandler('get-default-notes-folder', this.handleGetDefaultNotesFolder.bind(this));
         this.registerHandler('open-folder-dialog', this.handleOpenFolderDialog.bind(this));
         this.registerHandler('list-markdown-files', this.handleListMarkdownFiles.bind(this));
         this.registerHandler('read-file', this.handleReadFile.bind(this));
         this.registerHandler('write-file', this.handleWriteFile.bind(this));
         this.registerHandler('delete-file', this.handleDeleteFile.bind(this));
         this.registerHandler('open-external', this.handleOpenExternal.bind(this));
-        // ??????????? - ??????????API??
+        // 兼容性别名
         this.setupCompatibilityAliases();
         Logger_1.logger.info('IPC handlers registered');
     }
     /**
-     * ???????????
-     * ??????????API??????????????
+     * 设置兼容性别名
      */
     setupCompatibilityAliases() {
-        // ??????
+        // 应用相关
         this.registerHandler('get-app-version', this.handleGetAppVersion.bind(this));
         this.registerHandler('get-config', this.handleGetConfig.bind(this));
         this.registerHandler('set-config', this.handleSetConfig.bind(this));
-        this.registerHandler('show-notification', this.handleShowNotification.bind(this)); // 窗口相关
+        this.registerHandler('show-notification', this.handleShowNotification.bind(this));
+        // 窗口相关
         this.registerHandler('minimize-window', this.handleMinimizeWindow.bind(this));
         this.registerHandler('close-window', this.handleCloseWindow.bind(this));
         this.registerHandler('show-window', this.handleShowWindow.bind(this));
         this.registerHandler('hide-window', this.handleHideWindow.bind(this));
         this.registerHandler('set-window-size', this.handleSetWindowSize.bind(this));
-        this.registerHandler('get-window-bounds', this.handleGetWindowBounds.bind(this)); // ???????
+        this.registerHandler('get-window-bounds', this.handleGetWindowBounds.bind(this));
+        // 剪切板相关
         this.registerHandler('read-clipboard', this.handleReadClipboard.bind(this));
         this.registerHandler('write-clipboard', this.handleWriteClipboard.bind(this));
         this.registerHandler('write-image-clipboard', this.handleWriteImageClipboard.bind(this));
@@ -125,17 +127,17 @@ class IPCService extends events_1.EventEmitter {
         this.registerHandler('clear-clipboard-history', this.handleClearClipboardHistory.bind(this));
         this.registerHandler('toggle-clipboard-pin', this.handleToggleClipboardPin.bind(this));
         this.registerHandler('remove-clipboard-item', this.handleRemoveClipboardItem.bind(this));
-        // ???????
+        // 数据存储相关
         this.registerHandler('save-data', this.handleSaveData.bind(this));
         this.registerHandler('load-data', this.handleLoadData.bind(this));
         this.registerHandler('save-todos', this.handleSaveTodos.bind(this));
         this.registerHandler('load-todos', this.handleLoadTodos.bind(this));
         this.registerHandler('save-notes', this.handleSaveNotes.bind(this));
         this.registerHandler('load-notes', this.handleLoadNotes.bind(this));
-        // ??????
+        // 主题相关
         this.registerHandler('get-theme', this.handleGetTheme.bind(this));
         this.registerHandler('set-theme', this.handleSetTheme.bind(this));
-        // ???????
+        // 自启动相关
         this.registerHandler('get-auto-start-status', this.handleGetAutoStartStatus.bind(this));
         this.registerHandler('toggle-auto-start', this.handleToggleAutoStart.bind(this));
         this.registerHandler('enable-auto-start', this.handleEnableAutoStart.bind(this));
@@ -143,7 +145,7 @@ class IPCService extends events_1.EventEmitter {
         Logger_1.logger.info('IPC compatibility aliases registered');
     }
     /**
-     * ćł¨ĺIPCĺ¤çç¨ĺş
+     * 注册IPC处理程序
      */
     registerHandler(channel, handler) {
         this.handlers.set(channel, handler);
@@ -163,7 +165,7 @@ class IPCService extends events_1.EventEmitter {
         });
     }
     /**
-     * ĺéćśćŻĺ°ć¸˛ćčżç¨
+     * 发送消息到渲染进程
      */
     sendToRenderer(webContents, channel, data) {
         try {
@@ -175,15 +177,14 @@ class IPCService extends events_1.EventEmitter {
         }
     }
     /**
-     * ĺšżć­ćśćŻĺ°ććć¸˛ćčżç¨?
+     * 广播消息到所有渲染进程
      */
     broadcast(channel, data) {
         this.emit('broadcast', { channel, data });
     }
-    // === ĺşç¨ç¸ĺłĺ¤çç¨ĺş ===
+    // === 应用相关处理程序 ===
     async handleGetAppVersion() {
-        const { app } = require('electron');
-        return app.getVersion();
+        return electron_1.app.getVersion();
     }
     async handleGetConfig() {
         this.emit('get-config');
@@ -197,7 +198,7 @@ class IPCService extends events_1.EventEmitter {
     async handleShowNotification(event, { title, body, icon }) {
         this.emit('show-notification', { title, body, icon });
     }
-    // === çŞĺŁć§ĺśĺ¤çç¨ĺş ===
+    // === 窗口控制处理程序 ===
     async handleMinimizeWindow() {
         this.emit('window-minimize');
     }
@@ -244,7 +245,7 @@ class IPCService extends events_1.EventEmitter {
             this.once('edge-trigger-enabled-response', resolve);
         });
     }
-    // === ĺŞĺćżç¸ĺłĺ¤çç¨ĺş?===
+    // === 剪切板相关处理程序 ===
     async handleReadClipboard() {
         return new Promise((resolve) => {
             this.emit('clipboard-read');
@@ -278,7 +279,7 @@ class IPCService extends events_1.EventEmitter {
             this.once('clipboard-item-removed', resolve);
         });
     }
-    // === ć°ćŽćäšĺĺ¤çç¨ĺş?===
+    // === 数据存储处理程序 ===
     async handleSaveData(event, data) {
         this.emit('data-save', data);
     }
@@ -306,7 +307,7 @@ class IPCService extends events_1.EventEmitter {
             this.once('data-notes-response', resolve);
         });
     }
-    // === ä¸ťé˘ç¸ĺłĺ¤çç¨ĺş ===
+    // === 主题相关处理程序 ===
     async handleGetTheme() {
         return new Promise((resolve) => {
             this.emit('theme-get');
@@ -316,7 +317,7 @@ class IPCService extends events_1.EventEmitter {
     async handleSetTheme(event, theme) {
         this.emit('theme-set', theme);
     }
-    // === čŞĺŻĺ¨ç¸ĺłĺ¤çç¨ĺş?===
+    // === 自启动相关处理程序 ===
     async handleGetAutoStartStatus() {
         return new Promise((resolve) => {
             this.emit('auto-start-get-status');
@@ -336,13 +337,36 @@ class IPCService extends events_1.EventEmitter {
         this.emit('auto-start-disable');
     }
     // === 文件和文件夹操作处理程序 ===
+    async handleGetDefaultNotesFolder(event) {
+        try {
+            const userDataPath = electron_1.app.getPath('userData');
+            const notesFolder = path.join(userDataPath, 'notes');
+            // 确保 notes 文件夹存在
+            await fs.mkdir(notesFolder, { recursive: true });
+            return { folderPath: notesFolder };
+        }
+        catch (error) {
+            Logger_1.logger.error('Get default notes folder error:', error);
+            throw error;
+        }
+    }
     async handleOpenFolderDialog(event, options) {
         try {
-            const result = await electron_1.dialog.showOpenDialog({
+            // 构建对话框选项，确保 defaultPath 是字符串或不传递
+            const dialogOptions = {
                 properties: ['openDirectory'],
-                title: options?.title || '选择文件夹',
-                ...options
-            });
+                title: options?.title || '选择文件夹'
+            };
+            // 只有当 defaultPath 是有效字符串时才添加
+            if (options?.defaultPath && typeof options.defaultPath === 'string') {
+                dialogOptions.defaultPath = options.defaultPath;
+            }
+            // 添加其他选项（排除已处理的 title 和 defaultPath）
+            if (options) {
+                const { title, defaultPath, ...otherOptions } = options;
+                Object.assign(dialogOptions, otherOptions);
+            }
+            const result = await electron_1.dialog.showOpenDialog(dialogOptions);
             return result;
         }
         catch (error) {
@@ -395,6 +419,7 @@ class IPCService extends events_1.EventEmitter {
         try {
             await fs.writeFile(filePath, content, 'utf-8');
             Logger_1.logger.info(`File written: ${filePath}`);
+            return { filePath };
         }
         catch (error) {
             Logger_1.logger.error('Write file error:', error);
@@ -405,6 +430,7 @@ class IPCService extends events_1.EventEmitter {
         try {
             await fs.unlink(filePath);
             Logger_1.logger.info(`File deleted: ${filePath}`);
+            return { filePath };
         }
         catch (error) {
             Logger_1.logger.error('Delete file error:', error);
@@ -422,7 +448,7 @@ class IPCService extends events_1.EventEmitter {
         }
     }
     /**
-     * ç§ťé¤ĺ¤çç¨ĺş
+     * 移除处理程序
      */
     removeHandler(channel) {
         if (this.handlers.has(channel)) {
@@ -432,8 +458,9 @@ class IPCService extends events_1.EventEmitter {
         }
     }
     /**
-     * ç§ťé¤ććĺ?
-     */ removeAllHandlers() {
+     * 移除所有处理程序
+     */
+    removeAllHandlers() {
         Array.from(this.handlers.keys()).forEach(channel => {
             electron_1.ipcMain.removeHandler(channel);
         });
@@ -441,13 +468,13 @@ class IPCService extends events_1.EventEmitter {
         Logger_1.logger.info('All IPC handlers removed');
     }
     /**
-     * čˇĺĺˇ˛ćł¨ĺçĺ¤çç¨ĺşĺčĄ¨
+     * 获取已注册的处理程序列表
      */
     getRegisteredHandlers() {
         return Array.from(this.handlers.keys());
     }
     /**
-     * éćŻćĺ?
+     * 销毁服务
      */
     destroy() {
         this.removeAllHandlers();
