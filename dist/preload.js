@@ -9,6 +9,7 @@ electron_1.contextBridge.exposeInMainWorld('electronAPI', {
     // 应用信息
     getAppVersion: () => electron_1.ipcRenderer.invoke('get-app-version'), // 剪切板相关
     writeToClipboard: (text) => electron_1.ipcRenderer.invoke('write-clipboard', text),
+    writeImageToClipboard: (imageData) => electron_1.ipcRenderer.invoke('write-image-clipboard', imageData),
     readFromClipboard: () => electron_1.ipcRenderer.invoke('read-clipboard'),
     onClipboardChange: (callback) => {
         electron_1.ipcRenderer.on('clipboard-changed', (_, item) => callback(item));

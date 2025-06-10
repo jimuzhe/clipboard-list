@@ -43,6 +43,7 @@ export declare class IPCService extends EventEmitter {
     private handleGetEdgeTriggerEnabled;
     private handleReadClipboard;
     private handleWriteClipboard;
+    private handleWriteImageClipboard;
     private handleGetClipboardHistory;
     private handleClearClipboardHistory;
     private handleToggleClipboardPin;

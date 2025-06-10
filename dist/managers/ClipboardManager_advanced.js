@@ -38,17 +38,34 @@ class AdvancedClipboardManager extends events_1.EventEmitter {
         catch (error) {
             Logger_1.logger.error('Failed to initialize clipboard:', error);
         }
-    }
-    /**
+    } /**
      * 设置高级监听机制
      */
     setupAdvancedListening() {
-        // 1. 注册全局快捷键监听
-        this.registerGlobalShortcuts();
+        // 1. 延迟注册全局快捷键监听（等待app ready）
+        this.delayedRegisterGlobalShortcuts();
         // 2. 设置窗口事件监听
         this.setupWindowEventListening();
         // 3. 设置系统活动监听
         this.setupSystemActivityListening();
+    }
+    /**
+     * 延迟注册全局快捷键
+     */
+    delayedRegisterGlobalShortcuts() {
+        // 检查app是否已经ready
+        const { app } = require('electron');
+        if (app.isReady()) {
+            this.registerGlobalShortcuts();
+        }
+        else {
+            // 等待app ready事件
+            app.whenReady().then(() => {
+                this.registerGlobalShortcuts();
+            }).catch((error) => {
+                Logger_1.logger.error('❌ Failed to wait for app ready:', error);
+            });
+        }
     }
     /**
      * 注册全局快捷键
@@ -193,8 +210,7 @@ class AdvancedClipboardManager extends events_1.EventEmitter {
             this.globalShortcutRegistered = false;
         }
         Logger_1.logger.info('⏹️ Advanced clipboard monitoring stopped');
-    }
-    /**
+    } /**
      * 检查剪切板变化
      */
     checkClipboardChanges(source = 'unknown') {
@@ -202,6 +218,13 @@ class AdvancedClipboardManager extends events_1.EventEmitter {
             return;
         this.isCheckingClipboard = true;
         try {
+            // 首先检查是否有图片
+            const image = electron_1.clipboard.readImage();
+            if (!image.isEmpty()) {
+                this.handleImageClipboard(image, source);
+                return;
+            }
+            // 如果没有图片，检查文本内容
             const currentContent = electron_1.clipboard.readText();
             // 检查是否有内容且与上次不同
             if (currentContent && currentContent !== this.lastContent) {
@@ -519,6 +542,65 @@ class AdvancedClipboardManager extends events_1.EventEmitter {
         this.clipboardHistory = [];
         this.removeAllListeners();
         Logger_1.logger.info('Advanced ClipboardManager destroyed');
+    }
+    /**
+     * 处理图片剪切板内容
+     */
+    handleImageClipboard(image, source = 'unknown') {
+        try {
+            // 将图片转换为base64 data URL
+            const buffer = image.toPNG();
+            const base64 = buffer.toString('base64');
+            const dataUrl = `data:image/png;base64,${base64}`;
+            // 检查图片大小（限制在5MB以内）
+            const imageSizeKB = Math.round(buffer.length / 1024);
+            if (imageSizeKB > 5120) { // 5MB
+                Logger_1.logger.warn('Image too large, skipping', { sizeKB: imageSizeKB });
+                return;
+            }
+            // 创建图片的唯一标识符
+            const imageHash = this.generateImageHash(buffer);
+            // 检查是否已经存在相同的图片
+            const existingItem = this.clipboardHistory.find(item => item.type === 'image' && item.content === imageHash);
+            if (existingItem) {
+                Logger_1.logger.debug('Image already exists in history');
+                return;
+            }
+            const clipboardItem = {
+                id: this.generateId(),
+                content: imageHash, // 使用hash作为内容标识
+                type: 'image',
+                size: buffer.length,
+                timestamp: new Date(),
+                isPinned: false,
+                tags: [],
+                preview: `图片 (${imageSizeKB} KB)`,
+                // 将实际的图片数据存储在扩展属性中
+                imageData: dataUrl,
+                imageSize: { width: image.getSize().width, height: image.getSize().height }
+            };
+            this.addToHistory(clipboardItem);
+            this.emit('clipboard-changed', clipboardItem);
+            Logger_1.logger.info(`✨ Advanced clipboard image detected from ${source}`, {
+                type: 'image',
+                size: imageSizeKB + ' KB',
+                dimensions: `${image.getSize().width}x${image.getSize().height}`
+            });
+        }
+        catch (error) {
+            Logger_1.logger.error('Error handling image clipboard:', error);
+        }
+    }
+    /**
+     * 生成图片的哈希标识符
+     */
+    generateImageHash(buffer) {
+        // 简单的哈希生成，基于buffer内容
+        let hash = 0;
+        for (let i = 0; i < buffer.length; i += 100) { // 每100字节取样一次以提升性能
+            hash = ((hash << 5) - hash + buffer[i]) & 0xffffffff;
+        }
+        return `img_${Math.abs(hash).toString(36)}_${buffer.length}`;
     }
 }
 exports.AdvancedClipboardManager = AdvancedClipboardManager;

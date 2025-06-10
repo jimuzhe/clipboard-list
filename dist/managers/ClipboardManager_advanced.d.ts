@@ -23,11 +23,14 @@ export declare class AdvancedClipboardManager extends EventEmitter {
     /**
      * 初始化剪切板
      */
-    private initializeClipboard;
-    /**
+    private initializeClipboard; /**
      * 设置高级监听机制
      */
     private setupAdvancedListening;
+    /**
+     * 延迟注册全局快捷键
+     */
+    private delayedRegisterGlobalShortcuts;
     /**
      * 注册全局快捷键
      */
@@ -59,8 +62,7 @@ export declare class AdvancedClipboardManager extends EventEmitter {
     /**
      * 停止监控剪切板变化
      */
-    stopMonitoring(): void;
-    /**
+    stopMonitoring(): void; /**
      * 检查剪切板变化
      */
     private checkClipboardChanges;
@@ -120,5 +122,13 @@ export declare class AdvancedClipboardManager extends EventEmitter {
     forceCheck(): void;
     isMonitoringActive(): boolean;
     destroy(): void;
+    /**
+     * 处理图片剪切板内容
+     */
+    private handleImageClipboard;
+    /**
+     * 生成图片的哈希标识符
+     */
+    private generateImageHash;
 }
 //# sourceMappingURL=ClipboardManager_advanced.d.ts.map

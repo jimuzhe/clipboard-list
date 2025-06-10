@@ -50,8 +50,7 @@ export declare class ClipboardManagerNative extends EventEmitter {
     /**
      * 停止监控剪切板变化
      */
-    stopMonitoring(): void;
-    /**
+    stopMonitoring(): void; /**
      * 检查剪切板变化
      */
     private checkClipboardChanges;
@@ -135,5 +134,13 @@ export declare class ClipboardManagerNative extends EventEmitter {
      * 剪切操作可能有延迟，需要多次检查
      */
     private handleCutOperation;
+    /**
+     * 处理图片剪切板内容
+     */
+    private handleImageClipboard;
+    /**
+     * 生成图片的哈希标识符
+     */
+    private generateImageHash;
 }
 //# sourceMappingURL=ClipboardManager_native.d.ts.map

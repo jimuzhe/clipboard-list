@@ -94,5 +94,13 @@ export declare class ClipboardManager extends EventEmitter {
      * 销毁管理器
      */
     destroy(): void;
+    /**
+     * 处理图片剪切板内容
+     */
+    private handleImageClipboard;
+    /**
+     * 生成图片的哈希标识符
+     */
+    private generateImageHash;
 }
 //# sourceMappingURL=ClipboardManager.d.ts.map

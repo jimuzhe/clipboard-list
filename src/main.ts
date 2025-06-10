@@ -164,6 +164,9 @@ class ClipboardListApp {
         this.ipcService.on('clipboard-write', (text) => {
             this.clipboardManager.writeToClipboard(text);
         });
+        this.ipcService.on('clipboard-write-image', (imageData) => {
+            this.writeImageToClipboard(imageData);
+        });
         this.ipcService.on('clipboard-get-history', () => {
             const history = this.clipboardManager.getHistory();
             this.ipcService.emit('clipboard-history-response', history);
@@ -472,6 +475,26 @@ class ClipboardListApp {
             logger.info('Application cleanup completed');
         } catch (error) {
             logger.error('Error during cleanup:', error);
+        }
+    }
+
+    /**
+     * 写入图片到剪切板
+     */
+    private writeImageToClipboard(imageData: string): void {
+        try {
+            // 从data URL中提取base64数据
+            const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
+            const buffer = Buffer.from(base64Data, 'base64');
+            
+            // 创建NativeImage并写入剪切板
+            const { nativeImage, clipboard } = require('electron');
+            const image = nativeImage.createFromBuffer(buffer);
+            clipboard.writeImage(image);
+            
+            logger.info('Image written to clipboard successfully');
+        } catch (error) {
+            logger.error('Failed to write image to clipboard:', error);
         }
     }
 }

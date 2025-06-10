@@ -75,10 +75,10 @@ class IPCService extends events_1.EventEmitter {
         this.registerHandler('show-window', this.handleShowWindow.bind(this));
         this.registerHandler('hide-window', this.handleHideWindow.bind(this));
         this.registerHandler('set-window-size', this.handleSetWindowSize.bind(this));
-        this.registerHandler('get-window-bounds', this.handleGetWindowBounds.bind(this));
-        // ???????
+        this.registerHandler('get-window-bounds', this.handleGetWindowBounds.bind(this)); // ???????
         this.registerHandler('read-clipboard', this.handleReadClipboard.bind(this));
         this.registerHandler('write-clipboard', this.handleWriteClipboard.bind(this));
+        this.registerHandler('write-image-clipboard', this.handleWriteImageClipboard.bind(this));
         this.registerHandler('get-clipboard-history', this.handleGetClipboardHistory.bind(this));
         this.registerHandler('clear-clipboard-history', this.handleClearClipboardHistory.bind(this));
         this.registerHandler('toggle-clipboard-pin', this.handleToggleClipboardPin.bind(this));
@@ -211,6 +211,9 @@ class IPCService extends events_1.EventEmitter {
     }
     async handleWriteClipboard(event, text) {
         this.emit('clipboard-write', text);
+    }
+    async handleWriteImageClipboard(event, imageData) {
+        this.emit('clipboard-write-image', imageData);
     }
     async handleGetClipboardHistory() {
         return new Promise((resolve) => {

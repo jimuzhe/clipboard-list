@@ -9,6 +9,11 @@ export interface ClipboardItem {
     tags: string[];
     preview?: string;
     source?: string;
+    imageData?: string;
+    imageSize?: {
+        width: number;
+        height: number;
+    };
 }
 export type ClipboardItemType = 'text' | 'image' | 'file' | 'code' | 'url' | 'email';
 export interface ClipboardStats {

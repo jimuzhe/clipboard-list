@@ -3,6 +3,7 @@ export interface ElectronAPI {
     closeWindow: () => Promise<void>;
     getAppVersion: () => Promise<string>;
     writeToClipboard: (text: string) => Promise<void>;
+    writeImageToClipboard: (imageData: string) => Promise<void>;
     readFromClipboard: () => Promise<string>;
     onClipboardChange: (callback: (item: any) => void) => void;
     saveData: (data: any) => Promise<void>;

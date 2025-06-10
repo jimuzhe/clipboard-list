@@ -10,6 +10,9 @@ export interface ClipboardItem {
     tags: string[];
     preview?: string; // 长文本的预览
     source?: string; // 来源应用程序
+    // 图片相关属性
+    imageData?: string; // base64编码的图片数据 (data URL)
+    imageSize?: { width: number; height: number }; // 图片尺寸
 }
 
 // 剪切板条目类型

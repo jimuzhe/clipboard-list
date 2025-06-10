@@ -1230,4 +1230,236 @@ npm run dist
 - 安全的 IPC 通信
 - 输入验证和清理
 
-这份开发文档提供了完整的架构设计和开发指南，确保代码的可维护性和可扩展性。每个模块都有明确的职责边界，便于团队协作开发。
+## 📦 文件大小优化与 Git 管理
+
+### 项目文件大小分析
+
+经过分析，项目文件总大小约 **885MB**，其中：
+
+- **node_modules/** - 约 470MB (54%) - NPM 依赖包
+- **dist-installer/** - 约 374MB (42%) - 构建生成的安装包和可执行文件
+- **dist/** - 约 5-10MB - TypeScript 编译输出
+- **源码和资源** - 约 2-5MB - 实际需要版本控制的文件
+
+### .gitignore 策略
+
+为了优化 Git 仓库大小，我们忽略以下文件/目录：
+
+#### 依赖和构建文件 (必须忽略)
+```
+node_modules/          # NPM 依赖包，通过 package.json 管理
+dist/                  # TypeScript 编译输出，可重新生成
+dist-installer/        # 构建安装包，体积巨大
+build/                 # 其他构建输出
+```
+
+#### 开发和配置文件
+```
+*.log                  # 日志文件
+*.tmp                  # 临时文件
+*.temp                 # 临时文件
+.env*                  # 环境变量文件
+```
+
+#### IDE 和编辑器文件
+```
+.vscode/               # VS Code 配置
+.idea/                 # JetBrains IDE 配置
+*.swp                  # Vim 交换文件
+*~                     # 备份文件
+```
+
+#### 系统生成文件
+```
+.DS_Store              # macOS 系统文件
+Thumbs.db              # Windows 缩略图
+desktop.ini            # Windows 桌面配置
+```
+
+#### 用户数据文件 (重要!)
+```
+data/                  # 用户数据目录
+user-data/             # 用户数据
+userData/              # Electron 用户数据
+```
+
+### Git 最佳实践
+
+#### 1. 克隆和设置
+```bash
+# 克隆项目
+git clone https://github.com/longdz/clipboard-list.git
+cd clipboard-list
+
+# 首次安装依赖 (会下载约470MB)
+npm install
+
+# 编译 TypeScript
+npm run build
+```
+
+#### 2. 开发工作流
+```bash
+# 开发前更新依赖
+npm install
+
+# 启动开发模式
+npm run dev
+
+# 提交代码前检查文件大小
+git status
+git ls-files --others --ignored --exclude-standard  # 查看被忽略的文件
+```
+
+#### 3. 提交规范
+```bash
+# 好的提交示例 (只包含源码)
+git add src/ renderer/ assets/ *.md package.json
+git commit -m "feat: 添加剪切板智能识别功能"
+
+# 避免提交大文件
+git add .  # ❌ 避免使用，可能包含大文件
+```
+
+### 文件大小监控
+
+#### 检查仓库大小
+```bash
+# 检查当前工作目录大小
+Get-ChildItem -Recurse | Measure-Object -Property Length -Sum
+
+# 检查 node_modules 大小
+Get-ChildItem -Path "node_modules" -Recurse | Measure-Object -Property Length -Sum
+
+# 检查 Git 仓库大小
+git count-objects -vH
+```
+
+#### 大文件检查
+```bash
+# 查找大文件 (>10MB)
+Get-ChildItem -Recurse | Where-Object {$_.Length -gt 10MB} | Sort-Object Length -Descending
+
+# 检查 Git 中的大文件
+git ls-files | ForEach-Object {
+    $size = (Get-Item $_).Length
+    if ($size -gt 1MB) {
+        "$($_): $([math]::Round($size/1MB, 2))MB"
+    }
+}
+```
+
+### CI/CD 优化
+
+#### GitHub Actions 缓存
+```yaml
+# .github/workflows/build.yml
+- name: Cache node modules
+  uses: actions/cache@v3
+  with:
+    path: ~/.npm
+    key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+    restore-keys: |
+      ${{ runner.os }}-node-
+```
+
+#### 构建优化
+```json
+{
+  "scripts": {
+    "clean": "rimraf dist dist-installer node_modules/.cache",
+    "prebuild": "npm run clean",
+    "build:prod": "npm run build && npm run dist",
+    "postbuild": "echo 'Build completed, output size:' && du -sh dist-installer/"
+  }
+}
+```
+
+### 发布策略
+
+#### 1. 源码仓库 (GitHub)
+- 只包含源码和必要配置文件
+- 大小控制在 **5MB 以内**
+- 使用 Git LFS 管理大型资源文件
+
+#### 2. 发布包 (GitHub Releases)
+- 构建好的安装包上传到 Releases
+- 提供多平台版本
+- 包含详细的更新日志
+
+#### 3. 自动化发布
+```bash
+# 发布脚本示例
+npm run build          # 编译 TypeScript
+npm run dist           # 构建安装包
+gh release create v1.0.0 "dist-installer/*.exe" --notes "发布说明"
+```
+
+### 开发环境配置
+
+#### 必需工具
+```bash
+# Node.js 16+
+node --version
+
+# TypeScript
+npm install -g typescript
+
+# Electron
+npm install -g electron
+```
+
+#### 推荐 VS Code 扩展
+- TypeScript Importer
+- Electron Debug
+- GitLens
+- File Size
+
+### 故障排除
+
+#### 常见问题
+
+1. **仓库过大无法推送**
+```bash
+# 检查大文件
+git ls-files | xargs ls -la | sort -k5 -nr | head -20
+
+# 清理历史中的大文件
+git filter-branch --tree-filter 'rm -f large-file.exe' HEAD
+```
+
+2. **node_modules 被意外提交**
+```bash
+# 移除已提交的 node_modules
+git rm -r --cached node_modules/
+git commit -m "Remove node_modules from tracking"
+```
+
+3. **构建文件被提交**
+```bash
+# 移除构建文件
+git rm -r --cached dist/ dist-installer/
+git commit -m "Remove build files from tracking"
+```
+
+### 团队协作规范
+
+#### 1. 文件管理规范
+- 禁止提交依赖文件和构建产物
+- 大型资源文件使用 Git LFS
+- 定期清理本地构建缓存
+
+#### 2. 代码审查清单
+- [ ] 检查是否包含大文件
+- [ ] 验证 .gitignore 规则
+- [ ] 确认只提交源码变更
+- [ ] 测试构建流程
+
+#### 3. 发布流程
+1. 更新版本号和文档
+2. 本地构建测试
+3. 提交源码变更
+4. 创建 Git tag
+5. 自动构建和发布
+
+这份文档提供了完整的架构设计和开发指南，确保代码的可维护性和可扩展性。每个模块都有明确的职责边界，便于团队协作开发。通过合理的文件管理策略，项目可以保持轻量级的 Git 仓库，同时提供完整的功能和良好的开发体验。

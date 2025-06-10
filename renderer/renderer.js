@@ -108,15 +108,17 @@ class ClipboardManager {
             // 检查是否与上次内容相同
             if (clipboardItem.content === this.lastClipboardContent) return;
 
-            this.lastClipboardContent = clipboardItem.content;
-
-            // 转换为渲染进程的格式
+            this.lastClipboardContent = clipboardItem.content;            // 转换为渲染进程的格式
             const item = {
                 id: clipboardItem.id || Date.now(),
                 content: clipboardItem.content,
                 type: clipboardItem.type || 'text',
                 timestamp: clipboardItem.timestamp ? new Date(clipboardItem.timestamp) : new Date(),
-                pinned: clipboardItem.isPinned || false
+                pinned: clipboardItem.isPinned || false,
+                // 添加图片相关属性
+                imageData: clipboardItem.imageData,
+                imageSize: clipboardItem.imageSize,
+                size: clipboardItem.size
             };
 
             // 添加到剪切板历史
@@ -215,14 +217,34 @@ class ClipboardManager {
         if (pinnedItems.length > 0 && unpinnedItems.length > 0) {
             this.addPinnedSeparator(container, pinnedItems.length);
         }
-    }
-    createClipboardItemElement(item) {
+    }    createClipboardItemElement(item) {
         const div = document.createElement('div');
         div.className = `clipboard-item ${item.pinned ? 'pinned' : ''}`;
         div.dataset.id = item.id;
 
         const typeIcon = this.getTypeIcon(item.type);
-        const timeAgo = this.formatTimeAgo(item.timestamp);
+        const timeAgo = this.formatTimeAgo(item.timestamp);        // 根据类型显示不同的内容
+        let contentHtml = '';
+        if (item.type === 'image' && item.imageData) {
+            // 图片显示
+            const { width, height } = item.imageSize || { width: 0, height: 0 };
+            contentHtml = `
+                <div class="clipboard-image-container">
+                    <img src="${item.imageData}" 
+                         alt="剪切板图片" 
+                         class="clipboard-image"
+                         title="尺寸: ${width}x${height}"
+                         onclick="window.app.showImagePreview('${item.imageData}')">
+                    <div class="image-info">
+                        <span class="image-size">${Math.round((item.size || 0) / 1024)} KB</span>
+                        <span class="image-dimensions">${width}x${height}</span>
+                    </div>
+                </div>
+            `;
+        } else {
+            // 文本内容显示
+            contentHtml = `<div class="clipboard-item-content" data-full-content="${this.escapeHtml(item.content)}">${this.escapeHtml(item.content)}</div>`;
+        }
 
         div.innerHTML = `
       <div class="clipboard-item-header">
@@ -236,7 +258,7 @@ class ClipboardManager {
           <button class="control-btn delete-btn" title="删除">🗑️</button>
         </div>
       </div>
-      <div class="clipboard-item-content" data-full-content="${this.escapeHtml(item.content)}">${this.escapeHtml(item.content)}</div>
+      ${contentHtml}
       <div class="clipboard-item-time">${timeAgo}${item.pinned ? ' • 已置顶' : ''}</div>
     `;
 
@@ -244,13 +266,11 @@ class ClipboardManager {
         this.addClipboardItemEventListeners(div, item);
 
         return div;
-    }
-
-    addClipboardItemEventListeners(element, item) {
+    }    addClipboardItemEventListeners(element, item) {
         // 点击复制
         element.addEventListener('click', (e) => {
             if (!e.target.classList.contains('control-btn')) {
-                this.copyToClipboard(item.content);
+                this.copyToClipboard(item.content, item);
             }
         });
 
@@ -263,7 +283,7 @@ class ClipboardManager {
         // 复制按钮
         element.querySelector('.copy-btn').addEventListener('click', (e) => {
             e.stopPropagation();
-            this.copyToClipboard(item.content);
+            this.copyToClipboard(item.content, item);
         });
 
         // 编辑按钮
@@ -277,12 +297,18 @@ class ClipboardManager {
             e.stopPropagation();
             this.deleteClipboardItem(item.id);
         });
-    }
-
-    async copyToClipboard(content) {
+    }async copyToClipboard(content, item = null) {
         try {
-            await window.electronAPI.writeToClipboard(content);
-            this.showNotification('复制成功', '内容已复制到剪切板');
+            // 如果是图片类型，需要特殊处理
+            if (item && item.type === 'image' && item.imageData) {
+                // 对于图片，我们需要通过Electron API来处理
+                await window.electronAPI.writeImageToClipboard(item.imageData);
+                this.showNotification('复制成功', '图片已复制到剪切板');
+            } else {
+                // 文本内容直接复制
+                await window.electronAPI.writeToClipboard(content);
+                this.showNotification('复制成功', '内容已复制到剪切板');
+            }
         } catch (error) {
             console.error('Failed to copy to clipboard:', error);
             this.showNotification('复制失败', '无法复制到剪切板');
@@ -2122,7 +2148,7 @@ class App {
 
         // 应用主题
         this.themeManager.applyTheme(this.state.settings.theme);
-        this.themeManager.applyGlassEffect(this.state.settings.glassEffect);
+              
 
         // 渲染数据
         this.clipboardManager.renderClipboardList();
@@ -2384,6 +2410,46 @@ class App {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    /**
+     * 显示图片预览
+     */
+    showImagePreview(imageData) {
+        const modal = document.createElement('div');
+        modal.className = 'image-preview-modal';
+        modal.innerHTML = `
+            <button class="image-preview-close">&times;</button>
+            <img src="${imageData}" alt="图片预览" class="image-preview-content">
+        `;
+
+        document.body.appendChild(modal);
+
+        // 关闭预览
+        const closePreview = () => {
+            if (modal.parentNode) {
+                document.body.removeChild(modal);
+            }
+        };
+
+        // 点击关闭按钮
+        modal.querySelector('.image-preview-close').addEventListener('click', closePreview);
+
+        // 点击背景关闭
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closePreview();
+            }
+        });
+
+        // ESC键关闭
+        const handleKeydown = (e) => {
+            if (e.key === 'Escape') {
+                closePreview();
+                document.removeEventListener('keydown', handleKeydown);
+            }
+        };
+        document.addEventListener('keydown', handleKeydown);
     }
 }
 

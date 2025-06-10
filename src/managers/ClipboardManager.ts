@@ -74,11 +74,19 @@ export class ClipboardManager extends EventEmitter {
             this.clipboardWatcher = undefined;
             logger.info('Native clipboard monitoring stopped');
         }
-    }/**
+    }    /**
      * 检查剪切板变化
      */
     private checkClipboardChanges(): void {
         try {
+            // 首先检查是否有图片
+            const image = clipboard.readImage();
+            if (!image.isEmpty()) {
+                this.handleImageClipboard(image);
+                return;
+            }
+
+            // 如果没有图片，检查文本内容
             const currentContent = clipboard.readText();
 
             // 检查是否有内容且与上次不同
@@ -354,5 +362,75 @@ export class ClipboardManager extends EventEmitter {
         this.clipboardHistory = [];
         this.removeAllListeners();
         logger.info('ClipboardManager destroyed');
+    }
+
+    /**
+     * 处理图片剪切板内容
+     */
+    private handleImageClipboard(image: Electron.NativeImage): void {
+        try {
+            // 将图片转换为base64 data URL
+            const buffer = image.toPNG();
+            const base64 = buffer.toString('base64');
+            const dataUrl = `data:image/png;base64,${base64}`;
+            
+            // 检查图片大小（限制在5MB以内）
+            const imageSizeKB = Math.round(buffer.length / 1024);
+            if (imageSizeKB > 5120) { // 5MB
+                logger.warn('Image too large, skipping', { sizeKB: imageSizeKB });
+                return;
+            }
+
+            // 创建图片的唯一标识符
+            const imageHash = this.generateImageHash(buffer);
+            
+            // 检查是否已经存在相同的图片
+            const existingItem = this.clipboardHistory.find(item => 
+                item.type === 'image' && item.content === imageHash
+            );
+            
+            if (existingItem) {
+                logger.debug('Image already exists in history');
+                return;
+            }
+
+            const clipboardItem: ClipboardItem = {
+                id: this.generateId(),
+                content: imageHash, // 使用hash作为内容标识
+                type: 'image',
+                size: buffer.length,
+                timestamp: new Date(),
+                isPinned: false,
+                tags: [],
+                preview: `图片 (${imageSizeKB} KB)`,
+                // 将实际的图片数据存储在扩展属性中
+                imageData: dataUrl,
+                imageSize: { width: image.getSize().width, height: image.getSize().height }
+            };
+
+            this.addToHistory(clipboardItem);
+            this.emit('clipboard-changed', clipboardItem);
+
+            logger.info('✨ New clipboard image detected', {
+                type: 'image',
+                size: imageSizeKB + ' KB',
+                dimensions: `${image.getSize().width}x${image.getSize().height}`
+            });
+
+        } catch (error) {
+            logger.error('Error handling image clipboard:', error);
+        }
+    }
+
+    /**
+     * 生成图片的哈希标识符
+     */
+    private generateImageHash(buffer: Buffer): string {
+        // 简单的哈希生成，基于buffer内容
+        let hash = 0;
+        for (let i = 0; i < buffer.length; i += 100) { // 每100字节取样一次以提升性能
+            hash = ((hash << 5) - hash + buffer[i]) & 0xffffffff;
+        }
+        return `img_${Math.abs(hash).toString(36)}_${buffer.length}`;
     }
 }

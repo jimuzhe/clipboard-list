@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // 应用信息
     getAppVersion: () => ipcRenderer.invoke('get-app-version'),    // 剪切板相关
     writeToClipboard: (text: string) => ipcRenderer.invoke('write-clipboard', text),
+    writeImageToClipboard: (imageData: string) => ipcRenderer.invoke('write-image-clipboard', imageData),
     readFromClipboard: () => ipcRenderer.invoke('read-clipboard'),
     onClipboardChange: (callback: (item: any) => void) => {
         ipcRenderer.on('clipboard-changed', (_, item) => callback(item));
@@ -34,10 +35,11 @@ export interface ElectronAPI {
     closeWindow: () => Promise<void>;
     getAppVersion: () => Promise<string>;
     writeToClipboard: (text: string) => Promise<void>;
+    writeImageToClipboard: (imageData: string) => Promise<void>;
     readFromClipboard: () => Promise<string>;
     onClipboardChange: (callback: (item: any) => void) => void;
     saveData: (data: any) => Promise<void>;
-    loadData: () => Promise<any>; setTheme: (theme: string) => Promise<void>;
+    loadData: () => Promise<any>;setTheme: (theme: string) => Promise<void>;
     getTheme: () => Promise<string>;
     showNotification: (title: string, body: string) => Promise<void>;
     openExternal: (url: string) => Promise<void>;
