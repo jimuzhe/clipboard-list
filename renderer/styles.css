@@ -518,7 +518,7 @@ html, body {
 }
 
 .btn-secondary:hover {
-  background: #545b62;
+  background: hsl(210, 12%, 58%);
 }
 
 .btn-success {
