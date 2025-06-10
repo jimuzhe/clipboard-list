@@ -10,7 +10,8 @@ class AppState {
             glassEffect: true,
             autoStart: true,
             clipboardMonitor: true,
-            maxClipboardItems: 100
+            maxClipboardItems: 100,
+            communityUrl: 'http://8.130.41.186:3000/'
         };
         this.pomodoroTimer = {
             workDuration: 25,
@@ -241,7 +242,7 @@ class ClipboardManager {
                          alt="剪切板图片" 
                          class="clipboard-image"
                          title="尺寸: ${width}x${height}"
-                         onclick="window.app.showImagePreview('${item.imageData}')">
+                         data-image-preview="true">
                     <div class="image-info">
                         <span class="image-size">${Math.round((item.size || 0) / 1024)} KB</span>
                         <span class="image-dimensions">${width}x${height}</span>
@@ -275,9 +276,20 @@ class ClipboardManager {
         return div;
     }
     addClipboardItemEventListeners(element, item) {
+        // 图片预览点击事件
+        const imagePreview = element.querySelector('[data-image-preview="true"]');
+        if (imagePreview && item.imageData) {
+            imagePreview.addEventListener('click', (e) => {
+                e.stopPropagation();
+                window.app.showImagePreview(item.imageData);
+            });
+            // 添加鼠标悬停样式
+            imagePreview.style.cursor = 'pointer';
+        }
+
         // 点击复制
         element.addEventListener('click', (e) => {
-            if (!e.target.classList.contains('control-btn')) {
+            if (!e.target.classList.contains('control-btn') && !e.target.hasAttribute('data-image-preview')) {
                 this.copyToClipboard(item.content, item);
             }
         });
@@ -1278,13 +1290,8 @@ class PomodoroManager {
                     this.closeModal();
                 }
             });
-        }
-
-        // 输入按钮事件
+        } // 输入按钮事件
         this.setupInputButtons();
-
-        // 设置变化监听
-        this.setupSettingsListeners();
     }
 
     setupInputButtons() {
@@ -1312,58 +1319,6 @@ class PomodoroManager {
                 }
             });
         });
-    }
-
-    setupSettingsListeners() {
-        // 基础设置
-        document.getElementById('work-duration').addEventListener('change', (e) => {
-            this.appState.pomodoroTimer.workDuration = parseInt(e.target.value);
-            this.saveSettings();
-            if (this.appState.pomodoroTimer.isWork && !this.appState.pomodoroTimer.isRunning) {
-                this.reset();
-            }
-        });
-
-        document.getElementById('break-duration').addEventListener('change', (e) => {
-            this.appState.pomodoroTimer.breakDuration = parseInt(e.target.value);
-            this.saveSettings();
-            if (!this.appState.pomodoroTimer.isWork && !this.appState.pomodoroTimer.isRunning) {
-                this.reset();
-            }
-        });
-
-        // 高级设置
-        const longBreakDuration = document.getElementById('long-break-duration');
-        if (longBreakDuration) {
-            longBreakDuration.addEventListener('change', (e) => {
-                this.appState.pomodoroTimer.longBreakDuration = parseInt(e.target.value);
-                this.saveSettings();
-            });
-        }
-
-        const sessionsUntilLongBreak = document.getElementById('sessions-until-long-break');
-        if (sessionsUntilLongBreak) {
-            sessionsUntilLongBreak.addEventListener('change', (e) => {
-                this.appState.pomodoroTimer.sessionsUntilLongBreak = parseInt(e.target.value);
-                this.saveSettings();
-            });
-        }
-
-        const autoStartBreaks = document.getElementById('auto-start-breaks');
-        if (autoStartBreaks) {
-            autoStartBreaks.addEventListener('change', (e) => {
-                this.appState.pomodoroTimer.autoStartBreaks = e.target.checked;
-                this.saveSettings();
-            });
-        }
-
-        const soundNotifications = document.getElementById('sound-notifications');
-        if (soundNotifications) {
-            soundNotifications.addEventListener('change', (e) => {
-                this.appState.pomodoroTimer.soundNotifications = e.target.checked;
-                this.saveSettings();
-            });
-        }
     }
     start() {
         this.appState.pomodoroTimer.isRunning = true;
@@ -1692,18 +1647,35 @@ class NotesManager {
     constructor(appState) {
         this.appState = appState;
         this.currentMode = 'edit';
+        this.workspacePath = null; // 当前工作文件夹路径
+        this.workspaceFiles = []; // 工作文件夹中的文件列表
+        this.currentFilePath = null; // 当前编辑的文件路径
         this.init();
     }
 
     init() {
-        this.renderNotesList();
+        this.renderFilesList();
         this.setupEventListeners();
     }
+
     setupEventListeners() {
         // 新建笔记
         document.getElementById('new-note').addEventListener('click', () => {
             this.createNewNote();
         });
+
+        // 打开工作文件夹
+        document.getElementById('open-workspace-folder').addEventListener('click', () => {
+            this.openWorkspaceFolder();
+        });
+
+        // 关闭工作文件夹
+        const closeWorkspaceBtn = document.getElementById('close-workspace');
+        if (closeWorkspaceBtn) {
+            closeWorkspaceBtn.addEventListener('click', () => {
+                this.closeWorkspace();
+            });
+        }
 
         // 预览按钮切换
         document.getElementById('toggle-preview').addEventListener('click', () => {
@@ -1729,38 +1701,156 @@ class NotesManager {
             autoSaveTimeout = setTimeout(() => {
                 this.autoSaveCurrentNote();
             }, 500);
-        }); // 搜索
-        document.getElementById('notes-search').addEventListener('input', (e) => {
-            this.searchNotes(e.target.value);
         });
 
         // 侧边栏切换
         document.getElementById('toggle-sidebar').addEventListener('click', () => {
             this.toggleSidebar();
         });
+    } // 打开工作文件夹
+    async openWorkspaceFolder() {
+        try {
+            const response = await window.electronAPI.openFolderDialog({
+                title: '选择Markdown工作文件夹'
+            });
+
+            // 检查IPC调用是否成功
+            if (!response.success) {
+                throw new Error(response.error || '打开文件夹对话框失败');
+            }
+
+            const result = response.data;
+            if (result.canceled || result.filePaths.length === 0) {
+                return;
+            }
+
+            this.workspacePath = result.filePaths[0];
+
+            // 显示工作区信息
+            this.updateWorkspaceInfo();
+
+            // 加载工作文件夹中的文件
+            await this.refreshWorkspaceFiles();
+
+            this.showNotification('工作文件夹打开成功', `已打开: ${this.workspacePath}`);
+
+        } catch (error) {
+            console.error('打开工作文件夹失败:', error);
+            this.showNotification('打开失败', error.message || '无法打开文件夹');
+        }
     }
 
-    createNewNote() {
-        const note = {
-            id: Date.now(),
-            title: '新建笔记',
-            content: '',
-            createdAt: new Date(),
-            updatedAt: new Date()
-        };
+    // 关闭工作区
+    closeWorkspace() {
+        this.workspacePath = null;
+        this.workspaceFiles = [];
+        this.currentFilePath = null;
 
-        this.appState.notes.unshift(note);
-        this.appState.currentNote = note;
-        this.renderNotesList();
-        this.loadNoteToEditor(note);
-        this.appState.saveData();
+        // 清空编辑器
+        document.getElementById('markdown-editor').value = '';
+        const preview = document.getElementById('markdown-preview');
+        if (preview) {
+            preview.innerHTML = '<p class="no-content">选择或创建一个Markdown文件开始编辑...</p>';
+        }
+
+        // 隐藏工作区信息
+        this.updateWorkspaceInfo();
+
+        // 恢复原有笔记列表
+        this.renderFilesList();
+
+        this.showNotification('工作文件夹已关闭', '已切换回普通笔记模式');
     }
 
-    renderNotesList() {
+    // 更新工作区信息显示
+    updateWorkspaceInfo() {
+        const workspaceInfo = document.getElementById('workspace-info');
+        const workspaceName = document.getElementById('workspace-name');
+        const workspacePath = document.getElementById('workspace-path');
+
+        if (this.workspacePath) {
+            const folderName = this.workspacePath.split('\\').pop();
+            workspaceName.textContent = folderName;
+            workspacePath.textContent = this.workspacePath;
+            workspaceInfo.style.display = 'block';
+        } else {
+            workspaceInfo.style.display = 'none';
+        }
+    } // 刷新工作文件夹中的文件列表
+    async refreshWorkspaceFiles() {
+        if (!this.workspacePath) return;
+
+        try {
+            const response = await window.electronAPI.listMarkdownFiles(this.workspacePath);
+
+            // 检查IPC调用是否成功
+            if (!response.success) {
+                throw new Error(response.error || '获取文件列表失败');
+            }
+
+            const result = response.data;
+            // 确保result和files都存在
+            if (result && result.files && Array.isArray(result.files)) {
+                this.workspaceFiles = result.files;
+            } else {
+                this.workspaceFiles = [];
+                console.warn('获取文件列表返回数据格式异常:', result);
+            }
+            this.renderFilesList();
+        } catch (error) {
+            console.error('刷新文件列表失败:', error);
+            this.workspaceFiles = []; // 确保出错时也有默认值
+            this.renderFilesList();
+            this.showNotification('刷新失败', '无法读取文件夹内容');
+        }
+    } // 渲染文件列表
+    renderFilesList() {
+        // 确保workspaceFiles是数组
+        if (!Array.isArray(this.workspaceFiles)) {
+            this.workspaceFiles = [];
+        }
+
+        if (this.workspacePath && this.workspaceFiles.length >= 0) {
+            this.renderWorkspaceFiles();
+        } else {
+            this.renderMemoryNotes();
+        }
+    }
+
+    // 渲染工作区文件
+    renderWorkspaceFiles() {
         const container = document.getElementById('notes-list');
         if (!container) return;
 
         container.innerHTML = '';
+
+        if (this.workspaceFiles.length === 0) {
+            container.innerHTML = '<div class="no-files">文件夹中没有Markdown文件</div>';
+            return;
+        }
+
+        this.workspaceFiles.forEach(file => {
+            if (!file.isDirectory) {
+                const element = this.createFileListItem(file);
+                container.appendChild(element);
+            }
+        });
+    } // 渲染内存中的笔记（原有功能）
+    renderMemoryNotes() {
+        const container = document.getElementById('notes-list');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        // 确保notes是数组
+        if (!Array.isArray(this.appState.notes)) {
+            this.appState.notes = [];
+        }
+
+        if (this.appState.notes.length === 0) {
+            container.innerHTML = '<div class="no-files">暂无笔记</div>';
+            return;
+        }
 
         this.appState.notes.forEach(note => {
             const element = this.createNoteListItem(note);
@@ -1768,27 +1858,67 @@ class NotesManager {
         });
     }
 
+    // 创建文件列表项
+    createFileListItem(file) {
+        const div = document.createElement('div');
+        div.className = `note-item ${this.isCurrentFile(file) ? 'active' : ''}`;
+        div.dataset.path = file.path;
+
+        const fileName = file.name.replace(/\.(md|markdown)$/i, '');
+
+        div.innerHTML = `
+            <div class="note-content">
+                <div class="note-title">📄 ${this.escapeHtml(fileName)}</div>
+                <div class="note-date">${this.formatDate(file.lastModified)}</div>
+                <div class="note-file-path" title="${file.path}">${file.path}</div>
+            </div>
+            <div class="note-item-actions">
+                <button class="delete-btn" title="删除文件">🗑️</button>
+            </div>
+        `;
+
+        div.addEventListener('click', (e) => {
+            if (!e.target.classList.contains('delete-btn')) {
+                this.openWorkspaceFile(file);
+            }
+        });
+
+        // 删除按钮事件
+        const deleteBtn = div.querySelector('.delete-btn');
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.deleteWorkspaceFile(file);
+        });
+
+        return div;
+    }
+
+    // 创建内存笔记列表项
     createNoteListItem(note) {
         const div = document.createElement('div');
         div.className = `note-item ${this.appState.currentNote?.id === note.id ? 'active' : ''}`;
         div.dataset.id = note.id;
-        div.innerHTML = `
-      <div class="note-content">
-        <div class="note-title">${this.escapeHtml(note.title)}</div>
-        <div class="note-date">${this.formatDate(note.updatedAt)}</div>
-      </div>
-      <div class="note-item-actions">
-        <button class="delete-btn" title="删除笔记">🗑️</button>
-      </div>
-    `;
 
-        div.addEventListener('click', () => {
-            this.selectNote(note.id);
-        }); // 添加删除按钮事件监听
+        div.innerHTML = `
+            <div class="note-content">
+                <div class="note-title">${this.escapeHtml(note.title)}</div>
+                <div class="note-date">${this.formatDate(note.updatedAt)}</div>
+            </div>
+            <div class="note-item-actions">
+                <button class="delete-btn" title="删除笔记">🗑️</button>
+            </div>
+        `;
+
+        div.addEventListener('click', (e) => {
+            if (!e.target.classList.contains('delete-btn')) {
+                this.selectNote(note.id);
+            }
+        });
+
+        // 删除按钮事件
         const deleteBtn = div.querySelector('.delete-btn');
         deleteBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            // 使用统一的删除确认对话框
             window.app.showDeleteConfirmDialog({
                 title: '删除笔记',
                 itemName: note.title,
@@ -1802,39 +1932,169 @@ class NotesManager {
         return div;
     }
 
+    // 检查是否为当前打开的文件
+    isCurrentFile(file) {
+        return this.currentFilePath === file.path;
+    } // 打开工作区文件
+    async openWorkspaceFile(file) {
+        try {
+            const response = await window.electronAPI.readFile(file.path);
+
+            // 检查IPC调用是否成功
+            if (!response.success) {
+                throw new Error(response.error || '读取文件失败');
+            }
+
+            const fileData = response.data;
+            this.currentFilePath = file.path;
+            document.getElementById('markdown-editor').value = fileData.content;
+
+            // 更新文件列表选中状态
+            this.renderFilesList();
+
+            // 如果是预览模式，更新预览
+            if (this.currentMode === 'preview') {
+                this.updatePreview();
+            }
+
+            this.showSaveStatus('✅ 已保存');
+
+        } catch (error) {
+            console.error('打开文件失败:', error);
+            this.showNotification('打开失败', `无法打开文件: ${file.name}`);
+        }
+    }
+
+    // 选择内存笔记
     selectNote(noteId) {
         const note = this.appState.notes.find(n => n.id === noteId);
         if (note) {
             this.appState.currentNote = note;
-            this.loadNoteToEditor(note);
-            this.renderNotesList();
+            this.currentFilePath = null; // 清除文件路径，表示这是内存笔记
+            document.getElementById('markdown-editor').value = note.content;
+            this.renderFilesList();
+
+            if (this.currentMode === 'preview') {
+                this.updatePreview();
+            }
         }
     }
-    loadNoteToEditor(note) {
-        document.getElementById('markdown-editor').value = note.content;
+
+    // 创建新笔记
+    createNewNote() {
+        if (this.workspacePath) {
+            this.createNewFileInWorkspace();
+        } else {
+            this.createNewMemoryNote();
+        }
     }
 
-    saveCurrentNote() {
-        if (!this.appState.currentNote) return;
+    // 在工作文件夹中创建新文件
+    async createNewFileInWorkspace() {
+        if (!this.workspacePath) {
+            this.showNotification('错误', '请先选择工作文件夹');
+            return;
+        }
 
-        const content = document.getElementById('markdown-editor').value;
-        const firstLine = content.split('\n')[0];
-        const title = firstLine.replace(/^#+\s*/, '') || '无标题笔记';
+        const fileName = prompt('请输入文件名（不需要扩展名）：', '新建笔记');
+        if (!fileName) return;
 
-        this.appState.currentNote.content = content;
-        this.appState.currentNote.title = title.substring(0, 50);
-        this.appState.currentNote.updatedAt = new Date();
+        const safeName = fileName.replace(/[<>:"/\\|?*]/g, '_');
+        const filePath = `${this.workspacePath}\\${safeName}.md`;
 
+        try {
+            // 检查文件是否已存在
+            const exists = this.workspaceFiles.some(file => file.path === filePath);
+            if (exists) {
+                this.showNotification('错误', '同名文件已存在');
+                return;
+            } // 创建新文件
+            const initialContent = `# ${fileName}\n\n`;
+            const response = await window.electronAPI.writeFile(filePath, initialContent);
+
+            // 检查IPC调用是否成功
+            if (!response.success) {
+                throw new Error(response.error || '创建文件失败');
+            }
+
+            // 刷新工作区文件列表
+            await this.refreshWorkspaceFiles();
+
+            // 打开新创建的文件
+            const fileInfo = this.workspaceFiles.find(file => file.path === filePath);
+            if (fileInfo) {
+                await this.openWorkspaceFile(fileInfo);
+            }
+
+            this.showNotification('创建成功', `文件已创建: ${safeName}.md`);
+        } catch (error) {
+            console.error('创建文件失败:', error);
+            this.showNotification('创建失败', error.message || '无法创建文件');
+        }
+    }
+
+    // 创建内存笔记
+    createNewMemoryNote() {
+        const note = {
+            id: Date.now(),
+            title: '新建笔记',
+            content: '',
+            createdAt: new Date(),
+            updatedAt: new Date()
+        };
+
+        this.appState.notes.unshift(note);
+        this.appState.currentNote = note;
+        this.currentFilePath = null;
         this.appState.saveData();
-        this.renderNotesList();
-        this.showNotification('保存成功', '笔记已保存');
+
+        document.getElementById('markdown-editor').value = note.content;
+        this.renderFilesList();
+
+        // 聚焦到编辑器
+        document.getElementById('markdown-editor').focus();
+        this.showNotification('笔记创建成功', '新笔记已创建');
     }
 
     // 自动保存当前笔记
     autoSaveCurrentNote() {
+        const content = document.getElementById('markdown-editor').value;
+
+        if (this.currentFilePath) {
+            // 保存到工作区文件
+            this.saveToWorkspaceFile(content);
+        } else if (this.appState.currentNote) {
+            // 保存到内存笔记
+            this.saveMemoryNote(content);
+        }
+
+        this.showSaveStatus('✅ 已保存');
+    } // 保存到工作区文件
+    async saveToWorkspaceFile(content) {
+        if (!this.currentFilePath) return;
+
+        try {
+            const response = await window.electronAPI.writeFile(this.currentFilePath, content);
+
+            // 检查IPC调用是否成功
+            if (!response.success) {
+                throw new Error(response.error || '保存文件失败');
+            }
+
+            // 刷新文件列表以更新修改时间
+            if (this.workspacePath) {
+                await this.refreshWorkspaceFiles();
+            }
+        } catch (error) {
+            console.error('保存文件失败:', error);
+            this.showNotification('保存失败', error.message || '无法保存文件');
+        }
+    }
+
+    // 保存内存笔记
+    saveMemoryNote(content) {
         if (!this.appState.currentNote) return;
 
-        const content = document.getElementById('markdown-editor').value;
         const firstLine = content.split('\n')[0];
         const title = firstLine.replace(/^#+\s*/, '') || '无标题笔记';
 
@@ -1843,25 +2103,77 @@ class NotesManager {
         this.appState.currentNote.updatedAt = new Date();
 
         this.appState.saveData();
-        this.renderNotesList(); // 显示自动保存完成状态
-        this.showSaveStatus('✅ 已保存');
+        this.renderFilesList();
+    }
+
+    // 删除工作区文件
+    async deleteWorkspaceFile(file) {
+        const confirmed = confirm(`确定要删除文件吗？\n${file.name}\n\n此操作不可撤销！`);
+        if (!confirmed) return;
+
+        try {
+            // 这里需要添加删除文件的API，暂时提示用户手动删除
+            this.showNotification('删除功能', '请在文件管理器中手动删除文件');
+
+            // 如果删除的是当前文件，清空编辑器
+            if (this.isCurrentFile(file)) {
+                this.currentFilePath = null;
+                document.getElementById('markdown-editor').value = '';
+                const preview = document.getElementById('markdown-preview');
+                if (preview) {
+                    preview.innerHTML = '<p class="no-content">请选择一个文件开始编辑</p>';
+                }
+            }
+
+            // 刷新文件列表
+            await this.refreshWorkspaceFiles();
+
+        } catch (error) {
+            console.error('删除文件失败:', error);
+            this.showNotification('删除失败', error.message || '无法删除文件');
+        }
+    }
+
+    // 删除内存笔记
+    deleteNote(noteId) {
+        const noteIndex = this.appState.notes.findIndex(n => n.id === noteId);
+        if (noteIndex === -1) return;
+
+        const deletedNote = this.appState.notes[noteIndex];
+        this.appState.notes.splice(noteIndex, 1);
+
+        // 如果删除的是当前编辑的笔记，需要处理编辑器状态
+        if (this.appState.currentNote && this.appState.currentNote.id === noteId) {
+            if (this.appState.notes.length > 0) {
+                const nextNote = this.appState.notes[Math.min(noteIndex, this.appState.notes.length - 1)];
+                this.appState.currentNote = nextNote;
+                document.getElementById('markdown-editor').value = nextNote.content;
+            } else {
+                this.appState.currentNote = null;
+                document.getElementById('markdown-editor').value = '';
+                const preview = document.getElementById('markdown-preview');
+                if (preview) {
+                    preview.innerHTML = '<p class="no-content">请选择或创建一个笔记开始编辑</p>';
+                }
+            }
+        }
+
+        this.appState.saveData();
+        this.renderFilesList();
+        this.showNotification('删除成功', `笔记 "${deletedNote.title}" 已删除`);
     }
 
     // 显示保存状态
     showSaveStatus(status) {
-        const statusElement = document.getElementById('auto-save-status');
         const indicator = document.querySelector('.save-indicator');
-
         if (indicator) {
             indicator.textContent = status;
 
-            // 根据状态添加相应的样式
             if (status === '正在保存...') {
-                statusElement.classList.add('saving');
+                indicator.parentElement.classList.add('saving');
             } else {
-                statusElement.classList.remove('saving');
+                indicator.parentElement.classList.remove('saving');
 
-                // 如果是保存完成状态，3秒后恢复默认
                 if (status === '✅ 已保存') {
                     setTimeout(() => {
                         if (indicator.textContent === '✅ 已保存') {
@@ -1880,14 +2192,12 @@ class NotesManager {
         const toggleBtn = document.getElementById('toggle-preview');
 
         if (this.currentMode === 'edit') {
-            // 切换到预览模式
             this.currentMode = 'preview';
             editor.style.display = 'none';
             preview.style.display = 'block';
             toggleBtn.textContent = '✏️ 编辑';
             this.updatePreview();
         } else {
-            // 切换到编辑模式
             this.currentMode = 'edit';
             editor.style.display = 'block';
             preview.style.display = 'none';
@@ -1895,18 +2205,16 @@ class NotesManager {
         }
     }
 
-    // 切换侧边栏显示/隐藏
+    // 切换侧边栏
     toggleSidebar() {
         const sidebar = document.querySelector('.notes-sidebar');
         const toggleBtn = document.getElementById('toggle-sidebar');
 
         if (sidebar.classList.contains('collapsed')) {
-            // 展开侧边栏
             sidebar.classList.remove('collapsed');
             toggleBtn.textContent = '📁';
             toggleBtn.title = '收起侧边栏';
         } else {
-            // 收起侧边栏
             sidebar.classList.add('collapsed');
             toggleBtn.textContent = '📂';
             toggleBtn.title = '展开侧边栏';
@@ -1924,7 +2232,7 @@ class NotesManager {
 
     // 简化的Markdown渲染器
     renderMarkdown(content) {
-        if (!content) return '';
+        if (!content) return '<p class="no-content">暂无内容</p>';
 
         let html = content
             // 标题
@@ -1941,26 +2249,26 @@ class NotesManager {
             .replace(/`([^`]+)`/gim, '<code>$1</code>')
             // 链接
             .replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2" target="_blank">$1</a>')
-            // 图片
-            .replace(/!\[([^\]]*)\]\(([^)]+)\)/gim, '<img alt="$1" src="$2" />')
+            // 图片 - 支持本地文件路径
+            .replace(/!\[([^\]]*)\]\(([^)]+)\)/gim, (match, alt, src) => {
+                // 如果是相对路径且当前编辑的是工作区文件，解析相对路径
+                if (this.currentFilePath && !src.startsWith('http') && !src.startsWith('data:') && !src.startsWith('/')) {
+                    const noteDir = this.currentFilePath.substring(0, this.currentFilePath.lastIndexOf('\\'));
+                    const fullPath = `${noteDir}\\${src.replace(/\//g, '\\')}`;
+                    return `<img alt="${alt}" src="file:///${fullPath}" style="max-width: 100%; height: auto;" />`;
+                }
+                return `<img alt="${alt}" src="${src}" style="max-width: 100%; height: auto;" />`;
+            })
+            // 引用
+            .replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>')
+            // 无序列表
+            .replace(/^[\*\-] (.*$)/gim, '<ul><li>$1</li></ul>')
+            // 有序列表
+            .replace(/^(\d+)\. (.*$)/gim, '<ol><li>$2</li></ol>')
             // 换行
             .replace(/\n/gim, '<br>');
 
         return html;
-    }
-
-    searchNotes(query) {
-        const items = document.querySelectorAll('.note-item');
-        items.forEach(item => {
-            const title = item.querySelector('.note-title').textContent;
-            const note = this.appState.notes.find(n => n.id == item.dataset.id);
-            const content = note ? note.content : '';
-
-            const matches = title.toLowerCase().includes(query.toLowerCase()) ||
-                content.toLowerCase().includes(query.toLowerCase());
-
-            item.style.display = matches ? 'block' : 'none';
-        });
     }
 
     formatDate(date) {
@@ -1974,40 +2282,9 @@ class NotesManager {
     }
 
     showNotification(title, body) {
-        if (window.electronAPI.showNotification) {
+        if (window.electronAPI && window.electronAPI.showNotification) {
             window.electronAPI.showNotification(title, body);
         }
-    } // 删除笔记
-    deleteNote(noteId) {
-        const noteIndex = this.appState.notes.findIndex(n => n.id === noteId);
-        if (noteIndex === -1) return;
-
-        const deletedNote = this.appState.notes[noteIndex];
-        this.appState.notes.splice(noteIndex, 1);
-
-        // 如果删除的是当前编辑的笔记，需要处理编辑器状态
-        if (this.appState.currentNote && this.appState.currentNote.id === noteId) {
-            if (this.appState.notes.length > 0) {
-                // 如果还有其他笔记，选择下一个笔记
-                const nextNote = this.appState.notes[Math.min(noteIndex, this.appState.notes.length - 1)];
-                this.appState.currentNote = nextNote;
-                this.loadNoteToEditor(nextNote);
-            } else {
-                // 如果没有笔记了，清空编辑器
-                this.appState.currentNote = null;
-                document.getElementById('markdown-editor').value = '';
-                const preview = document.getElementById('markdown-preview');
-                if (preview) {
-                    preview.innerHTML = '<p class="no-content">请选择或创建一个笔记开始编辑</p>';
-                }
-            }
-        }
-
-        // 保存数据并重新渲染列表
-        this.appState.saveData();
-        this.renderNotesList();
-
-        this.showNotification('删除成功', `笔记 "${deletedNote.title}" 已删除`);
     }
 }
 
@@ -2109,11 +2386,122 @@ class App {
         document.getElementById('clear-clipboard').addEventListener('click', () => {
             this.clipboardManager.clearClipboard();
         }); // 设置项监听
-        this.setupSettingsListeners();
-
-        // 社区面板监听器
+        this.setupSettingsListeners(); // 社区面板监听器
         this.setupCommunityListeners();
     }
+
+    setupSettingsListeners() {
+        // 主题选择
+        const themeSelect = document.getElementById('theme-select');
+        if (themeSelect) {
+            themeSelect.addEventListener('change', (e) => {
+                this.state.settings.theme = e.target.value;
+                this.state.saveData();
+                this.themeManager.applyTheme(e.target.value);
+            });
+        }
+
+        // 毛玻璃效果
+        const glassEffect = document.getElementById('glass-effect');
+        if (glassEffect) {
+            glassEffect.addEventListener('change', (e) => {
+                this.state.settings.glassEffect = e.target.checked;
+                this.state.saveData();
+                this.themeManager.applyGlassEffect(e.target.checked);
+            });
+        }
+
+        // 自启动
+        const autoStart = document.getElementById('auto-start');
+        if (autoStart) {
+            autoStart.addEventListener('change', async (e) => {
+                this.state.settings.autoStart = e.target.checked;
+                this.state.saveData();
+                if (window.electronAPI && window.electronAPI.setAutoStart) {
+                    await window.electronAPI.setAutoStart(e.target.checked);
+                }
+            });
+        }
+
+        // 剪切板监控
+        const clipboardMonitor = document.getElementById('clipboard-monitor');
+        if (clipboardMonitor) {
+            clipboardMonitor.addEventListener('change', (e) => {
+                this.state.settings.clipboardMonitor = e.target.checked;
+                this.state.saveData();
+                if (window.electronAPI && window.electronAPI.setClipboardMonitor) {
+                    window.electronAPI.setClipboardMonitor(e.target.checked);
+                }
+            });
+        }
+
+        // 剪切板历史数量
+        const maxClipboardItems = document.getElementById('max-clipboard-items');
+        if (maxClipboardItems) {
+            maxClipboardItems.addEventListener('change', (e) => {
+                this.state.settings.maxClipboardItems = parseInt(e.target.value) || 50;
+                this.state.saveData();
+            });
+        }
+
+        // 检查更新
+        const checkUpdates = document.getElementById('check-updates');
+        if (checkUpdates) {
+            checkUpdates.addEventListener('click', () => {
+                this.checkUpdates();
+            });
+        }
+
+        // 社区URL设置
+        const communityUrl = document.getElementById('community-url');
+        const applyCommunityUrl = document.getElementById('apply-community-url');
+        const urlPreset = document.getElementById('url-preset');
+
+        if (communityUrl && applyCommunityUrl) {
+            applyCommunityUrl.addEventListener('click', () => {
+                const newUrl = communityUrl.value.trim();
+
+                if (!newUrl) {
+                    alert('请输入有效的URL');
+                    return;
+                }
+
+                if (!this.isValidUrl(newUrl)) {
+                    alert('请输入有效的URL格式（包含 http:// 或 https://）');
+                    return;
+                }
+
+                // 保存到设置
+                this.state.settings.communityUrl = newUrl;
+                this.state.saveData();
+
+                // 更新webview
+                this.updateCommunityUrl(newUrl);
+
+                // 更新预设选择框
+                this.updateUrlPresetSelection(newUrl);
+
+                // 显示成功提示
+                this.showUrlUpdateSuccess();
+            });
+        }
+
+        if (urlPreset) {
+            urlPreset.addEventListener('change', (e) => {
+                const selectedUrl = e.target.value;
+                if (selectedUrl && selectedUrl !== 'custom' && communityUrl) {
+                    communityUrl.value = selectedUrl;
+
+                    // 自动应用预设URL
+                    this.state.settings.communityUrl = selectedUrl;
+                    this.state.saveData();
+                    this.updateCommunityUrl(selectedUrl);
+                    this.showUrlUpdateSuccess();
+                }
+            });
+        }
+    }
+
     setupCommunityListeners() {
         // 这个方法在初始化时调用，但社区面板可能还没有渲染
         // 实际的事件监听器会在 setupCommunityPanelListeners 中设置
@@ -2146,23 +2534,27 @@ class App {
             document.getElementById('app-version').textContent = version;
         } catch (error) {
             console.error('Failed to get app version:', error);
-        }
-
-        // 应用设置
+        } // 应用设置
         document.getElementById('theme-select').value = this.state.settings.theme;
         document.getElementById('glass-effect').checked = this.state.settings.glassEffect;
         document.getElementById('auto-start').checked = this.state.settings.autoStart;
         document.getElementById('clipboard-monitor').checked = this.state.settings.clipboardMonitor;
         document.getElementById('max-clipboard-items').value = this.state.settings.maxClipboardItems;
 
+        // 设置社区URL
+        const communityUrlInput = document.getElementById('community-url');
+        if (communityUrlInput && this.state.settings.communityUrl) {
+            communityUrlInput.value = this.state.settings.communityUrl;
+        }
+
+        // 初始化社区webview URL
+        this.initializeCommunityWebview();
+
         // 应用主题
-        this.themeManager.applyTheme(this.state.settings.theme);
-
-
-        // 渲染数据
+        this.themeManager.applyTheme(this.state.settings.theme); // 渲染数据
         this.clipboardManager.renderClipboardList();
         this.todoManager.renderTodoList();
-        this.notesManager.renderNotesList();
+        this.notesManager.renderFilesList();
     }
     switchTab(tabName) {
         // 更新选项卡按钮状态
@@ -2329,13 +2721,13 @@ class App {
             }
         }
     }
-
     openExternalCommunity() {
+        const url = this.state.settings.communityUrl || 'http://8.130.41.186:3000/';
         if (window.electronAPI && window.electronAPI.openExternal) {
-            window.electronAPI.openExternal('http://8.130.41.186:3000/');
+            window.electronAPI.openExternal(url);
         } else {
             // 备用方案
-            window.open('http://8.130.41.186:3000/', '_blank');
+            window.open(url, '_blank');
         }
     }
 
@@ -2350,6 +2742,90 @@ class App {
     async checkUpdates() {
         // 这里可以实现更新检查逻辑
         alert('当前已是最新版本！');
+    }
+
+    // URL验证方法
+    isValidUrl(string) {
+        try {
+            const url = new URL(string);
+            return url.protocol === 'http:' || url.protocol === 'https:';
+        } catch (_) {
+            return false;
+        }
+    }
+
+    // 更新社区页面URL
+    updateCommunityUrl(newUrl) {
+        const webview = document.getElementById('community-webview');
+        if (webview) {
+            // 显示加载状态
+            const loading = document.getElementById('community-loading');
+            if (loading) {
+                loading.classList.remove('hidden');
+                loading.innerHTML = `
+                    <div class="loading-spinner">
+                        <div class="spinner"></div>
+                        <span>正在加载新页面...</span>
+                    </div>
+                `;
+            }
+
+            // 更新webview的src属性
+            webview.src = newUrl;
+
+            console.log('社区页面URL已更新为:', newUrl);
+        }
+    } // 显示URL更新成功提示
+    showUrlUpdateSuccess() {
+        const button = document.getElementById('apply-community-url');
+        if (button) {
+            const originalText = button.innerHTML;
+            button.innerHTML = '<span>✅ 已应用</span>';
+            button.style.backgroundColor = 'var(--success-color)';
+            button.disabled = true;
+
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.style.backgroundColor = '';
+                button.disabled = false;
+            }, 2000);
+        }
+    } // 初始化社区webview
+    initializeCommunityWebview() {
+        const webview = document.getElementById('community-webview');
+        if (webview && this.state.settings.communityUrl) {
+            // 只有当webview的src与设置不同时才更新
+            if (webview.src !== this.state.settings.communityUrl) {
+                webview.src = this.state.settings.communityUrl;
+                console.log('社区webview初始化为:', this.state.settings.communityUrl);
+            }
+        }
+    }
+
+    // 更新URL预设选择框
+    updateUrlPresetSelection(currentUrl) {
+        const urlPreset = document.getElementById('url-preset');
+        if (!urlPreset) return;
+
+        // 检查当前URL是否匹配预设选项
+        const options = urlPreset.options;
+        let foundMatch = false;
+
+        for (let i = 0; i < options.length; i++) {
+            if (options[i].value === currentUrl) {
+                urlPreset.selectedIndex = i;
+                foundMatch = true;
+                break;
+            }
+        }
+
+        // 如果没有找到匹配的预设，选择"自定义"
+        if (!foundMatch) {
+            const customOption = Array.from(options).find(option => option.value === 'custom');
+            if (customOption) {
+                urlPreset.value = 'custom';
+            }
+        }
     }
 
     // 通用删除确认对话框

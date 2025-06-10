@@ -30,7 +30,7 @@
             <button class="tab-btn active" data-tab="clipboard">📋 剪切板</button>
             <button class="tab-btn" data-tab="todo">✅ 待办</button>
             <button class="tab-btn" data-tab="notes">📝 笔记</button>
-            <button class="tab-btn" data-tab="community">🌐 社区</button>
+            <button class="tab-btn" data-tab="community">🌐 在线</button>
             <button class="tab-btn" data-tab="settings">⚙️ 设置</button>
         </div>
 
@@ -63,13 +63,12 @@
             <div class="todo-list" id="todo-list">
                 <!-- 待办事项将在这里动态生成 -->
             </div>
-        </div>
-
-        <!-- 笔记面板 -->
+        </div> <!-- 笔记面板 -->
         <div id="notes-panel" class="panel">
             <div class="panel-header">
-                <h3>Markdown 笔记</h3>
+                <h3>Markdown 编辑器</h3>
                 <div class="header-controls">
+                    <button id="open-workspace-folder" class="btn btn-secondary" title="打开工作文件夹">📂 打开文件夹</button>
                     <button id="toggle-sidebar" class="btn btn-secondary" title="收起/展开侧边栏">📁</button>
                     <button id="new-note" class="btn btn-primary">新建笔记</button>
                     <button id="toggle-preview" class="btn btn-secondary">👁️ 预览</button>
@@ -80,14 +79,23 @@
             </div>
             <div class="notes-container">
                 <div class="notes-sidebar">
-                    <input type="text" id="notes-search" placeholder="搜索笔记..." class="search-input">
+                    <!-- 工作区信息 -->
+                    <div class="workspace-info" id="workspace-info" style="display: none;">
+                        <div class="workspace-header">
+                            <h4>工作文件夹</h4>
+                            <button id="close-workspace" class="btn btn-small" title="关闭工作文件夹">✕</button>
+                        </div>
+                        <div class="workspace-name" id="workspace-name"></div>
+                        <div class="workspace-path" id="workspace-path"></div>
+                    </div>
+                    <!-- 文件列表 -->
                     <div class="notes-list" id="notes-list">
-                        <!-- 笔记列表将在这里生成 -->
+                        <!-- 文件列表将在这里生成 -->
                     </div>
                 </div>
                 <div class="notes-editor">
                     <div class="editor-content">
-                        <textarea id="markdown-editor" placeholder="开始写作...支持 Markdown 语法"></textarea>
+                        <textarea id="markdown-editor" placeholder="选择或创建一个Markdown文件开始编辑...支持 Markdown 语法"></textarea>
                         <div id="markdown-preview" class="markdown-preview" style="display: none;">
                             <!-- Markdown预览内容将在这里显示 -->
                         </div>
@@ -99,7 +107,7 @@
         <!-- 社区面板 -->
         <div id="community-panel" class="panel">
             <div class="panel-header">
-                <h3>社区交流</h3>
+                <h3>在线访问</h3>
                 <div class="header-controls">
                     <button id="refresh-community" class="btn btn-secondary" title="刷新页面">🔄</button>
                     <button id="open-external-community" class="btn btn-secondary" title="在外部浏览器打开">🔗</button>
@@ -114,7 +122,7 @@
                     <div class="loading-overlay" id="community-loading">
                         <div class="loading-spinner">
                             <div class="spinner"></div>
-                            <span>正在加载社区页面...</span>
+                            <span>正在加载页面...</span>
                         </div>
                     </div>
                 </div>
@@ -144,7 +152,6 @@
                         </label>
                     </div>
                 </div>
-
                 <div class="setting-group">
                     <h4>功能设置</h4>
                     <div class="setting-item">
@@ -163,6 +170,34 @@
                         <label for="max-clipboard-items">剪切板历史数量：</label>
                         <input type="number" id="max-clipboard-items" value="100" min="10" max="1000"
                             class="setting-input">
+                    </div>
+                    <div class="setting-item">
+                        <label for="community-url">在线页面地址：</label>
+                        <div class="url-preset-group">
+                            <select id="url-preset" class="setting-select">
+                                <option value="">选择预设页面</option>
+                                <option value="http://8.130.41.186:3000/">默认社区</option>
+                                <option value="https://www.doubao.com/chat/">豆包</option>
+                                <option value="https://chat.openai.com/">ChatGPT</option>
+                                <option value="https://yuanbao.tencent.com/chat/">元宝</option>
+                                <option value="https://grok.dairoot.cn/">Grok</option>
+                                <option value="https://gemini.google.com/">Gemini</option>
+                                <option value="https://www.bing.com/">必应</option>
+                                <option value="https://www.google.com/">Google</option>
+
+                                <option value="custom">自定义...</option>
+                            </select>
+                        </div>
+                        <div class="url-input-group">
+                            <input type="url" id="community-url" value="http://8.130.41.186:3000/"
+                                placeholder="请输入在线页面的URL..." class="setting-input url-input">
+                            <button id="apply-community-url" class="btn btn-secondary btn-small" title="应用新地址">
+                                <span>应用</span>
+                            </button>
+                        </div>
+                        <div class="setting-hint">
+                            修改后点击"应用"按钮生效，支持 http:// 和 https:// 协议
+                        </div>
                     </div>
                 </div>
 

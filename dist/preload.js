@@ -20,8 +20,17 @@ electron_1.contextBridge.exposeInMainWorld('electronAPI', {
     // 主题相关
     setTheme: (theme) => electron_1.ipcRenderer.invoke('set-theme', theme),
     getTheme: () => electron_1.ipcRenderer.invoke('get-theme'), // 通知
-    showNotification: (title, body) => electron_1.ipcRenderer.invoke('show-notification', { title, body }),
-    // 外部链接
+    showNotification: (title, body) => electron_1.ipcRenderer.invoke('show-notification', { title, body }), // 外部链接
+    /**
+     * 通过IPC调用主进程打开外部链接
+     * @param url - 要打开的外部链接地址
+     */
     openExternal: (url) => electron_1.ipcRenderer.invoke('open-external', url),
+    // 文件夹和文件操作
+    openFolderDialog: (options) => electron_1.ipcRenderer.invoke('open-folder-dialog', options),
+    listMarkdownFiles: (folderPath) => electron_1.ipcRenderer.invoke('list-markdown-files', folderPath),
+    readFile: (filePath) => electron_1.ipcRenderer.invoke('read-file', filePath),
+    writeFile: (filePath, content) => electron_1.ipcRenderer.invoke('write-file', filePath, content),
+    deleteFile: (filePath) => electron_1.ipcRenderer.invoke('delete-file', filePath),
 });
 //# sourceMappingURL=preload.js.map

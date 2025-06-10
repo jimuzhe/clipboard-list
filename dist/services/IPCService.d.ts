@@ -60,6 +60,12 @@ export declare class IPCService extends EventEmitter {
     private handleToggleAutoStart;
     private handleEnableAutoStart;
     private handleDisableAutoStart;
+    private handleOpenFolderDialog;
+    private handleListMarkdownFiles;
+    private handleReadFile;
+    private handleWriteFile;
+    private handleDeleteFile;
+    private handleOpenExternal;
     /**
      * ç§ťé¤ĺ¤çç¨ĺş
      */

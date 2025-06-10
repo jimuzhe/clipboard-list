@@ -1,8 +1,43 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.IPCService = void 0;
 const electron_1 = require("electron");
 const events_1 = require("events");
+const fs = __importStar(require("fs/promises"));
+const path = __importStar(require("path"));
 const Logger_1 = require("../utils/Logger");
 /**
  * IPCćĺĄ - č´č´Łä¸ťčżç¨ĺć¸˛ćčżç¨äšé´çĺŽĺ¨éäżĄ
@@ -56,6 +91,13 @@ class IPCService extends events_1.EventEmitter {
         this.registerHandler('auto-start:toggle', this.handleToggleAutoStart.bind(this));
         this.registerHandler('auto-start:enable', this.handleEnableAutoStart.bind(this));
         this.registerHandler('auto-start:disable', this.handleDisableAutoStart.bind(this));
+        // 文件和文件夹操作
+        this.registerHandler('open-folder-dialog', this.handleOpenFolderDialog.bind(this));
+        this.registerHandler('list-markdown-files', this.handleListMarkdownFiles.bind(this));
+        this.registerHandler('read-file', this.handleReadFile.bind(this));
+        this.registerHandler('write-file', this.handleWriteFile.bind(this));
+        this.registerHandler('delete-file', this.handleDeleteFile.bind(this));
+        this.registerHandler('open-external', this.handleOpenExternal.bind(this));
         // ??????????? - ??????????API??
         this.setupCompatibilityAliases();
         Logger_1.logger.info('IPC handlers registered');
@@ -292,6 +334,92 @@ class IPCService extends events_1.EventEmitter {
     }
     async handleDisableAutoStart() {
         this.emit('auto-start-disable');
+    }
+    // === 文件和文件夹操作处理程序 ===
+    async handleOpenFolderDialog(event, options) {
+        try {
+            const result = await electron_1.dialog.showOpenDialog({
+                properties: ['openDirectory'],
+                title: options?.title || '选择文件夹',
+                ...options
+            });
+            return result;
+        }
+        catch (error) {
+            Logger_1.logger.error('Open folder dialog error:', error);
+            throw error;
+        }
+    }
+    async handleListMarkdownFiles(event, folderPath) {
+        try {
+            const files = await fs.readdir(folderPath, { withFileTypes: true });
+            const markdownFiles = [];
+            for (const file of files) {
+                const fullPath = path.join(folderPath, file.name);
+                const stat = await fs.stat(fullPath);
+                if (file.isFile() && /\.(md|markdown)$/i.test(file.name)) {
+                    markdownFiles.push({
+                        name: file.name,
+                        path: fullPath,
+                        isDirectory: false,
+                        lastModified: stat.mtime,
+                        size: stat.size
+                    });
+                }
+            }
+            // 按修改时间倒序排列
+            markdownFiles.sort((a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime());
+            return { files: markdownFiles };
+        }
+        catch (error) {
+            Logger_1.logger.error('List markdown files error:', error);
+            throw error;
+        }
+    }
+    async handleReadFile(event, filePath) {
+        try {
+            const content = await fs.readFile(filePath, 'utf-8');
+            const stat = await fs.stat(filePath);
+            return {
+                content,
+                lastModified: stat.mtime,
+                size: stat.size
+            };
+        }
+        catch (error) {
+            Logger_1.logger.error('Read file error:', error);
+            throw error;
+        }
+    }
+    async handleWriteFile(event, filePath, content) {
+        try {
+            await fs.writeFile(filePath, content, 'utf-8');
+            Logger_1.logger.info(`File written: ${filePath}`);
+        }
+        catch (error) {
+            Logger_1.logger.error('Write file error:', error);
+            throw error;
+        }
+    }
+    async handleDeleteFile(event, filePath) {
+        try {
+            await fs.unlink(filePath);
+            Logger_1.logger.info(`File deleted: ${filePath}`);
+        }
+        catch (error) {
+            Logger_1.logger.error('Delete file error:', error);
+            throw error;
+        }
+    }
+    async handleOpenExternal(event, url) {
+        try {
+            await electron_1.shell.openExternal(url);
+            Logger_1.logger.info(`Opened external URL: ${url}`);
+        }
+        catch (error) {
+            Logger_1.logger.error('Open external URL error:', error);
+            throw error;
+        }
     }
     /**
      * ç§ťé¤ĺ¤çç¨ĺş

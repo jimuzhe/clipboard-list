@@ -1028,6 +1028,8 @@ body {
   flex: 1;
   display: flex;
   position: relative;
+  overflow: hidden; /* 确保容器不会超出边界 */
+  height: 100%; /* 明确设置高度 */
 }
 
 #markdown-editor {
@@ -1041,6 +1043,7 @@ body {
   color: var(--text-primary);
   resize: none;
   outline: none;
+  overflow-y: auto; /* 确保编辑器可以滚动 */
 }
 
 .markdown-preview {
@@ -1051,6 +1054,8 @@ body {
   font-size: 13px;
   line-height: 1.6;
   border-left: 1px solid var(--border-color);
+  height: 100%; /* 明确设置高度 */
+  max-height: 100%; /* 限制最大高度 */
 }
 
 .markdown-preview h1, .markdown-preview h2, .markdown-preview h3 {
@@ -1106,6 +1111,46 @@ body {
 
 .markdown-preview.active {
   display: block;
+}
+
+/* 预览模式特定样式 */
+.markdown-preview img {
+  max-width: 100%;
+  height: auto;
+  margin: 10px 0;
+  border-radius: 4px;
+}
+
+.markdown-preview pre {
+  background: var(--bg-secondary);
+  padding: 12px;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin: 10px 0;
+  border-left: 4px solid var(--primary-color);
+}
+
+.markdown-preview pre code {
+  background: none;
+  padding: 0;
+  font-size: 12px;
+}
+
+.markdown-preview blockquote {
+  margin: 10px 0;
+  padding: 8px 16px;
+  background: var(--bg-secondary);
+  border-left: 4px solid var(--primary-color);
+  font-style: italic;
+}
+
+.markdown-preview ul, .markdown-preview ol {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+.markdown-preview li {
+  margin: 4px 0;
 }
 
 /* 设置面板 */
@@ -1553,7 +1598,7 @@ body {
 
 .add-todo-modal .checkbox-custom:hover {
   border-color: var(--primary-color);
-  transform: scale(1.05);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .add-todo-modal .form-checkbox:checked + .checkbox-custom {
@@ -2485,177 +2530,174 @@ body {
   border-color: var(--primary-color);
 }
 
-/* 统一的编辑模态框复选框样式 */
-.edit-modal .checkbox-label,
-.add-todo-modal .checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  cursor: pointer;
-  padding: 8px 0;
-  transition: all 0.2s ease;
-  user-select: none;
-}
-
-.edit-modal .checkbox-label:hover,
-.add-todo-modal .checkbox-label:hover {
-  background: var(--bg-hover);
-  border-radius: 8px;
-  padding: 8px 12px;
-  margin: 0 -12px;
-}
-
-.edit-modal .form-checkbox,
-.add-todo-modal .form-checkbox {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.edit-modal .checkbox-custom,
-.add-todo-modal .checkbox-custom {
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--border-color);
-  border-radius: 6px;
-  background: var(--bg-secondary);
-  position: relative;
-  transition: all 0.3s ease;
-  flex-shrink: 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.edit-modal .checkbox-custom:hover,
-.add-todo-modal .checkbox-custom:hover {
-  border-color: var(--primary-color);
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.edit-modal .form-checkbox:checked + .checkbox-custom,
-.add-todo-modal .form-checkbox:checked + .checkbox-custom {
-  background: linear-gradient(135deg, var(--primary-color), #667eea);
-  border-color: var(--primary-color);
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-}
-
-.edit-modal .form-checkbox:checked + .checkbox-custom::after,
-.add-todo-modal .form-checkbox:checked + .checkbox-custom::after {
-  content: '✓';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: white;
-  font-size: 12px;
-  font-weight: bold;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.edit-modal .checkbox-text,
-.add-todo-modal .checkbox-text {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: var(--text-primary);
-  font-weight: 500;
-  line-height: 1.4;
-}
-
-.edit-modal .feature-icon,
-.add-todo-modal .feature-icon {
-  font-size: 16px;
-  flex-shrink: 0;
-  opacity: 0.8;
-  transition: opacity 0.2s ease;
-}
-
-.edit-modal .checkbox-label:hover .feature-icon,
-.add-todo-modal .checkbox-label:hover .feature-icon {
-  opacity: 1;
-}
-
-/* 剪切板图片样式 */
-.clipboard-image-container {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-width: 100%;
-}
-
-.clipboard-image {
-  max-width: 100%;
-  max-height: 200px;
-  border-radius: var(--border-radius);
-  object-fit: contain;
-  border: 1px solid var(--border-color);
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.clipboard-image:hover {
-  transform: scale(1.02);
-  box-shadow: var(--box-shadow);
-}
-
-.image-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.8em;
-  color: var(--text-secondary);
-  padding: 4px 8px;
-  background: var(--bg-secondary);
-  border-radius: var(--border-radius);
-}
-
-.image-size,
-.image-dimensions {
-  font-weight: 500;
-}
-
-/* 图片预览模态框 */
+/* 图片预览模态框样式 */
 .image-preview-modal {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.8);
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 10000;
-}
-
-.image-preview-content {
-  max-width: 90%;
-  max-height: 90%;
-  object-fit: contain;
-  border-radius: var(--border-radius);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  animation: fadeInModal 0.3s ease;
 }
 
 .image-preview-close {
   position: absolute;
   top: 20px;
   right: 20px;
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
   color: white;
-  font-size: 20px;
+  font-size: 24px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
   cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+  z-index: 10001;
   backdrop-filter: blur(10px);
-  transition: var(--transition);
 }
 
 .image-preview-close:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
   transform: scale(1.1);
+  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.2);
+}
+
+.image-preview-content {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  cursor: default;
+  animation: scaleInImage 0.4s ease;
+}
+
+/* 图片预览动画 */
+@keyframes fadeInModal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleInImage {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* 剪切板图片悬停效果 */
+.clipboard-image {
+  transition: all 0.3s ease;
+}
+
+.clipboard-image:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  filter: brightness(1.1);
+}
+
+.clipboard-image-container {
+  cursor: pointer;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.clipboard-image-container:hover .image-info {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+/* 暗色主题下的图片预览模态框 */
+[data-theme="dark"] .image-preview-modal {
+  background: rgba(0, 0, 0, 0.9);
+}
+
+[data-theme="dark"] .image-preview-close {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* URL输入组样式 */
+.url-preset-group {
+  margin-bottom: 8px;
+}
+
+.url-input-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.url-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  transition: var(--transition);
+}
+
+.url-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.2);
+}
+
+.url-input:invalid {
+  border-color: var(--danger-color);
+}
+
+.btn-small {
+  padding: 6px 12px;
+  font-size: 12px;
+  min-height: 32px;
+  white-space: nowrap;
+}
+
+.setting-hint {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  line-height: 1.4;
+  font-style: italic;
+}
+
+/* 深色主题适配 */
+[data-theme="dark"] .url-input {
+  background: rgba(40, 40, 40, 0.8);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .url-input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.3);
+}
+
+[data-theme="dark"] .setting-hint {
+  color: rgba(255, 255, 255, 0.6);
 }
 
 

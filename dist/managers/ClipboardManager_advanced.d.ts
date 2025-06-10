@@ -30,16 +30,15 @@ export declare class AdvancedClipboardManager extends EventEmitter {
     /**
      * 延迟注册全局快捷键
      */
-    private delayedRegisterGlobalShortcuts;
-    /**
+    private delayedRegisterGlobalShortcuts; /**
      * 注册全局快捷键
+     * 注意：不再注册Ctrl+C/X/V这些系统级快捷键，避免冲突
      */
     private registerGlobalShortcuts;
     /**
      * 设置窗口事件监听
      */
-    private setupWindowEventListening;
-    /**
+    private setupWindowEventListening; /**
      * 设置系统活动监听
      */
     private setupSystemActivityListening;

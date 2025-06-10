@@ -1,5 +1,7 @@
-import { ipcMain, IpcMainInvokeEvent, WebContents } from 'electron';
+import { ipcMain, IpcMainInvokeEvent, WebContents, dialog, shell } from 'electron';
 import { EventEmitter } from 'events';
+import * as fs from 'fs/promises';
+import * as path from 'path';
 import { logger } from '../utils/Logger';
 import { ClipboardItem } from '../types/clipboard';
 import { TodoItem } from '../types/todo';
@@ -65,6 +67,14 @@ export class IPCService extends EventEmitter {
         this.registerHandler('auto-start:toggle', this.handleToggleAutoStart.bind(this));
         this.registerHandler('auto-start:enable', this.handleEnableAutoStart.bind(this));
         this.registerHandler('auto-start:disable', this.handleDisableAutoStart.bind(this));
+
+        // 文件和文件夹操作
+        this.registerHandler('open-folder-dialog', this.handleOpenFolderDialog.bind(this));
+        this.registerHandler('list-markdown-files', this.handleListMarkdownFiles.bind(this));
+        this.registerHandler('read-file', this.handleReadFile.bind(this));
+        this.registerHandler('write-file', this.handleWriteFile.bind(this));
+        this.registerHandler('delete-file', this.handleDeleteFile.bind(this));
+        this.registerHandler('open-external', this.handleOpenExternal.bind(this));
 
         // ??????????? - ??????????API??
         this.setupCompatibilityAliases();
@@ -337,6 +347,97 @@ export class IPCService extends EventEmitter {
 
     private async handleDisableAutoStart(): Promise<void> {
         this.emit('auto-start-disable');
+    }
+
+    // === 文件和文件夹操作处理程序 ===
+    private async handleOpenFolderDialog(event: IpcMainInvokeEvent, options?: any): Promise<any> {
+        try {
+            const result = await dialog.showOpenDialog({
+                properties: ['openDirectory'],
+                title: options?.title || '选择文件夹',
+                ...options
+            });
+            return result;
+        } catch (error) {
+            logger.error('Open folder dialog error:', error);
+            throw error;
+        }
+    }
+
+    private async handleListMarkdownFiles(event: IpcMainInvokeEvent, folderPath: string): Promise<any> {
+        try {
+            const files = await fs.readdir(folderPath, { withFileTypes: true });
+            const markdownFiles = [];
+
+            for (const file of files) {
+                const fullPath = path.join(folderPath, file.name);
+                const stat = await fs.stat(fullPath);
+
+                if (file.isFile() && /\.(md|markdown)$/i.test(file.name)) {
+                    markdownFiles.push({
+                        name: file.name,
+                        path: fullPath,
+                        isDirectory: false,
+                        lastModified: stat.mtime,
+                        size: stat.size
+                    });
+                }
+            }
+
+            // 按修改时间倒序排列
+            markdownFiles.sort((a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime());
+
+            return { files: markdownFiles };
+        } catch (error) {
+            logger.error('List markdown files error:', error);
+            throw error;
+        }
+    }
+
+    private async handleReadFile(event: IpcMainInvokeEvent, filePath: string): Promise<any> {
+        try {
+            const content = await fs.readFile(filePath, 'utf-8');
+            const stat = await fs.stat(filePath);
+
+            return {
+                content,
+                lastModified: stat.mtime,
+                size: stat.size
+            };
+        } catch (error) {
+            logger.error('Read file error:', error);
+            throw error;
+        }
+    }
+
+    private async handleWriteFile(event: IpcMainInvokeEvent, filePath: string, content: string): Promise<void> {
+        try {
+            await fs.writeFile(filePath, content, 'utf-8');
+            logger.info(`File written: ${filePath}`);
+        } catch (error) {
+            logger.error('Write file error:', error);
+            throw error;
+        }
+    }
+
+    private async handleDeleteFile(event: IpcMainInvokeEvent, filePath: string): Promise<void> {
+        try {
+            await fs.unlink(filePath);
+            logger.info(`File deleted: ${filePath}`);
+        } catch (error) {
+            logger.error('Delete file error:', error);
+            throw error;
+        }
+    }
+
+    private async handleOpenExternal(event: IpcMainInvokeEvent, url: string): Promise<void> {
+        try {
+            await shell.openExternal(url);
+            logger.info(`Opened external URL: ${url}`);
+        } catch (error) {
+            logger.error('Open external URL error:', error);
+            throw error;
+        }
     }
 
     /**

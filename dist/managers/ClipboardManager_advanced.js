@@ -18,9 +18,8 @@ class AdvancedClipboardManager extends events_1.EventEmitter {
         this.ignoreNextChange = false;
         // 多种监听机制
         this.globalShortcutRegistered = false;
-        // 性能优化
         this.lastCheckTime = 0;
-        this.minCheckInterval = 100; // 最小检查间隔
+        this.minCheckInterval = 50; // 最小检查间隔，减少到50ms提高响应性
         this.isCheckingClipboard = false;
         this.mainWindow = mainWindow;
         this.initializeClipboard();
@@ -66,34 +65,21 @@ class AdvancedClipboardManager extends events_1.EventEmitter {
                 Logger_1.logger.error('❌ Failed to wait for app ready:', error);
             });
         }
-    }
-    /**
+    } /**
      * 注册全局快捷键
+     * 注意：不再注册Ctrl+C/X/V这些系统级快捷键，避免冲突
      */
     registerGlobalShortcuts() {
         try {
-            // 监听 Ctrl+C
-            const ctrlCRegistered = electron_1.globalShortcut.register('CommandOrControl+C', () => {
-                this.onClipboardAction('copy');
-            });
-            // 监听 Ctrl+X
-            const ctrlXRegistered = electron_1.globalShortcut.register('CommandOrControl+X', () => {
-                this.onClipboardAction('cut');
-            });
-            // 监听 Ctrl+V (了解用户粘贴行为)
-            const ctrlVRegistered = electron_1.globalShortcut.register('CommandOrControl+V', () => {
-                this.onClipboardAction('paste');
-            });
-            this.globalShortcutRegistered = ctrlCRegistered && ctrlXRegistered && ctrlVRegistered;
-            if (this.globalShortcutRegistered) {
-                Logger_1.logger.info('✅ Global shortcuts registered successfully');
-            }
-            else {
-                Logger_1.logger.warn('⚠️ Some global shortcuts failed to register');
-            }
+            // 不再注册系统级的剪切板快捷键（Ctrl+C, Ctrl+X, Ctrl+V）
+            // 这些快捷键会干扰系统正常的剪切板操作
+            // 只使用其他监听机制来检测剪切板变化
+            this.globalShortcutRegistered = true;
+            Logger_1.logger.info('✅ Clipboard monitoring initialized (no global shortcuts override)');
+            Logger_1.logger.info('💡 Using window events and system monitoring instead');
         }
         catch (error) {
-            Logger_1.logger.error('❌ Failed to register global shortcuts:', error);
+            Logger_1.logger.error('❌ Failed to setup clipboard monitoring:', error);
         }
     }
     /**
@@ -116,23 +102,20 @@ class AdvancedClipboardManager extends events_1.EventEmitter {
                 }
             });
         }
-    }
-    /**
+    } /**
      * 设置系统活动监听
      */
     setupSystemActivityListening() {
         // 窗口焦点变化监听器
         this.windowFocusWatcher = setInterval(() => {
-            if (this.mainWindow && this.mainWindow.isFocused()) {
-                // 窗口有焦点时，检查剪切板
-                this.scheduleClipboardCheck('focus-watcher');
-            }
-        }, 3000); // 3秒检查一次
+            // 不管窗口是否有焦点都检查剪切板变化
+            this.scheduleClipboardCheck('focus-watcher');
+        }, 1000); // 1秒检查一次，更频繁地捕获剪切板变化
         // 系统活动监听器
         this.systemActivityWatcher = setInterval(() => {
             // 基于系统活动的智能检查
             this.scheduleClipboardCheck('activity-watcher');
-        }, 5000); // 5秒检查一次
+        }, 2000); // 2秒检查一次
     }
     /**
      * 检测是否为剪切板相关快捷键
@@ -176,12 +159,12 @@ class AdvancedClipboardManager extends events_1.EventEmitter {
             return;
         }
         this.isMonitoring = true;
-        // 启动应急轮询（频率很低，作为备用机制）
+        // 启动应急轮询（更频繁的备用机制）
         this.emergencyPoller = setInterval(() => {
             this.scheduleClipboardCheck('emergency-poll');
-        }, 10000); // 10秒一次的应急检查
+        }, 3000); // 3秒一次的应急检查，确保不会错过剪切板变化
         Logger_1.logger.info('🚀 Advanced clipboard monitoring started');
-        Logger_1.logger.info('📋 Using: Global shortcuts + Window events + System activity monitoring');
+        Logger_1.logger.info('📋 Using: Window events + System activity monitoring + Emergency polling');
     }
     /**
      * 停止监控剪切板变化
@@ -203,10 +186,9 @@ class AdvancedClipboardManager extends events_1.EventEmitter {
         if (this.emergencyPoller) {
             clearInterval(this.emergencyPoller);
             this.emergencyPoller = undefined;
-        }
-        // 注销全局快捷键
+        } // 不再需要注销全局快捷键，因为我们没有注册系统级快捷键
+        // 避免调用 globalShortcut.unregisterAll() 来防止意外注销其他快捷键
         if (this.globalShortcutRegistered) {
-            electron_1.globalShortcut.unregisterAll();
             this.globalShortcutRegistered = false;
         }
         Logger_1.logger.info('⏹️ Advanced clipboard monitoring stopped');

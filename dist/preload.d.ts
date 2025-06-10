@@ -12,6 +12,11 @@ export interface ElectronAPI {
     getTheme: () => Promise<string>;
     showNotification: (title: string, body: string) => Promise<void>;
     openExternal: (url: string) => Promise<void>;
+    openFolderDialog: (options?: any) => Promise<any>;
+    listMarkdownFiles: (folderPath: string) => Promise<any>;
+    readFile: (filePath: string) => Promise<any>;
+    writeFile: (filePath: string, content: string) => Promise<void>;
+    deleteFile: (filePath: string) => Promise<void>;
 }
 declare global {
     interface Window {
