@@ -8,6 +8,7 @@ import { ClipboardItem } from '../types/clipboard';
 export declare class AdvancedClipboardManager extends EventEmitter {
     private isMonitoring;
     private lastContent;
+    private lastImageHash;
     private clipboardHistory;
     private maxHistorySize;
     private ignoreNextChange;
@@ -19,8 +20,7 @@ export declare class AdvancedClipboardManager extends EventEmitter {
     private lastCheckTime;
     private minCheckInterval;
     private isCheckingClipboard;
-    constructor(mainWindow?: BrowserWindow);
-    /**
+    constructor(mainWindow?: BrowserWindow); /**
      * 初始化剪切板
      */
     private initializeClipboard; /**

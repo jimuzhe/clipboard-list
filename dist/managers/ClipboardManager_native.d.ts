@@ -8,6 +8,7 @@ import { ClipboardItem } from '../types/clipboard';
 export declare class ClipboardManagerNative extends EventEmitter {
     private isMonitoring;
     private lastContent;
+    private lastImageHash;
     private clipboardHistory;
     private maxHistorySize;
     private ignoreNextChange;

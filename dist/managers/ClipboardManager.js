@@ -13,6 +13,7 @@ class ClipboardManager extends events_1.EventEmitter {
         super();
         this.isMonitoring = false;
         this.lastContent = '';
+        this.lastImageHash = ''; // 添加图片内容跟踪
         this.clipboardHistory = [];
         this.maxHistorySize = 100;
         this.ignoreNextChange = false;
@@ -21,10 +22,15 @@ class ClipboardManager extends events_1.EventEmitter {
     }
     /**
      * 初始化剪切板
-     */
-    initializeClipboard() {
+     */ initializeClipboard() {
         try {
             this.lastContent = electron_1.clipboard.readText() || '';
+            // 初始化时也检查图片
+            const image = electron_1.clipboard.readImage();
+            if (!image.isEmpty()) {
+                const buffer = image.toPNG();
+                this.lastImageHash = this.generateImageHash(buffer);
+            }
             Logger_1.logger.info('Clipboard manager initialized');
         }
         catch (error) {
@@ -73,8 +79,19 @@ class ClipboardManager extends events_1.EventEmitter {
             // 首先检查是否有图片
             const image = electron_1.clipboard.readImage();
             if (!image.isEmpty()) {
-                this.handleImageClipboard(image);
+                // 生成图片哈希用于比较
+                const buffer = image.toPNG();
+                const imageHash = this.generateImageHash(buffer);
+                // 检查是否与上次图片相同
+                if (imageHash !== this.lastImageHash) {
+                    this.lastImageHash = imageHash;
+                    this.handleImageClipboard(image);
+                }
                 return;
+            }
+            else {
+                // 如果剪切板中没有图片，清空图片哈希
+                this.lastImageHash = '';
             }
             // 如果没有图片，检查文本内容
             const currentContent = electron_1.clipboard.readText();

@@ -10,6 +10,7 @@ import { logger } from '../utils/Logger';
 export class AdvancedClipboardManager extends EventEmitter {
     private isMonitoring: boolean = false;
     private lastContent: string = '';
+    private lastImageHash: string = ''; // 添加图片内容跟踪
     private clipboardHistory: ClipboardItem[] = [];
     private maxHistorySize: number = 100;
     private ignoreNextChange: boolean = false;
@@ -29,20 +30,26 @@ export class AdvancedClipboardManager extends EventEmitter {
         this.mainWindow = mainWindow;
         this.initializeClipboard();
         this.setupAdvancedListening();
-    }
-
-    /**
+    }    /**
      * 初始化剪切板
      */
     private initializeClipboard(): void {
         try {
             this.lastContent = clipboard.readText() || '';
+
+            // 初始化时也检查图片
+            const image = clipboard.readImage();
+            if (!image.isEmpty()) {
+                const buffer = image.toPNG();
+                this.lastImageHash = this.generateImageHash(buffer);
+            }
+
             this.lastCheckTime = Date.now();
             logger.info('Advanced clipboard manager initialized');
         } catch (error) {
             logger.error('Failed to initialize clipboard:', error);
         }
-    }    /**
+    }/**
      * 设置高级监听机制
      */
     private setupAdvancedListening(): void {

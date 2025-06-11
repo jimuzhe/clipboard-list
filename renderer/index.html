@@ -115,10 +115,12 @@
                 </div>
             </div>
             <div class="community-container">
-                <div class="webview-container">
-                    <webview id="community-webview" src="http://8.130.41.186:3000/"
-                        style="width: 100%; height: 100%; border: none;" allowpopups nodeintegration="false"
-                        websecurity="true" disablewebsecurity="false">
+                <div class="webview-container">                    <webview id="community-webview" src="http://8.130.41.186:3000/"
+                        style="width: 100%; height: 100%; border: none;" 
+                        allowpopups="true" 
+                        nodeintegration="false"
+                        webpreferences="allowRunningInsecureContent,experimentalFeatures"
+                        useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36">
                     </webview>
                     <div class="loading-overlay" id="community-loading">
                         <div class="loading-spinner">
@@ -173,6 +175,14 @@
                             <span class="setting-icon">📋</span>
                             <span class="setting-text">监控剪切板变化</span>
                             <input type="checkbox" id="clipboard-monitor" checked class="setting-checkbox">
+                            <span class="checkbox-slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <label class="setting-label checkbox-setting">
+                            <span class="setting-icon">🔄</span>
+                            <span class="setting-text">重启时自动清理剪切板数据</span>
+                            <input type="checkbox" id="clear-clipboard-on-restart" checked class="setting-checkbox">
                             <span class="checkbox-slider"></span>
                         </label>
                     </div>
@@ -257,6 +267,310 @@
                             检查更新
                         </div>
                         <button id="check-updates" class="btn btn-primary btn-small">检查更新</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> <!-- 添加待办事项模态框 -->
+    <div id="add-todo-modal" class="modal add-todo-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="modal-icon">✅</span>
+                    <h3>添加新的待办事项</h3>
+                </div>
+                <button class="modal-close" aria-label="关闭">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="add-todo-form" class="todo-form">
+                    <div class="form-group">
+                        <label for="todo-title" class="form-label">
+                            <span class="label-icon">📝</span>
+                            事项标题 <span class="required">*</span>
+                        </label>
+                        <input type="text" id="todo-title" class="form-input" placeholder="请输入待办事项的标题..." required
+                            maxlength="100">
+                        <div class="input-feedback" id="title-feedback"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="todo-description" class="form-label">
+                            <span class="label-icon">📄</span>
+                            详细描述
+                        </label>
+                        <textarea id="todo-description" class="form-textarea" placeholder="可选：添加更详细的描述或备注..." rows="3"
+                            maxlength="500"></textarea>
+                        <div class="char-counter">
+                            <span id="desc-counter">0</span>/500
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="todo-priority" class="form-label">
+                                <span class="label-icon">⭐</span>
+                                优先级
+                            </label>
+                            <select id="todo-priority" class="form-select">
+                                <option value="low">🟢 低优先级</option>
+                                <option value="medium" selected>🟡 中等优先级</option>
+                                <option value="high">🔴 高优先级</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="todo-category" class="form-label">
+                                <span class="label-icon">🏷️</span>
+                                分类标签
+                            </label>
+                            <select id="todo-category" class="form-select">
+                                <option value="">选择分类</option>
+                                <option value="work">💼 工作</option>
+                                <option value="personal">👤 个人</option>
+                                <option value="study">📚 学习</option>
+                                <option value="health">💪 健康</option>
+                                <option value="other">📌 其他</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="todo-deadline" class="form-label">
+                            <span class="label-icon">📅</span>
+                            截止日期
+                        </label>
+                        <input type="datetime-local" id="todo-deadline" class="form-input">
+                        <div class="input-help">
+                            选择截止日期和时间（可选）
+                        </div>
+                    </div>
+
+                    <div class="form-features">
+                        <div class="feature-item">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="todo-reminder" class="form-checkbox">
+                                <span class="checkbox-custom"></span>
+                                <span class="checkbox-text">
+                                    <span class="feature-icon">🔔</span>
+                                    设置提醒通知
+                                </span>
+                            </label>
+                        </div>
+
+                        <div class="feature-item">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="todo-pomodoro" class="form-checkbox">
+                                <span class="checkbox-custom"></span>
+                                <span class="checkbox-text">
+                                    <span class="feature-icon">🍅</span>
+                                    启用番茄时钟
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancel-todo">
+                    <span class="btn-icon">❌</span>
+                    取消
+                </button>
+                <button type="submit" class="btn btn-primary" form="add-todo-form" id="save-todo">
+                    <span class="btn-icon">✅</span>
+                    创建待办事项
+                </button>
+            </div>
+        </div>
+    </div> <!-- 番茄时钟模态框 -->
+    <div id="pomodoro-modal" class="modal pomodoro-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="modal-icon">🍅</span>
+                    <h3>番茄专注计时器</h3>
+                </div>
+                <button class="modal-close" aria-label="关闭">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="pomodoro-display">
+                    <div class="pomodoro-circle">
+                        <div class="pomodoro-progress">
+                            <svg class="progress-ring" width="220" height="220">
+                                <defs>
+                                    <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#ff6b6b;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#ee5a52;stop-opacity:1" />
+                                    </linearGradient>
+                                    <filter id="glow">
+                                        <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                                        <feMerge>
+                                            <feMergeNode in="coloredBlur" />
+                                            <feMergeNode in="SourceGraphic" />
+                                        </feMerge>
+                                    </filter>
+                                    <!-- 深色主题光效 -->
+                                    <filter id="glow-dark">
+                                        <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+                                        <feColorMatrix in="coloredBlur" type="matrix" values="0.6 0.4 0.9 0 0
+                                             0.4 0.3 0.8 0 0
+                                             0.8 0.6 1 0 0
+                                             0 0 0 1 0" />
+                                        <feMerge>
+                                            <feMergeNode in="coloredBlur" />
+                                            <feMergeNode in="SourceGraphic" />
+                                        </feMerge>
+                                    </filter>
+                                </defs>
+                                <circle class="progress-ring-bg" cx="110" cy="110" r="100" />
+                                <circle class="progress-ring-fill" cx="110" cy="110" r="100" />
+                            </svg>
+                            <div class="time-display" id="pomodoro-time">25:00</div>
+                            <div class="progress-indicator">
+                                <span class="session-type" id="session-type">工作时间</span>
+                                <div class="progress-dots">
+                                    <span class="dot active"></span>
+                                    <span class="dot"></span>
+                                    <span class="dot"></span>
+                                    <span class="dot"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pomodoro-status">
+                        <div class="status-card">
+                            <span class="status-icon">⏱️</span>
+                            <span id="pomodoro-status">准备开始专注时间</span>
+                        </div>
+                    </div>
+
+                    <div class="pomodoro-controls">
+                        <button id="pomodoro-start" class="btn btn-primary pomodoro-btn">
+                            <span class="btn-icon">▶️</span>
+                            开始专注
+                        </button>
+                        <button id="pomodoro-pause" class="btn btn-secondary pomodoro-btn" style="display: none;">
+                            <span class="btn-icon">⏸️</span>
+                            暂停
+                        </button>
+                        <button id="pomodoro-reset" class="btn btn-danger pomodoro-btn">
+                            <span class="btn-icon">🔄</span>
+                            重置
+                        </button>
+                    </div>
+                </div>
+
+                <div class="pomodoro-stats">
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="completed-sessions">0</div>
+                            <div class="stat-label">🎯 完成轮次</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="focus-time">0</div>
+                            <div class="stat-label">⏰ 专注时长</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="break-time">0</div>
+                            <div class="stat-label">☕ 休息时长</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pomodoro-settings">
+                    <div class="settings-header">
+                        <h4>⚙️ 时间设置</h4>
+                        <div class="settings-toggle">
+                            <span class="toggle-text">高级设置</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="advanced-toggle">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="settings-basic">
+                        <div class="setting-row">
+                            <div class="setting-item">
+                                <label for="work-duration">
+                                    <span class="setting-icon">🔥</span>
+                                    工作时长（分钟）
+                                </label>
+                                <div class="input-group">
+                                    <button class="input-btn minus" data-target="work-duration">-</button>
+                                    <input type="number" id="work-duration" value="25" min="1" max="60"
+                                        class="setting-input">
+                                    <button class="input-btn plus" data-target="work-duration">+</button>
+                                </div>
+                            </div>
+                            <div class="setting-item">
+                                <label for="break-duration">
+                                    <span class="setting-icon">☕</span>
+                                    休息时长（分钟）
+                                </label>
+                                <div class="input-group">
+                                    <button class="input-btn minus" data-target="break-duration">-</button>
+                                    <input type="number" id="break-duration" value="5" min="1" max="30"
+                                        class="setting-input">
+                                    <button class="input-btn plus" data-target="break-duration">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-advanced" style="display: none;">
+                        <div class="setting-row">
+                            <div class="setting-item">
+                                <label for="long-break-duration">
+                                    <span class="setting-icon">🛌</span>
+                                    长休息时长（分钟）
+                                </label>
+                                <div class="input-group">
+                                    <button class="input-btn minus" data-target="long-break-duration">-</button>
+                                    <input type="number" id="long-break-duration" value="15" min="5" max="60"
+                                        class="setting-input">
+                                    <button class="input-btn plus" data-target="long-break-duration">+</button>
+                                </div>
+                            </div>
+                            <div class="setting-item">
+                                <label for="sessions-until-long-break">
+                                    <span class="setting-icon">🔄</span>
+                                    长休息间隔（轮次）
+                                </label>
+                                <div class="input-group">
+                                    <button class="input-btn minus" data-target="sessions-until-long-break">-</button>
+                                    <input type="number" id="sessions-until-long-break" value="4" min="2" max="8"
+                                        class="setting-input">
+                                    <button class="input-btn plus" data-target="sessions-until-long-break">+</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="setting-row">
+                            <div class="setting-item full-width">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="auto-start-breaks" class="setting-checkbox">
+                                    <span class="checkbox-custom"></span>
+                                    <span class="checkbox-text">
+                                        <span class="setting-icon">🚀</span>
+                                        自动开始休息时间
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="setting-row">
+                            <div class="setting-item full-width">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="sound-notifications" class="setting-checkbox" checked>
+                                    <span class="checkbox-custom"></span>
+                                    <span class="checkbox-text">
+                                        <span class="setting-icon">🔔</span>
+                                        启用声音提醒
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

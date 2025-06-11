@@ -10,6 +10,7 @@ class AppState {
             glassEffect: true,
             autoStart: true,
             clipboardMonitor: true,
+            clearClipboardOnRestart: true,
             maxClipboardItems: 100,
             communityUrl: 'http://8.130.41.186:3000/',
             online: {
@@ -70,11 +71,11 @@ class AppState {
                 this.loadSettingsData(),
                 this.loadPomodoroData()
             ]);
-            console.log('✅ 所有数据加载完成');
-        } catch (error) {
+            console.log('✅ 所有数据加载完成');        } catch (error) {
             console.error('❌ 数据加载失败:', error);
         }
     }
+
     async loadClipboardData() {
         try {
             console.log('🔄 开始加载剪切板数据...');
@@ -89,8 +90,25 @@ class AppState {
             console.log('📥 从文件加载的原始数据:', response);
 
             if (response && response.success && Array.isArray(response.data)) {
-                this.clipboardItems = response.data;
-                console.log(`✅ 剪切板数据加载完成: ${response.data.length} 项`);
+                let clipboardData = response.data;
+                  // 检查是否启用了重启时清理剪切板数据的设置
+                if (this.settings.clearClipboardOnRestart) {
+                    // 只保留置顶的项目
+                    const pinnedItems = clipboardData.filter(item => item.pinned);
+                    clipboardData = pinnedItems;
+                    
+                    console.log(`🧹 重启时清理剪切板数据已启用: 原始 ${response.data.length} 项，保留置顶 ${pinnedItems.length} 项`);
+                    
+                    // 如果有数据被清理，保存清理后的数据
+                    if (response.data.length > pinnedItems.length) {
+                        this.clipboardItems = clipboardData; // 先设置数据
+                        console.log('💾 保存清理后的剪切板数据...');
+                        await this.saveClipboardData();
+                    }
+                }
+                
+                this.clipboardItems = clipboardData;
+                console.log(`✅ 剪切板数据加载完成: ${clipboardData.length} 项`);
                 console.log('📋 加载的剪切板项目详情:', this.clipboardItems); // 验证数据结构
                 this.clipboardItems.forEach((item, index) => {
                     console.log(`📄 项目 ${index + 1}:`, {
@@ -153,15 +171,15 @@ class AppState {
             const response = await window.electronAPI.loadSettings();
             if (response && response.success && response.data && typeof response.data === 'object') {
                 this.settings = {
-                    ...this.settings,
-                    ...response.data
+                   ...this.settings,
+                   ...response.data
                 };
                 console.log('✅ 设置数据加载完成');
             } else if (response && typeof response === 'object' && !response.success) {
                 // 向后兼容：如果返回的是直接数据而不是包装格式
                 this.settings = {
-                    ...this.settings,
-                    ...response
+                   ...this.settings,
+                   ...response
                 };
                 console.log('✅ 设置数据加载完成（向后兼容模式）');
             }
@@ -175,15 +193,15 @@ class AppState {
             const response = await window.electronAPI.loadPomodoroTimer();
             if (response && response.success && response.data && typeof response.data === 'object') {
                 this.pomodoroTimer = {
-                    ...this.pomodoroTimer,
-                    ...response.data
+                   ...this.pomodoroTimer,
+                   ...response.data
                 };
                 console.log('✅ 番茄时钟数据加载完成');
             } else if (response && typeof response === 'object' && !response.success) {
                 // 向后兼容：如果返回的是直接数据而不是包装格式
                 this.pomodoroTimer = {
-                    ...this.pomodoroTimer,
-                    ...response
+                   ...this.pomodoroTimer,
+                   ...response
                 };
                 console.log('✅ 番茄时钟数据加载完成（向后兼容模式）');
             }
@@ -419,7 +437,7 @@ class ClipboardManager {
         console.log('📄 普通项目:', unpinnedItems.length, '个');
 
         // 先显示置顶项目，然后显示普通项目
-        const sortedItems = [...pinnedItems, ...unpinnedItems];
+        const sortedItems = [...pinnedItems,...unpinnedItems];
 
         sortedItems.forEach((item, index) => {
             console.log(`🔧 创建第 ${index + 1} 个剪切板项目:`, {
@@ -1607,9 +1625,7 @@ class PomodoroManager {
             // 工作时间完成
             this.sessionCount++;
             this.totalFocusTime += timer.workDuration;
-            this.showNotification('工作完成！', '是时候休息一下了 ☕');
-
-            // 判断是否需要长休息
+            this.showNotification('工作完成！', '是时候休息一下了 ☕');            // 判断是否需要长休息
             const needLongBreak = this.sessionCount % (timer.sessionsUntilLongBreak || 4) === 0;
             const breakDuration = needLongBreak ?
                 (timer.longBreakDuration || 15) : timer.breakDuration;
@@ -2385,8 +2401,8 @@ class NotesManager {
         console.log('🔍 检查 API 可用性:');
         console.log('  - window.electronAPI:', !!window.electronAPI);
         console.log('  - window.api:', !!window.api);
-        console.log('  - window.api?.fileSystem:', !!window.api ? .fileSystem);
-        console.log('  - window.api?.fileSystem?.exists:', !!window.api ? .fileSystem ? .exists);
+        console.log('  - window.api?.fileSystem:', !!window.api ?.fileSystem);
+        console.log('  - window.api?.fileSystem?.exists:', !!window.api ?.fileSystem ?.exists);
 
         try {
             // 优先在工作区创建文件，如果没有工作区则创建内存笔记
@@ -2394,14 +2410,14 @@ class NotesManager {
                 console.log('✅ 工作区存在，准备在工作区创建文件');
                 console.log('📂 工作区完整路径:', this.workspacePath); // 验证工作区路径是否有效
                 try {
-                    if (window.api ? .fileSystem ? .exists) {
+                    if (window.api ?.fileSystem ?.exists) {
                         console.log('🔍 验证工作区目录是否存在...');
                         const workspaceExists = await window.api.fileSystem.exists(this.workspacePath);
                         console.log('📁 工作区目录是否存在:', workspaceExists);
 
                         if (!workspaceExists) {
                             console.warn('⚠️  工作区目录不存在，尝试创建目录');
-                            if (window.api ? .fileSystem ? .createDirectory) {
+                            if (window.api ?.fileSystem ?.createDirectory) {
                                 const createResult = await window.api.fileSystem.createDirectory(this.workspacePath);
                                 console.log('📁 创建目录结果:', createResult);
                             } else {
@@ -2505,7 +2521,7 @@ class NotesManager {
             console.log('🔧 准备调用 window.electronAPI.writeFile API');
             console.log('🔍 检查 API 可用性:');
             console.log('  - window.electronAPI:', !!window.electronAPI);
-            console.log('  - window.electronAPI.writeFile:', !!window.electronAPI ? .writeFile);
+            console.log('  - window.electronAPI.writeFile:', !!window.electronAPI ?.writeFile);
 
             if (!window.electronAPI || !window.electronAPI.writeFile) {
                 throw new Error('writeFile API 不可用');
@@ -2831,21 +2847,21 @@ class NotesManager {
 
         let html = content
             // 标题
-            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+           .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+           .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+           .replace(/^# (.*$)/gim, '<h1>$1</h1>')
             // 粗体
-            .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+           .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
             // 斜体
-            .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+           .replace(/\*(.*?)\*/gim, '<em>$1</em>')
             // 代码块
-            .replace(/```([\s\S]*?)```/gim, '<pre><code>$1</code></pre>')
+           .replace(/```([\s\S]*?)```/gim, '<pre><code>$1</code></pre>')
             // 行内代码
-            .replace(/`([^`]+)`/gim, '<code>$1</code>')
+           .replace(/`([^`]+)`/gim, '<code>$1</code>')
             // 链接
-            .replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2" target="_blank">$1</a>')
+           .replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2" target="_blank">$1</a>')
             // 图片 - 支持本地文件路径
-            .replace(/!\[([^\]]*)\]\(([^)]+)\)/gim, (match, alt, src) => {
+           .replace(/!\[([^\]]*)\]\(([^)]+)\)/gim, (match, alt, src) => {
                 // 如果是相对路径且当前编辑的是工作区文件，解析相对路径
                 if (this.currentFilePath && !src.startsWith('http') && !src.startsWith('data:') && !src.startsWith('/')) {
                     const noteDir = this.currentFilePath.substring(0, this.currentFilePath.lastIndexOf('\\'));
@@ -2855,13 +2871,13 @@ class NotesManager {
                 return `<img alt="${alt}" src="${src}" style="max-width: 100%; height: auto;" />`;
             })
             // 引用
-            .replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>')
+           .replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>')
             // 无序列表
-            .replace(/^[\*\-] (.*$)/gim, '<ul><li>$1</li></ul>')
+           .replace(/^[\*\-] (.*$)/gim, '<ul><li>$1</li></ul>')
             // 有序列表
-            .replace(/^(\d+)\. (.*$)/gim, '<ol><li>$2</li></ol>')
+           .replace(/^(\d+)\. (.*$)/gim, '<ol><li>$2</li></ol>')
             // 换行
-            .replace(/\n/gim, '<br>');
+           .replace(/\n/gim, '<br>');
 
         return html;
     }
@@ -2874,11 +2890,6 @@ class NotesManager {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
-    }
-    showNotification(title, body) {
-        if (window.electronAPI && window.electronAPI.showNotification) {
-            window.electronAPI.showNotification(title, body);
-        }
     }
 
     // 显示自定义输入对话框
@@ -3114,69 +3125,13 @@ class App {
             });
         }
 
-        // 剪切板历史数量
-        const maxClipboardItems = document.getElementById('max-clipboard-items');
-        if (maxClipboardItems) {
-            maxClipboardItems.addEventListener('change', (e) => {
-                this.state.settings.maxClipboardItems = parseInt(e.target.value) || 50;
+        // 重启时清理剪切板数据
+        const clearClipboardOnRestart = document.getElementById('clear-clipboard-on-restart');
+        if (clearClipboardOnRestart) {
+            clearClipboardOnRestart.addEventListener('change', (e) => {
+                this.state.settings.clearClipboardOnRestart = e.target.checked;
                 this.state.saveData();
-            });
-        }
-
-        // 检查更新
-        const checkUpdates = document.getElementById('check-updates');
-        if (checkUpdates) {
-            checkUpdates.addEventListener('click', () => {
-                this.checkUpdates();
-            });
-        }
-
-        // 社区URL设置
-        const communityUrl = document.getElementById('community-url');
-        const applyCommunityUrl = document.getElementById('apply-community-url');
-        const urlPreset = document.getElementById('url-preset');
-
-        if (communityUrl && applyCommunityUrl) {
-            applyCommunityUrl.addEventListener('click', () => {
-                const newUrl = communityUrl.value.trim();
-
-                if (!newUrl) {
-                    alert('请输入有效的URL');
-                    return;
-                }
-
-                if (!this.isValidUrl(newUrl)) {
-                    alert('请输入有效的URL格式（包含 http:// 或 https://）');
-                    return;
-                }
-
-                // 保存到设置
-                this.state.settings.communityUrl = newUrl;
-                this.state.saveData();
-
-                // 更新webview
-                this.updateCommunityUrl(newUrl);
-
-                // 更新预设选择框
-                this.updateUrlPresetSelection(newUrl);
-
-                // 显示成功提示
-                this.showUrlUpdateSuccess();
-            });
-        }
-
-        if (urlPreset) {
-            urlPreset.addEventListener('change', (e) => {
-                const selectedUrl = e.target.value;
-                if (selectedUrl && selectedUrl !== 'custom' && communityUrl) {
-                    communityUrl.value = selectedUrl;
-
-                    // 自动应用预设URL
-                    this.state.settings.communityUrl = selectedUrl;
-                    this.state.saveData();
-                    this.updateCommunityUrl(selectedUrl);
-                    this.showUrlUpdateSuccess();
-                }
+                console.log('设置重启清理剪切板数据:', e.target.checked);
             });
         }
     }
@@ -3212,11 +3167,12 @@ class App {
             document.getElementById('app-version').textContent = version;
         } catch (error) {
             console.error('Failed to get app version:', error);
-        } // 应用设置
+        }        // 应用设置
         document.getElementById('theme-select').value = this.state.settings.theme;
         document.getElementById('glass-effect').checked = this.state.settings.glassEffect;
         document.getElementById('auto-start').checked = this.state.settings.autoStart;
         document.getElementById('clipboard-monitor').checked = this.state.settings.clipboardMonitor;
+        document.getElementById('clear-clipboard-on-restart').checked = this.state.settings.clearClipboardOnRestart;
         document.getElementById('max-clipboard-items').value = this.state.settings.maxClipboardItems;
 
         // 设置社区URL
@@ -3808,7 +3764,7 @@ class App {
             const description = item.querySelector('.preset-description').value.trim();
             if (name && url) {
                 newPresets.push({
-                    id: this.state.settings.online.presetWebsites[index] ? .id || `custom_${Date.now()}_${index}`,
+                    id: this.state.settings.online.presetWebsites[index] ?.id || `custom_${Date.now()}_${index}`,
                     name,
                     url,
                     icon: icon || '🌐',

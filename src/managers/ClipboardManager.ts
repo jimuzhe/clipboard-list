@@ -10,6 +10,7 @@ import { logger } from '../utils/Logger';
 export class ClipboardManager extends EventEmitter {
     private isMonitoring: boolean = false;
     private lastContent: string = '';
+    private lastImageHash: string = ''; // 添加图片内容跟踪
     private clipboardHistory: ClipboardItem[] = [];
     private maxHistorySize: number = 100;
     private ignoreNextChange: boolean = false;
@@ -25,15 +26,22 @@ export class ClipboardManager extends EventEmitter {
 
     /**
      * 初始化剪切板
-     */
-    private initializeClipboard(): void {
+     */    private initializeClipboard(): void {
         try {
             this.lastContent = clipboard.readText() || '';
+
+            // 初始化时也检查图片
+            const image = clipboard.readImage();
+            if (!image.isEmpty()) {
+                const buffer = image.toPNG();
+                this.lastImageHash = this.generateImageHash(buffer);
+            }
+
             logger.info('Clipboard manager initialized');
         } catch (error) {
             logger.error('Failed to initialize clipboard:', error);
         }
-    }    /**
+    }/**
      * 开始监控剪切板变化 - 使用原生事件机制
      */
     public startMonitoring(): void {
@@ -76,14 +84,24 @@ export class ClipboardManager extends EventEmitter {
         }
     }    /**
      * 检查剪切板变化
-     */
-    private checkClipboardChanges(): void {
+     */    private checkClipboardChanges(): void {
         try {
             // 首先检查是否有图片
             const image = clipboard.readImage();
             if (!image.isEmpty()) {
-                this.handleImageClipboard(image);
+                // 生成图片哈希用于比较
+                const buffer = image.toPNG();
+                const imageHash = this.generateImageHash(buffer);
+
+                // 检查是否与上次图片相同
+                if (imageHash !== this.lastImageHash) {
+                    this.lastImageHash = imageHash;
+                    this.handleImageClipboard(image);
+                }
                 return;
+            } else {
+                // 如果剪切板中没有图片，清空图片哈希
+                this.lastImageHash = '';
             }
 
             // 如果没有图片，检查文本内容

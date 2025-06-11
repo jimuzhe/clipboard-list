@@ -13,6 +13,7 @@ class AdvancedClipboardManager extends events_1.EventEmitter {
         super();
         this.isMonitoring = false;
         this.lastContent = '';
+        this.lastImageHash = ''; // 添加图片内容跟踪
         this.clipboardHistory = [];
         this.maxHistorySize = 100;
         this.ignoreNextChange = false;
@@ -24,13 +25,18 @@ class AdvancedClipboardManager extends events_1.EventEmitter {
         this.mainWindow = mainWindow;
         this.initializeClipboard();
         this.setupAdvancedListening();
-    }
-    /**
+    } /**
      * 初始化剪切板
      */
     initializeClipboard() {
         try {
             this.lastContent = electron_1.clipboard.readText() || '';
+            // 初始化时也检查图片
+            const image = electron_1.clipboard.readImage();
+            if (!image.isEmpty()) {
+                const buffer = image.toPNG();
+                this.lastImageHash = this.generateImageHash(buffer);
+            }
             this.lastCheckTime = Date.now();
             Logger_1.logger.info('Advanced clipboard manager initialized');
         }

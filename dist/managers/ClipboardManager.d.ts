@@ -7,6 +7,7 @@ import { ClipboardItem } from '../types/clipboard';
 export declare class ClipboardManager extends EventEmitter {
     private isMonitoring;
     private lastContent;
+    private lastImageHash;
     private clipboardHistory;
     private maxHistorySize;
     private ignoreNextChange;
@@ -15,8 +16,7 @@ export declare class ClipboardManager extends EventEmitter {
     constructor();
     /**
      * 初始化剪切板
-     */
-    private initializeClipboard; /**
+     */ private initializeClipboard; /**
      * 开始监控剪切板变化 - 使用原生事件机制
      */
     startMonitoring(): void;
