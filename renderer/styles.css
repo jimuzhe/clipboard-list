@@ -285,6 +285,8 @@ html, body {
   gap: 8px;
   align-items: center;
   flex-wrap: nowrap;
+  min-width: 0; /* 允许弹性收缩 */
+  width: 100%; /* 确保占用全部可用宽度 */
 }
 
 /* 自动保存状态样式优化 */
@@ -347,7 +349,35 @@ html, body {
   display: flex;
   gap: 4px;
   align-items: center;
-  flex-wrap: wrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex-wrap: nowrap;
+  min-width: 0;
+  flex: 1;
+  padding: 2px 0 8px 0; /* 底部留出滚动条空间 */
+  /* 自定义滚动条样式 */
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+}
+
+/* Webkit 浏览器滚动条样式 */
+.preset-websites::-webkit-scrollbar {
+  height: 8px; /* 增加滚动条高度，使其更容易看到 */
+}
+
+.preset-websites::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+.preset-websites::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+  min-width: 20px; /* 确保滚动条拖拽手柄有最小宽度 */
+}
+
+.preset-websites::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
 }
 
 .preset-website-btn {
@@ -364,6 +394,8 @@ html, body {
   transition: var(--transition);
   white-space: nowrap;
   text-decoration: none;
+  flex-shrink: 0;
+  min-width: auto;
 }
 
 .preset-website-btn:hover {
@@ -2243,12 +2275,27 @@ html, body {
   font-size: 13px;
   font-weight: 500;
   color: var(--text-primary);
-  min-width: 80px;
+  white-space: nowrap;
 }
 
 .preset-select {
   flex: 1;
+  min-width: 200px;
   max-width: 300px;
+}
+
+.manage-btn {
+  padding: 6px 12px;
+  font-size: 12px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 80px;
+}
+
+.manage-btn .btn-icon {
+  font-size: 12px;
 }
 
 .url-input-container {

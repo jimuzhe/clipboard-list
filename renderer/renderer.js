@@ -71,7 +71,8 @@ class AppState {
                 this.loadSettingsData(),
                 this.loadPomodoroData()
             ]);
-            console.log('✅ 所有数据加载完成');        } catch (error) {
+            console.log('✅ 所有数据加载完成');
+        } catch (error) {
             console.error('❌ 数据加载失败:', error);
         }
     }
@@ -91,14 +92,14 @@ class AppState {
 
             if (response && response.success && Array.isArray(response.data)) {
                 let clipboardData = response.data;
-                  // 检查是否启用了重启时清理剪切板数据的设置
+                // 检查是否启用了重启时清理剪切板数据的设置
                 if (this.settings.clearClipboardOnRestart) {
                     // 只保留置顶的项目
                     const pinnedItems = clipboardData.filter(item => item.pinned);
                     clipboardData = pinnedItems;
-                    
+
                     console.log(`🧹 重启时清理剪切板数据已启用: 原始 ${response.data.length} 项，保留置顶 ${pinnedItems.length} 项`);
-                    
+
                     // 如果有数据被清理，保存清理后的数据
                     if (response.data.length > pinnedItems.length) {
                         this.clipboardItems = clipboardData; // 先设置数据
@@ -106,7 +107,7 @@ class AppState {
                         await this.saveClipboardData();
                     }
                 }
-                
+
                 this.clipboardItems = clipboardData;
                 console.log(`✅ 剪切板数据加载完成: ${clipboardData.length} 项`);
                 console.log('📋 加载的剪切板项目详情:', this.clipboardItems); // 验证数据结构
@@ -171,15 +172,15 @@ class AppState {
             const response = await window.electronAPI.loadSettings();
             if (response && response.success && response.data && typeof response.data === 'object') {
                 this.settings = {
-                   ...this.settings,
-                   ...response.data
+                    ...this.settings,
+                    ...response.data
                 };
                 console.log('✅ 设置数据加载完成');
             } else if (response && typeof response === 'object' && !response.success) {
                 // 向后兼容：如果返回的是直接数据而不是包装格式
                 this.settings = {
-                   ...this.settings,
-                   ...response
+                    ...this.settings,
+                    ...response
                 };
                 console.log('✅ 设置数据加载完成（向后兼容模式）');
             }
@@ -193,15 +194,15 @@ class AppState {
             const response = await window.electronAPI.loadPomodoroTimer();
             if (response && response.success && response.data && typeof response.data === 'object') {
                 this.pomodoroTimer = {
-                   ...this.pomodoroTimer,
-                   ...response.data
+                    ...this.pomodoroTimer,
+                    ...response.data
                 };
                 console.log('✅ 番茄时钟数据加载完成');
             } else if (response && typeof response === 'object' && !response.success) {
                 // 向后兼容：如果返回的是直接数据而不是包装格式
                 this.pomodoroTimer = {
-                   ...this.pomodoroTimer,
-                   ...response
+                    ...this.pomodoroTimer,
+                    ...response
                 };
                 console.log('✅ 番茄时钟数据加载完成（向后兼容模式）');
             }
@@ -437,7 +438,7 @@ class ClipboardManager {
         console.log('📄 普通项目:', unpinnedItems.length, '个');
 
         // 先显示置顶项目，然后显示普通项目
-        const sortedItems = [...pinnedItems,...unpinnedItems];
+        const sortedItems = [...pinnedItems, ...unpinnedItems];
 
         sortedItems.forEach((item, index) => {
             console.log(`🔧 创建第 ${index + 1} 个剪切板项目:`, {
@@ -1625,7 +1626,7 @@ class PomodoroManager {
             // 工作时间完成
             this.sessionCount++;
             this.totalFocusTime += timer.workDuration;
-            this.showNotification('工作完成！', '是时候休息一下了 ☕');            // 判断是否需要长休息
+            this.showNotification('工作完成！', '是时候休息一下了 ☕'); // 判断是否需要长休息
             const needLongBreak = this.sessionCount % (timer.sessionsUntilLongBreak || 4) === 0;
             const breakDuration = needLongBreak ?
                 (timer.longBreakDuration || 15) : timer.breakDuration;
@@ -2088,11 +2089,12 @@ class NotesManager {
         // 侧边栏切换
         document.getElementById('toggle-sidebar').addEventListener('click', () => {
             this.toggleSidebar();
-        });
-
-        // 设置预览页面按钮事件
+        }); // 设置预览页面按钮事件 - 直接打开预设网站管理器
         document.getElementById('settings-preview').addEventListener('click', () => {
-            this.openSettingsPreview();
+            // 直接调用App实例的预设网站管理器方法
+            if (window.app && window.app.showPresetWebsitesManager) {
+                window.app.showPresetWebsitesManager();
+            }
         });
     } // 打开工作文件夹
     async openWorkspaceFolder() {
@@ -2401,8 +2403,8 @@ class NotesManager {
         console.log('🔍 检查 API 可用性:');
         console.log('  - window.electronAPI:', !!window.electronAPI);
         console.log('  - window.api:', !!window.api);
-        console.log('  - window.api?.fileSystem:', !!window.api ?.fileSystem);
-        console.log('  - window.api?.fileSystem?.exists:', !!window.api ?.fileSystem ?.exists);
+        console.log('  - window.api?.fileSystem:', !!window.api ? .fileSystem);
+        console.log('  - window.api?.fileSystem?.exists:', !!window.api ? .fileSystem ? .exists);
 
         try {
             // 优先在工作区创建文件，如果没有工作区则创建内存笔记
@@ -2410,14 +2412,14 @@ class NotesManager {
                 console.log('✅ 工作区存在，准备在工作区创建文件');
                 console.log('📂 工作区完整路径:', this.workspacePath); // 验证工作区路径是否有效
                 try {
-                    if (window.api ?.fileSystem ?.exists) {
+                    if (window.api ? .fileSystem ? .exists) {
                         console.log('🔍 验证工作区目录是否存在...');
                         const workspaceExists = await window.api.fileSystem.exists(this.workspacePath);
                         console.log('📁 工作区目录是否存在:', workspaceExists);
 
                         if (!workspaceExists) {
                             console.warn('⚠️  工作区目录不存在，尝试创建目录');
-                            if (window.api ?.fileSystem ?.createDirectory) {
+                            if (window.api ? .fileSystem ? .createDirectory) {
                                 const createResult = await window.api.fileSystem.createDirectory(this.workspacePath);
                                 console.log('📁 创建目录结果:', createResult);
                             } else {
@@ -2521,7 +2523,7 @@ class NotesManager {
             console.log('🔧 准备调用 window.electronAPI.writeFile API');
             console.log('🔍 检查 API 可用性:');
             console.log('  - window.electronAPI:', !!window.electronAPI);
-            console.log('  - window.electronAPI.writeFile:', !!window.electronAPI ?.writeFile);
+            console.log('  - window.electronAPI.writeFile:', !!window.electronAPI ? .writeFile);
 
             if (!window.electronAPI || !window.electronAPI.writeFile) {
                 throw new Error('writeFile API 不可用');
@@ -2847,21 +2849,21 @@ class NotesManager {
 
         let html = content
             // 标题
-           .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-           .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-           .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
             // 粗体
-           .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+            .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
             // 斜体
-           .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+            .replace(/\*(.*?)\*/gim, '<em>$1</em>')
             // 代码块
-           .replace(/```([\s\S]*?)```/gim, '<pre><code>$1</code></pre>')
+            .replace(/```([\s\S]*?)```/gim, '<pre><code>$1</code></pre>')
             // 行内代码
-           .replace(/`([^`]+)`/gim, '<code>$1</code>')
+            .replace(/`([^`]+)`/gim, '<code>$1</code>')
             // 链接
-           .replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2" target="_blank">$1</a>')
+            .replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2" target="_blank">$1</a>')
             // 图片 - 支持本地文件路径
-           .replace(/!\[([^\]]*)\]\(([^)]+)\)/gim, (match, alt, src) => {
+            .replace(/!\[([^\]]*)\]\(([^)]+)\)/gim, (match, alt, src) => {
                 // 如果是相对路径且当前编辑的是工作区文件，解析相对路径
                 if (this.currentFilePath && !src.startsWith('http') && !src.startsWith('data:') && !src.startsWith('/')) {
                     const noteDir = this.currentFilePath.substring(0, this.currentFilePath.lastIndexOf('\\'));
@@ -2871,13 +2873,13 @@ class NotesManager {
                 return `<img alt="${alt}" src="${src}" style="max-width: 100%; height: auto;" />`;
             })
             // 引用
-           .replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>')
+            .replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>')
             // 无序列表
-           .replace(/^[\*\-] (.*$)/gim, '<ul><li>$1</li></ul>')
+            .replace(/^[\*\-] (.*$)/gim, '<ul><li>$1</li></ul>')
             // 有序列表
-           .replace(/^(\d+)\. (.*$)/gim, '<ol><li>$2</li></ol>')
+            .replace(/^(\d+)\. (.*$)/gim, '<ol><li>$2</li></ol>')
             // 换行
-           .replace(/\n/gim, '<br>');
+            .replace(/\n/gim, '<br>');
 
         return html;
     }
@@ -3123,15 +3125,75 @@ class App {
                     window.electronAPI.setClipboardMonitor(e.target.checked);
                 }
             });
-        }
-
-        // 重启时清理剪切板数据
+        } // 重启时清理剪切板数据
         const clearClipboardOnRestart = document.getElementById('clear-clipboard-on-restart');
         if (clearClipboardOnRestart) {
             clearClipboardOnRestart.addEventListener('change', (e) => {
                 this.state.settings.clearClipboardOnRestart = e.target.checked;
                 this.state.saveData();
                 console.log('设置重启清理剪切板数据:', e.target.checked);
+            });
+        }
+
+        // URL预设选择器
+        const urlPreset = document.getElementById('url-preset');
+        if (urlPreset) {
+            urlPreset.addEventListener('change', (e) => {
+                const selectedUrl = e.target.value;
+                const communityUrlInput = document.getElementById('community-url');
+
+                if (selectedUrl && selectedUrl !== 'custom' && communityUrlInput) {
+                    // 如果选择了预设URL，更新输入框
+                    communityUrlInput.value = selectedUrl;
+                } else if (selectedUrl === 'custom') {
+                    // 如果选择自定义，聚焦到输入框
+                    if (communityUrlInput) {
+                        communityUrlInput.focus();
+                    }
+                }
+            });
+        } // 应用社区URL按钮
+        const applyCommunityUrl = document.getElementById('apply-community-url');
+        if (applyCommunityUrl) {
+            applyCommunityUrl.addEventListener('click', () => {
+                const communityUrlInput = document.getElementById('community-url');
+                if (communityUrlInput) {
+                    const newUrl = communityUrlInput.value.trim();
+
+                    if (!newUrl) {
+                        alert('请输入有效的URL地址');
+                        return;
+                    }
+
+                    if (!this.isValidUrl(newUrl)) {
+                        alert('请输入有效的URL地址，需要包含 http:// 或 https://');
+                        return;
+                    }
+
+                    // 更新设置
+                    this.state.settings.communityUrl = newUrl;
+                    this.state.settings.online.currentUrl = newUrl;
+                    this.state.saveData();
+
+                    // 更新webview
+                    this.updateCommunityUrl(newUrl);
+
+                    // 显示成功提示
+                    this.showUrlUpdateSuccess();
+
+                    // 重新渲染预设按钮（更新激活状态）
+                    this.renderPresetWebsites();
+
+                    console.log('社区URL已更新为:', newUrl);
+                }
+            });
+        }
+
+        // 管理预设网站按钮
+        const managePresetWebsites = document.getElementById('manage-preset-websites');
+        if (managePresetWebsites) {
+            managePresetWebsites.addEventListener('click', () => {
+                this.showPresetWebsitesManager();
             });
         }
     }
@@ -3167,19 +3229,20 @@ class App {
             document.getElementById('app-version').textContent = version;
         } catch (error) {
             console.error('Failed to get app version:', error);
-        }        // 应用设置
+        } // 应用设置
         document.getElementById('theme-select').value = this.state.settings.theme;
         document.getElementById('glass-effect').checked = this.state.settings.glassEffect;
         document.getElementById('auto-start').checked = this.state.settings.autoStart;
         document.getElementById('clipboard-monitor').checked = this.state.settings.clipboardMonitor;
         document.getElementById('clear-clipboard-on-restart').checked = this.state.settings.clearClipboardOnRestart;
-        document.getElementById('max-clipboard-items').value = this.state.settings.maxClipboardItems;
-
-        // 设置社区URL
+        document.getElementById('max-clipboard-items').value = this.state.settings.maxClipboardItems; // 设置社区URL
         const communityUrlInput = document.getElementById('community-url');
         if (communityUrlInput && this.state.settings.communityUrl) {
             communityUrlInput.value = this.state.settings.communityUrl;
         }
+
+        // 初始化预设选择器
+        this.initializePresetSelector();
 
         // 初始化社区webview URL
         this.initializeCommunityWebview();
@@ -3461,9 +3524,7 @@ class App {
             webview.src = newUrl;
             console.log('页面URL已更新为:', newUrl);
         }
-    }
-
-    // 显示URL更新成功提示
+    } // 显示URL更新成功提示
     showUrlUpdateSuccess() {
         const button = document.getElementById('apply-community-url');
         if (button) {
@@ -3477,6 +3538,45 @@ class App {
                 button.style.backgroundColor = '';
                 button.disabled = false;
             }, 2000);
+        }
+    }
+
+    // 初始化预设选择器
+    initializePresetSelector() {
+        const urlPresetSelect = document.getElementById('url-preset');
+        if (!urlPresetSelect) return;
+
+        // 清空现有选项
+        urlPresetSelect.innerHTML = '<option value="">选择预设页面</option>';
+
+        // 添加预设网站选项
+        if (this.state.settings.online && this.state.settings.online.presetWebsites) {
+            this.state.settings.online.presetWebsites.forEach(website => {
+                const option = document.createElement('option');
+                option.value = website.url;
+                option.textContent = `${website.icon || '🌐'} ${website.name}`;
+                urlPresetSelect.appendChild(option);
+            });
+        }
+
+        // 添加自定义选项
+        const customOption = document.createElement('option');
+        customOption.value = 'custom';
+        customOption.textContent = '✏️ 自定义...';
+        urlPresetSelect.appendChild(customOption);
+
+        // 设置当前选中的值
+        const currentUrl = this.state.settings.online ? .currentUrl || this.state.settings.communityUrl;
+        if (currentUrl) {
+            // 查找匹配的预设
+            const matchingPreset = this.state.settings.online ? .presetWebsites ? .find(
+                website => website.url === currentUrl
+            );
+            if (matchingPreset) {
+                urlPresetSelect.value = currentUrl;
+            } else {
+                urlPresetSelect.value = '';
+            }
         }
     }
 
@@ -3709,9 +3809,7 @@ class App {
     deletePreset(index) {
         this.state.settings.online.presetWebsites.splice(index, 1);
         this.renderPresetManagerList();
-    }
-
-    // 重置默认预设
+    } // 重置默认预设
     resetDefaultPresets() {
         this.state.settings.online.presetWebsites = [{
                 id: 'default',
@@ -3747,12 +3845,62 @@ class App {
                 url: 'https://translate.google.com',
                 icon: '🌐',
                 description: '在线翻译工具'
+            },
+            {
+                id: 'douban',
+                name: '豆瓣',
+                url: 'https://www.douban.com',
+                icon: '📚',
+                description: '豆瓣读书影音'
+            },
+            {
+                id: 'bing',
+                name: '必应搜索',
+                url: 'https://www.bing.com',
+                icon: '🔍',
+                description: '必应搜索引擎'
+            },
+            {
+                id: 'wikipedia',
+                name: '维基百科',
+                url: 'https://zh.wikipedia.org',
+                icon: '📖',
+                description: '维基百科中文'
+            },
+            {
+                id: 'codepen',
+                name: 'CodePen',
+                url: 'https://codepen.io',
+                icon: '💻',
+                description: '在线代码编辑器'
+            },
+            {
+                id: 'youtube',
+                name: 'YouTube',
+                url: 'https://www.youtube.com',
+                icon: '📺',
+                description: '视频平台'
+            },
+            {
+                id: 'bilibili',
+                name: 'Bilibili',
+                url: 'https://www.bilibili.com',
+                icon: '📹',
+                description: 'B站视频'
+            },
+            {
+                id: 'zhihu',
+                name: '知乎',
+                url: 'https://www.zhihu.com',
+                icon: '💭',
+                description: '知识问答社区'
             }
         ];
         this.renderPresetManagerList();
-    }
 
-    // 保存预设设置
+        // 更新预设选择器
+        this.initializePresetSelector();
+    } // 保存预设设置
     savePresetSettings() {
         const items = document.querySelectorAll('.preset-item');
         const newPresets = [];
@@ -3764,7 +3912,7 @@ class App {
             const description = item.querySelector('.preset-description').value.trim();
             if (name && url) {
                 newPresets.push({
-                    id: this.state.settings.online.presetWebsites[index] ?.id || `custom_${Date.now()}_${index}`,
+                    id: this.state.settings.online.presetWebsites[index] ? .id || `custom_${Date.now()}_${index}`,
                     name,
                     url,
                     icon: icon || '🌐',
@@ -3775,6 +3923,9 @@ class App {
 
         this.state.settings.online.presetWebsites = newPresets;
         this.state.saveData();
+
+        // 更新预设选择器
+        this.initializePresetSelector();
     }
 
     // 通用删除确认对话框
