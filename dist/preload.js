@@ -54,6 +54,7 @@ electron_1.contextBridge.exposeInMainWorld('electronAPI', {
     downloadUpdate: (updateInfo) => electron_1.ipcRenderer.invoke('update:download', updateInfo),
     installUpdate: (filePath) => electron_1.ipcRenderer.invoke('update:install', filePath),
     getCurrentVersion: () => electron_1.ipcRenderer.invoke('update:get-current-version'),
+    showItemInFolder: (filePath) => electron_1.ipcRenderer.invoke('show-item-in-folder', filePath),
     // 动画设置
     updateAnimationSettings: (settings) => electron_1.ipcRenderer.invoke('update-animation-settings', settings),
     // 更新事件监听

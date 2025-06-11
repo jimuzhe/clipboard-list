@@ -1,16 +1,18 @@
-// iOS 风格产品介绍页交互脚本 - v2.0
+// Apple风格产品页交互脚本 - 移记 QuiverNote
 
 document.addEventListener('DOMContentLoaded', function () {
     // 导航栏滚动效果
-    const navbar = document.querySelector('.navbar');
+    const navbar = document.querySelector('.apple-nav');
 
-    window.addEventListener('scroll', function () {
-        if (window.scrollY > 30) {
-            navbar.classList.add('scrolled');
-        } else {
-            navbar.classList.remove('scrolled');
-        }
-    });
+    if (navbar) {
+        window.addEventListener('scroll', function () {
+            if (window.scrollY > 20) {
+                navbar.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+            } else {
+                navbar.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+            }
+        });
+    }
 
     // 平滑滚动到锚点
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -18,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
             const target = document.querySelector(this.getAttribute('href'));
             if (target) {
-                const headerOffset = 80;
+                const headerOffset = 60;
                 const elementPosition = target.getBoundingClientRect().top;
                 const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
 
@@ -30,176 +32,116 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // 版本亮点卡片动画效果
-    const versionHighlightCards = document.querySelectorAll('.highlight-card');
-    const highlightObserverOptions = {
+    // 浮动卡片动画
+    const floatingCards = document.querySelectorAll('.feature-card.floating');
+    const observerOptions = {
         threshold: 0.1,
         rootMargin: '0px 0px -50px 0px'
     };
 
-    const versionHighlightObserver = new IntersectionObserver((entries) => {
+    const cardObserver = new IntersectionObserver((entries) => {
         entries.forEach((entry, index) => {
             if (entry.isIntersecting) {
                 setTimeout(() => {
                     entry.target.style.opacity = '1';
                     entry.target.style.transform = 'translateY(0)';
-                }, index * 200);
+                }, index * 150);
             }
         });
-    }, highlightObserverOptions);
+    }, observerOptions);
 
-    versionHighlightCards.forEach(card => {
+    floatingCards.forEach(card => {
         card.style.opacity = '0';
         card.style.transform = 'translateY(30px)';
-        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-        versionHighlightObserver.observe(card);
+        card.style.transition = 'all 0.6s ease-out';
+        cardObserver.observe(card);
     });
 
-    // 功能卡片悬停效果增强
-    const mainFeatureCards = document.querySelectorAll('.feature-card');
-    mainFeatureCards.forEach((card, index) => {
-        // 添加延迟动画
-        card.style.animationDelay = `${index * 0.1}s`;
+    // 功能展示区域动画
+    const featureShowcases = document.querySelectorAll('.feature-showcase');
 
-        card.addEventListener('mouseenter', function () {
-            // 添加悬停时的微妙旋转和发光效果
-            const icon = this.querySelector('.icon-wrapper');
-            if (icon) {
-                icon.style.transform = 'scale(1.15) rotateY(15deg)';
-                icon.style.boxShadow = '0 8px 25px rgba(0, 122, 255, 0.3)';
+    const showcaseObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const content = entry.target.querySelector('.feature-content');
+                const visual = entry.target.querySelector('.feature-visual');
+
+                if (content) {
+                    content.style.opacity = '1';
+                    content.style.transform = 'translateX(0)';
+                }
+
+                if (visual) {
+                    visual.style.opacity = '1';
+                    visual.style.transform = 'translateX(0)';
+                }
             }
+        });
+    }, observerOptions);
+
+    featureShowcases.forEach(showcase => {
+        const content = showcase.querySelector('.feature-content');
+        const visual = showcase.querySelector('.feature-visual');
+
+        if (content) {
+            content.style.opacity = '0';
+            content.style.transform = 'translateX(-50px)';
+            content.style.transition = 'all 0.8s ease-out';
+        }
+
+        if (visual) {
+            visual.style.opacity = '0';
+            visual.style.transform = 'translateX(50px)';
+            visual.style.transition = 'all 0.8s ease-out 0.2s';
+        }
+
+        showcaseObserver.observe(showcase);
+    });
+
+    // 设计卡片悬停效果
+    const designCards = document.querySelectorAll('.design-card');
+
+    designCards.forEach(card => {
+        card.addEventListener('mouseenter', function () {
+            this.style.transform = 'translateY(-8px) scale(1.02)';
         });
 
         card.addEventListener('mouseleave', function () {
-            const icon = this.querySelector('.icon-wrapper');
-            if (icon) {
-                icon.style.transform = 'scale(1) rotateY(0deg)';
-                icon.style.boxShadow = 'none';
-            }
+            this.style.transform = 'translateY(-4px) scale(1)';
         });
     });
 
-    // 应用预览窗口交互增强
-    const appWindow = document.querySelector('.app-window');
-    if (appWindow) {
-        let isHovering = false;
+    // 演示界面交互
+    const demoItems = document.querySelectorAll('.demo-item, .clipboard-item, .todo-item');
 
-        appWindow.addEventListener('mouseenter', function () {
-            isHovering = true;
-            this.style.transform = 'perspective(1000px) rotateY(0deg) rotateX(0deg) scale(1.05)';
+    demoItems.forEach(item => {
+        item.addEventListener('mouseenter', function () {
+            this.style.transform = 'translateY(-2px)';
+            this.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
         });
 
-        appWindow.addEventListener('mouseleave', function () {
-            isHovering = false;
-            this.style.transform = 'perspective(1000px) rotateY(-5deg) rotateX(5deg) scale(1)';
+        item.addEventListener('mouseleave', function () {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = '';
         });
+    });
 
-        // 鼠标移动效果
-        appWindow.addEventListener('mousemove', function (e) {
-            if (!isHovering) return;
+    // 动作按钮点击效果
+    const actionButtons = document.querySelectorAll('.action-btn, .btn-apple-primary, .btn-download-primary');
 
-            const rect = this.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
-
-            const rotateX = (y - centerY) / 10;
-            const rotateY = (centerX - x) / 10;
-
-            this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
-        });
-    }
-
-    // 下载按钮特效
-    const downloadBtn = document.querySelector('.btn-download');
-    if (downloadBtn) {
-        downloadBtn.addEventListener('click', function (e) {
-            // 显示下载动画
-            this.style.position = 'relative';
-            this.style.overflow = 'hidden';
-
-            // 创建下载进度指示器
-            const progress = document.createElement('div');
-            progress.style.cssText = `
-                position: absolute;
-                top: 0;
-                left: -100%;
-                width: 100%;
-                height: 100%;
-                background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-                animation: downloadProgress 2s ease-in-out;
-            `;
-
-            this.appendChild(progress);
-
-            // 2秒后移除进度指示器
-            setTimeout(() => {
-                progress.remove();
-            }, 2000);
-
-            // 显示下载提示
-            showDownloadNotification();
-        });
-    }
-
-    // 下载通知
-    function showDownloadNotification() {
-        const notification = document.createElement('div');
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #34C759;
-            color: white;
-            padding: 16px 24px;
-            border-radius: 12px;
-            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.1);
-            z-index: 10000;
-            transform: translateX(100%);
-            transition: transform 0.3s ease;
-            font-weight: 500;
-        `;
-        notification.textContent = '✨ 移记 v2.0.0 下载即将开始...';
-
-        document.body.appendChild(notification);
-
-        // 显示动画
-        setTimeout(() => {
-            notification.style.transform = 'translateX(0)';
-        }, 100);
-
-        // 自动隐藏
-        setTimeout(() => {
-            notification.style.transform = 'translateX(100%)';
-            setTimeout(() => {
-                notification.remove();
-            }, 300);
-        }, 3000);
-    }
-
-    // 按钮点击动画
-    const buttons = document.querySelectorAll('.btn');
-    buttons.forEach(button => {
+    actionButtons.forEach(button => {
         button.addEventListener('click', function (e) {
-            // 创建波纹效果
+            // 创建涟漪效果
             const ripple = document.createElement('span');
             const rect = this.getBoundingClientRect();
             const size = Math.max(rect.width, rect.height);
             const x = e.clientX - rect.left - size / 2;
             const y = e.clientY - rect.top - size / 2;
 
-            ripple.style.cssText = `
-                position: absolute;
-                width: ${size}px;
-                height: ${size}px;
-                background: rgba(255, 255, 255, 0.3);
-                border-radius: 50%;
-                pointer-events: none;
-                left: ${x}px;
-                top: ${y}px;
-                animation: ripple 0.6s ease-out;
-            `;
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            ripple.classList.add('ripple-effect');
 
             this.appendChild(ripple);
 
@@ -208,6 +150,128 @@ document.addEventListener('DOMContentLoaded', function () {
             }, 600);
         });
     });
+
+    // 视差滚动效果
+    const heroVisual = document.querySelector('.hero-visual');
+
+    if (heroVisual) {
+        window.addEventListener('scroll', function () {
+            const scrolled = window.pageYOffset;
+            const rate = scrolled * -0.5;
+            heroVisual.style.transform = `translateY(${rate}px)`;
+        });
+    }
+
+    // 页面加载动画
+    const heroContent = document.querySelector('.hero-content');
+
+    if (heroContent) {
+        setTimeout(() => {
+            heroContent.style.opacity = '1';
+            heroContent.style.transform = 'translateY(0)';
+        }, 100);
+
+        heroContent.style.opacity = '0';
+        heroContent.style.transform = 'translateY(30px)';
+        heroContent.style.transition = 'all 0.8s ease-out';
+    }
+
+    // 统计数字动画
+    const statNumbers = document.querySelectorAll('.stat-number');
+
+    const animateNumbers = (entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const target = entry.target;
+                const finalText = target.textContent;
+
+                if (finalText === '∞') {
+                    // 无限符号特殊动画
+                    target.style.animation = 'pulse 2s ease-in-out infinite';
+                } else if (finalText === 'AI') {
+                    // AI文字特殊动画
+                    target.style.animation = 'glow 3s ease-in-out infinite';
+                } else if (finalText.includes('%')) {
+                    // 百分比数字动画
+                    animatePercentage(target, parseInt(finalText));
+                }
+            }
+        });
+    };
+
+    const numberObserver = new IntersectionObserver(animateNumbers, observerOptions);
+
+    statNumbers.forEach(number => {
+        numberObserver.observe(number);
+    });
+
+    // 百分比动画函数
+    function animatePercentage(element, target) {
+        let current = 0;
+        const increment = target / 50;
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                current = target;
+                clearInterval(timer);
+            }
+            element.textContent = Math.floor(current) + '%';
+        }, 30);
+    }
+
+    // 添加必要的CSS动画
+    const style = document.createElement('style');
+    style.textContent = `
+        .ripple-effect {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.6);
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+            pointer-events: none;
+        }
+        
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes glow {
+            0%, 100% {
+                text-shadow: 0 0 5px rgba(0, 122, 255, 0.5);
+            }
+            50% {
+                text-shadow: 0 0 20px rgba(0, 122, 255, 0.8);
+            }
+        }
+    `;
+    document.head.appendChild(style);
+
+    // 键盘导航支持
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Tab') {
+            document.body.classList.add('keyboard-navigation');
+        }
+    });
+
+    document.addEventListener('mousedown', function () {
+        document.body.classList.remove('keyboard-navigation');
+    });
+
+    // 性能优化：防抖滚动事件
+    let scrollTimeout;
+    window.addEventListener('scroll', function () {
+        if (scrollTimeout) {
+            clearTimeout(scrollTimeout);
+        }
+
+        scrollTimeout = setTimeout(function () {
+            // 在这里执行需要防抖的滚动相关操作
+        }, 10);
+    });
+    console.log('移记 QuiverNote - Apple风格产品页已加载完成');
 });
 
 // CSS 动画定义

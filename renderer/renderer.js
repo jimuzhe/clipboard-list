@@ -1534,10 +1534,9 @@ class PomodoroManager {
         document.getElementById('pomodoro-pause').addEventListener('click', () => {
             this.pause();
         });
-
         document.getElementById('pomodoro-reset').addEventListener('click', () => {
             this.reset();
-        }); // 模态框关闭
+        }); // 模态框关闭按钮
         const closeBtn = document.querySelector('#pomodoro-modal.modal-close');
         if (closeBtn) {
             closeBtn.addEventListener('click', () => {
@@ -3762,31 +3761,43 @@ class App {
                     matches = true;
                 }
             }
-
             item.style.display = matches ? 'block' : 'none';
         });
     }
+
     async checkUpdates() {
         try {
             // 显示检查中状态
             this.showUpdateCheckingStatus();
 
+            console.log('🔍 开始检查更新...');
             const result = await window.electronAPI.checkForUpdates();
-            console.log('检查更新结果:', result);
+            console.log('✅ 检查更新结果:', result);
 
-            if (result.hasUpdate) {
-                // 有更新可用
-                this.showUpdateAvailableDialog(result.updateInfo);
-            } else if (result.error) {
-                // 检查更新时出错
-                this.showUpdateErrorDialog(result.error);
+            // 直接使用返回的结果，因为 UpdateService 没有使用 IPCService 的包装
+            if (result && typeof result === 'object') {
+                console.log('📋 处理结果:', result);
+
+                if (result.hasUpdate) {
+                    // 有更新可用
+                    console.log('🎉 发现新版本:', result.updateInfo ?.version);
+                    this.showUpdateAvailableDialog(result.updateInfo);
+                } else if (result.error) {
+                    // 检查更新时出错
+                    console.error('❌ 检查更新出错:', result.error);
+                    this.showUpdateErrorDialog(result.error);
+                } else {
+                    // 已是最新版本
+                    console.log('✨ 当前已是最新版本');
+                    this.showNoUpdateDialog();
+                }
             } else {
-                // 已是最新版本
-                this.showNoUpdateDialog();
+                console.error('❌ 检查更新返回了无效的结果格式:', result);
+                this.showUpdateErrorDialog('检查更新返回了无效的结果格式');
             }
         } catch (error) {
-            console.error('检查更新失败:', error);
-            this.showUpdateErrorDialog('检查更新时发生错误');
+            console.error('💥 检查更新失败:', error);
+            this.showUpdateErrorDialog('检查更新时发生错误: ' + (error.message || error));
         }
     }
 
@@ -3798,12 +3809,10 @@ class App {
         setTimeout(() => {
             notification.remove();
         }, 3000);
-    }
-
-    // 显示有更新可用的对话框
+    } // 显示有更新可用的对话框
     showUpdateAvailableDialog(updateInfo) {
         const modal = document.createElement('div');
-        modal.className = 'modal update-modal';
+        modal.className = 'modal update-modal active';
         modal.innerHTML = `
             <div class="modal-content">
                 <div class="modal-header">
@@ -3854,16 +3863,21 @@ class App {
                 </div>
             </div>
         `;
-
         document.body.appendChild(modal);
 
-        // 获取并显示当前版本
-        window.electronAPI.getCurrentVersion().then(version => {
-            const currentVersionEl = document.getElementById('current-version');
-            if (currentVersionEl) {
+        // 获取并显示当前版本 - 使用更可靠的元素查找方式
+        const currentVersionEl = modal.querySelector('#current-version');
+        if (currentVersionEl) {
+            window.electronAPI.getCurrentVersion().then(version => {
                 currentVersionEl.textContent = version;
-            }
-        });
+                console.log('当前版本已设置:', version);
+            }).catch(error => {
+                console.error('获取当前版本失败:', error);
+                currentVersionEl.textContent = '未知版本';
+            });
+        } else {
+            console.error('找不到current-version元素');
+        }
 
         // 绑定下载按钮事件
         const downloadBtn = modal.querySelector('#download-update-btn');
@@ -3898,9 +3912,7 @@ class App {
         setTimeout(() => {
             notification.remove();
         }, 5000);
-    }
-
-    // 开始下载更新
+    } // 开始下载更新
     async startUpdateDownload(updateInfo, modal) {
         const downloadBtn = modal.querySelector('#download-update-btn');
         const progressContainer = modal.querySelector('#download-progress');
@@ -3910,24 +3922,103 @@ class App {
         // 显示下载进度
         downloadBtn.style.display = 'none';
         progressContainer.style.display = 'block';
+        progressText.textContent = '准备下载...';
+        progressFill.style.width = '0%';
 
         try {
+            console.log('开始下载更新:', updateInfo);
+
+            // 监听下载进度
+            this.setupDownloadProgressListener(modal);
+
             const result = await window.electronAPI.downloadUpdate(updateInfo);
+            console.log('下载结果:', result);
 
             if (result.success) {
                 progressText.textContent = '下载完成！';
                 progressFill.style.width = '100%';
 
-                // 显示安装按钮
+                // 显示下载完成选项
                 setTimeout(() => {
-                    this.showInstallDialog(result.data.filePath, modal);
+                    this.showDownloadCompleteOptions(result.filePath, modal);
                 }, 1000);
             } else {
                 this.handleDownloadError(result.error, modal);
             }
         } catch (error) {
+            console.error('下载更新失败:', error);
             this.handleDownloadError(error.message || '下载失败', modal);
         }
+    }
+
+    // 设置下载进度监听器
+    setupDownloadProgressListener(modal) {
+        const progressFill = modal.querySelector('#progress-fill');
+        const progressText = modal.querySelector('#progress-text');
+
+        // 监听下载进度事件
+        if (window.electronAPI && window.electronAPI.onUpdateDownloadProgress) {
+            window.electronAPI.onUpdateDownloadProgress((progress) => {
+                console.log('下载进度更新:', progress);
+                if (progressFill && progressText) {
+                    const percent = Math.round(progress.percent || 0);
+                    progressFill.style.width = `${percent}%`;
+
+                    // 显示详细的下载信息
+                    const transferred = this.formatBytes(progress.transferredBytes || 0);
+                    const total = this.formatBytes(progress.totalBytes || 0);
+                    progressText.textContent = `下载中... ${percent}% (${transferred}/${total})`;
+                }
+            });
+        }
+    }
+
+    // 显示下载完成后的选项
+    showDownloadCompleteOptions(filePath, modal) {
+        const modalFooter = modal.querySelector('.modal-footer');
+        modalFooter.innerHTML = `
+            <button class="btn btn-secondary" id="open-download-folder">📁 打开目录</button>
+            <button class="btn btn-primary" id="install-update-btn">🚀 立即安装</button>
+            <button class="btn btn-outline" onclick="this.closest('.modal').remove()">稍后处理</button>
+        `;
+
+        // 打开下载目录按钮
+        const openFolderBtn = modal.querySelector('#open-download-folder');
+        openFolderBtn.addEventListener('click', async () => {
+            try {
+                // 调用electron API打开文件所在目录
+                if (window.electronAPI && window.electronAPI.showItemInFolder) {
+                    await window.electronAPI.showItemInFolder(filePath);
+                } else {
+                    // 备用方案：显示文件路径
+                    this.showNotification('文件位置', `文件已保存到: ${filePath}`);
+                }
+            } catch (error) {
+                console.error('打开目录失败:', error);
+                this.showNotification('打开失败', '无法打开文件目录');
+            }
+        });
+
+        // 立即安装按钮
+        const installBtn = modal.querySelector('#install-update-btn');
+        installBtn.addEventListener('click', async () => {
+            try {
+                await window.electronAPI.installUpdate(filePath);
+                modal.remove();
+            } catch (error) {
+                console.error('安装更新失败:', error);
+                this.showUpdateErrorDialog('安装更新失败: ' + error.message);
+            }
+        });
+    }
+
+    // 格式化字节数
+    formatBytes(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
     // 显示安装对话框

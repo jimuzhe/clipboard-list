@@ -59,6 +59,7 @@ contextBridge.exposeInMainWorld('electronAPI', {    // 窗口控制
     downloadUpdate: (updateInfo: any) => ipcRenderer.invoke('update:download', updateInfo),
     installUpdate: (filePath: string) => ipcRenderer.invoke('update:install', filePath),
     getCurrentVersion: () => ipcRenderer.invoke('update:get-current-version'),
+    showItemInFolder: (filePath: string) => ipcRenderer.invoke('show-item-in-folder', filePath),
 
     // 动画设置
     updateAnimationSettings: (settings: { showAnimationDuration: number; hideAnimationDuration: number }) =>
@@ -131,13 +132,12 @@ export interface ElectronAPI {
     writeFile: (filePath: string, content: string) => Promise<void>;
     deleteFile: (filePath: string) => Promise<void>;
     openDevTools: () => Promise<void>;
-    closeDevTools: () => Promise<void>; toggleDevTools: () => Promise<void>;
-
-    // 更新相关
+    closeDevTools: () => Promise<void>; toggleDevTools: () => Promise<void>;    // 更新相关
     checkForUpdates: () => Promise<any>;
     downloadUpdate: (updateInfo: any) => Promise<any>;
     installUpdate: (filePath: string) => Promise<void>;
     getCurrentVersion: () => Promise<string>;
+    showItemInFolder: (filePath: string) => Promise<void>;
 
     // 动画设置
     updateAnimationSettings: (settings: { showAnimationDuration: number; hideAnimationDuration: number }) => Promise<void>;

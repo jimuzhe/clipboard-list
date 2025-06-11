@@ -31,15 +31,23 @@ export class UpdateService extends EventEmitter {
     private isDownloading: boolean = false;
     private currentVersion: string;
     private downloadPath: string;
-
-    constructor() {
+    private isDev: boolean = false; constructor() {
         super();
         this.currentVersion = app.getVersion();
         this.downloadPath = path.join(app.getPath('downloads'), '移记-Setup.exe');
+        this.isDev = process.env.NODE_ENV === 'development' || process.argv.includes('--dev') || !app.isPackaged;
         this.setupIPCHandlers();
-    }
 
-    /**
+        // 始终使用在线更新服务器
+        logger.info('更新服务初始化完成，使用在线更新服务器:', this.updateUrl);
+
+        // 如果需要使用本地测试文件，可以通过环境变量 USE_LOCAL_UPDATE 控制
+        if (process.env.USE_LOCAL_UPDATE === 'true') {
+            const testUpdateFile = path.join(process.cwd(), 'test-update-info.json');
+            this.updateUrl = `file://${testUpdateFile}`;
+            logger.info('使用本地测试更新文件:', this.updateUrl);
+        }
+    }    /**
      * 设置IPC处理程序
      */
     private setupIPCHandlers(): void {
@@ -47,6 +55,7 @@ export class UpdateService extends EventEmitter {
         ipcMain.handle('update:download', this.handleDownloadUpdate.bind(this));
         ipcMain.handle('update:install', this.handleInstallUpdate.bind(this));
         ipcMain.handle('update:get-current-version', this.handleGetCurrentVersion.bind(this));
+        ipcMain.handle('show-item-in-folder', this.handleShowItemInFolder.bind(this));
     }
 
     /**
@@ -102,51 +111,65 @@ export class UpdateService extends EventEmitter {
         }
     }    /**
      * 获取更新信息
-     */
-    private async fetchUpdateInfo(): Promise<UpdateInfo | null> {
+     */    private async fetchUpdateInfo(): Promise<UpdateInfo | null> {
         try {
-            logger.info(`正在从网络获取更新信息: ${this.updateUrl}`);
+            logger.info(`正在获取更新信息: ${this.updateUrl}`);
+            logger.info(`当前模式: ${this.isDev ? '开发模式' : '生产模式'}`);
 
-            // 创建 AbortController 用于超时控制
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => {
-                controller.abort();
-                logger.warn('更新信息请求超时');
-            }, 15000); // 15秒超时
-            const response = await fetch(this.updateUrl, {
-                method: 'GET',
-                headers: {
-                    'User-Agent': `ClipboardList/${this.currentVersion}`,
-                    'Cache-Control': 'no-cache',
-                    'Accept': 'application/json',
-                    'Accept-Encoding': 'gzip, deflate, br'
-                },
-                signal: controller.signal
-            });
-
-            clearTimeout(timeoutId);
-
-            logger.info(`收到响应: ${response.status} ${response.statusText}`);
-
-            if (!response.ok) {
-                throw new Error(`网络请求失败: HTTP ${response.status} ${response.statusText}`);
-            } const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                logger.warn(`响应内容类型: ${contentType}`);
-            }
-
-            // 先获取响应文本进行调试
-            const responseText = await response.text();
-            logger.info('服务器响应内容:', responseText.substring(0, 500)); // 只记录前500个字符
-
-            // 解析JSON
             let updateInfo: UpdateInfo;
-            try {
-                updateInfo = JSON.parse(responseText) as UpdateInfo;
-            } catch (parseError) {
-                logger.error('JSON解析失败:', parseError);
-                logger.error('响应文本内容:', responseText);
-                throw new Error('服务器返回的数据格式不正确，无法解析JSON');
+
+            // 判断是否为本地文件
+            if (this.updateUrl.startsWith('file://')) {
+                const filePath = this.updateUrl.replace('file://', '');
+                const content = await fs.readFile(filePath, 'utf-8');
+                updateInfo = JSON.parse(content) as UpdateInfo;
+                logger.info('从本地文件获取更新信息成功');
+            } else {
+                // 网络获取
+                logger.info('开始从在线服务器获取更新信息...');
+                // 创建 AbortController 用于超时控制
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => {
+                    controller.abort();
+                    logger.warn('更新信息请求超时');
+                }, 15000); // 15秒超时
+
+                const response = await fetch(this.updateUrl, {
+                    method: 'GET',
+                    headers: {
+                        'User-Agent': `ClipboardList/${this.currentVersion}`,
+                        'Cache-Control': 'no-cache',
+                        'Accept': 'application/json',
+                        'Accept-Encoding': 'gzip, deflate, br'
+                    },
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+
+                logger.info(`收到响应: ${response.status} ${response.statusText}`);
+
+                if (!response.ok) {
+                    throw new Error(`网络请求失败: HTTP ${response.status} ${response.statusText}`);
+                }
+
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    logger.warn(`响应内容类型: ${contentType}`);
+                }
+
+                // 先获取响应文本进行调试
+                const responseText = await response.text();
+                logger.info('服务器响应内容:', responseText.substring(0, 500)); // 只记录前500个字符
+
+                // 解析JSON
+                try {
+                    updateInfo = JSON.parse(responseText) as UpdateInfo;
+                } catch (parseError) {
+                    logger.error('JSON解析失败:', parseError);
+                    logger.error('响应文本内容:', responseText);
+                    throw new Error('服务器返回的数据格式不正确，无法解析JSON');
+                }
             }
 
             // 验证必要字段
@@ -323,33 +346,103 @@ export class UpdateService extends EventEmitter {
             this.emit('install-error', error);
             throw error;
         }
-    }
-
-    /**
+    }    /**
      * IPC 处理程序
      */
     private async handleCheckUpdates(): Promise<any> {
-        return await this.checkForUpdates();
-    }
-
-    private async handleDownloadUpdate(event: any, updateInfo: UpdateInfo): Promise<any> {
-        return await this.downloadUpdate(updateInfo);
-    }
-
-    private async handleInstallUpdate(event: any, filePath: string): Promise<void> {
-        return await this.installUpdate(filePath);
-    }
-
-    private async handleGetCurrentVersion(): Promise<string> {
-        return this.currentVersion;
+        try {
+            const result = await this.checkForUpdates();
+            logger.info('检查更新 IPC 调用完成:', result);
+            return result;
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : '检查更新失败';
+            logger.error('检查更新 IPC 调用失败:', error);
+            return { hasUpdate: false, error: errorMessage };
+        }
+    } private async handleDownloadUpdate(event: any, updateInfo: UpdateInfo): Promise<any> {
+        try {
+            const result = await this.downloadUpdate(updateInfo);
+            logger.info('下载更新 IPC 调用完成:', result);
+            return result;
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : '下载更新失败';
+            logger.error('下载更新 IPC 调用失败:', error);
+            return { success: false, error: errorMessage };
+        }
+    } private async handleInstallUpdate(event: any, filePath: string): Promise<void> {
+        try {
+            await this.installUpdate(filePath);
+            logger.info('安装更新 IPC 调用完成');
+        } catch (error) {
+            logger.error('安装更新 IPC 调用失败:', error);
+            throw error;
+        }
+    } private async handleGetCurrentVersion(): Promise<string> {
+        try {
+            logger.info('获取当前版本:', this.currentVersion);
+            return this.currentVersion;
+        } catch (error) {
+            logger.error('获取当前版本失败:', error);
+            throw error;
+        }
     }
 
     /**
+     * 处理在文件夹中显示文件
+     */
+    private async handleShowItemInFolder(event: any, filePath: string): Promise<boolean> {
+        try {
+            logger.info('在文件夹中显示文件:', filePath);
+            shell.showItemInFolder(filePath);
+            return true;
+        } catch (error) {
+            logger.error('打开文件夹失败:', error);
+            return false;
+        }
+    }/**
      * 设置更新服务器URL
      */
     public setUpdateUrl(url: string): void {
         this.updateUrl = url;
         logger.info(`更新服务器URL已设置为: ${url}`);
+    }
+
+    /**
+     * 获取更新服务器URL
+     */
+    public getUpdateUrl(): string {
+        return this.updateUrl;
+    }
+
+    /**
+     * 手动检查更新（强制检查，忽略正在检查状态）
+     */
+    public async forceCheckForUpdates(): Promise<{
+        hasUpdate: boolean;
+        updateInfo?: UpdateInfo;
+        error?: string;
+    }> {
+        this.isChecking = false; // 重置检查状态
+        return await this.checkForUpdates();
+    }
+
+    /**
+     * 获取详细状态信息
+     */
+    public getDetailedStatus(): {
+        isChecking: boolean;
+        isDownloading: boolean;
+        currentVersion: string;
+        updateUrl: string;
+        isDev: boolean;
+    } {
+        return {
+            isChecking: this.isChecking,
+            isDownloading: this.isDownloading,
+            currentVersion: this.currentVersion,
+            updateUrl: this.updateUrl,
+            isDev: this.isDev
+        };
     }
 
     /**

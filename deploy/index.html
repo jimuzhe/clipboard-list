@@ -4,326 +4,892 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>移记 2.0 - 智能剪切板管理工具</title>
+    <title>移记 QuiverNote - 智能剪切板管理工具</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <meta name="description" content="移记 2.0 - 智能剪切板管理工具，数据持久化本地存储，UI全新升级，一键直达任意网站。高效的桌面效率工具。">
-    <meta name="keywords" content="剪切板管理,数据持久化,本地存储,一键跳转,待办清单,Markdown笔记,桌面工具,效率软件">
-    <meta property="og:title" content="移记 2.0 - 智能剪切板管理工具">
-    <meta property="og:description" content="2.0版本重磅升级：数据持久化本地存储，UI全新升级，一键直达任意网站。让你的创意从不丢失。">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <meta name="description" content="移记 QuiverNote - 智能剪切板管理工具，数据持久化本地存储，AI智能识别，一键直达任意网站。重新定义桌面效率工具。">
+    <meta name="keywords" content="剪切板管理,智能识别,数据持久化,本地存储,一键跳转,待办清单,Markdown笔记,桌面工具,效率软件">
+    <meta property="og:title" content="移记 QuiverNote - 智能剪切板管理工具">
+    <meta property="og:description" content="重新定义桌面效率工具：智能识别，数据持久化本地存储，让你的每一个想法都有价值。">
     <meta property="og:image" content="assets/app-icon.png">
     <meta property="og:type" content="website">
-    <link rel="icon" type="image/png" href="asserts/app-icon.png">
+    <link rel="icon" type="image/png" href="assets/app-icon.png">
 </head>
 
 <body>
-    <!-- 导航栏 -->
-    <nav class="navbar">
+    <!-- Apple风格导航栏 -->
+    <nav class="apple-nav">
         <div class="nav-container">
-            <div class="nav-brand">
-                <img src="asserts/app-icon.png" alt="移记" class="nav-logo">
+            <div class="nav-left">
+                <img src="assets/app-icon.png" alt="移记" class="nav-logo">
                 <span class="nav-title">移记</span>
             </div>
-            <div class="nav-links">
-                <a href="#features" class="nav-link">功能</a>
-                <a href="#screenshots" class="nav-link">截图</a>
+            <div class="nav-center">
+                <a href="#overview" class="nav-link">概览</a>
+                <a href="#features" class="nav-link">功能特性</a>
+                <a href="#design" class="nav-link">设计理念</a>
                 <a href="#download" class="nav-link">下载</a>
+            </div>
+            <div class="nav-right">
+                <a href="https://github.com/longdz/clipboard-list" class="nav-link nav-github" target="_blank">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z" />
+                    </svg>
+                </a>
             </div>
         </div>
     </nav>
 
-    <!-- 主标题区域 -->
-    <section class="hero">
-        <div class="hero-container">
-            <div class="hero-content">
-                <h1 class="hero-title">
-                    <span class="hero-title-main">移记</span>
-                    <span class="hero-title-sub">捕捉每一个好点子</span>
-                </h1>
-                <p class="hero-description">
-                    智能剪切板管理工具 2.0 重磅升级！全新UI界面设计，
-                    数据持久化本地存储，一键直达任意网站。
-                    让你的每一次复制都有价值，让效率工作变得更简单。
-                </p>
-                <div class="hero-buttons">
-                    <a href="#download" class="btn btn-primary">
-                        <span>免费下载</span>
-                        <i class="icon-download">⬇️</i>
-                    </a>
-                    <a href="#features" class="btn btn-secondary">
-                        <span>了解更多</span>
-                        <i class="icon-arrow">➡️</i>
-                    </a>
-                </div>
+    <!-- Hero区域 - 苹果风格 -->
+    <section class="hero-apple">
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span class="badge-new">新品</span>
+                <span class="badge-text">重新定义桌面效率工具</span>
             </div>
-            <div class="hero-visual">
-                <div class="app-preview">
-                    <div class="app-window">
-                        <div class="window-header">
-                            <div class="window-controls">
-                                <span class="control red"></span>
-                                <span class="control yellow"></span>
-                                <span class="control green"></span>
-                            </div>
-                            <div class="window-title">移记</div>
-                        </div>
-                        <div class="window-content">
-                            <div class="app-tabs">
-                                <span class="tab active">📋 剪切板</span>
-                                <span class="tab">✅ 待办</span>
-                                <span class="tab">📝 笔记</span>
-                            </div>
-                            <div class="clipboard-items">
-                                <div class="clipboard-item">
-                                    <div class="item-content">https://github.com/electron/electron</div>
-                                    <div class="item-meta">网址链接 · 一键直达 · 1分钟前</div>
-                                </div>
-                                <div class="clipboard-item">
-                                    <div class="item-content">console.log('Hello World');</div>
-                                    <div class="item-meta">代码片段 · 本地存储 · 3分钟前</div>
-                                </div>
-                                <div class="clipboard-item">
-                                    <div class="item-content">设计一个现代化的用户界面</div>
-                                    <div class="item-meta">文本内容 · 已保存 · 5分钟前</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section> <!-- 2.0 版本亮点 -->
-    <section class="version-highlights">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">✨ 2.0 版本重磅升级</h2>
-                <p class="section-subtitle">三大核心功能，全新体验</p>
-            </div>
-            <div class="highlights-grid">
-                <div class="highlight-card">
-                    <div class="highlight-icon">💾</div>
-                    <h3 class="highlight-title">数据持久化本地存储</h3>
-                    <p class="highlight-description">
-                        全新的本地数据存储系统，所有剪切板历史、
-                        待办清单和笔记内容安全保存在本地，永不丢失。
-                    </p>
-                </div>
-                <div class="highlight-card">
-                    <div class="highlight-icon">🎨</div>
-                    <h3 class="highlight-title">UI 界面全新升级</h3>
-                    <p class="highlight-description">
-                        采用现代化设计语言，毛玻璃效果和流畅动画，
-                        界面更美观，交互更自然，使用更舒适。
-                    </p>
-                </div>
-                <div class="highlight-card">
-                    <div class="highlight-icon">🌐</div>
-                    <h3 class="highlight-title">一键直达任意网站</h3>
-                    <p class="highlight-description">
-                        智能识别网址链接，支持一键快速跳转，
-                        让你的工作流程更加高效便捷。
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- 功能特性区域 -->
-    <section id="features" class="features">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">强大功能，简单易用</h2>
-                <p class="section-subtitle">2.0 版本全新升级，让每一个功能都恰到好处</p>
-            </div>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <div class="icon-wrapper">
-                            <span class="icon">🚀</span>
-                        </div>
-                    </div>
-                    <h3 class="feature-title">开机自启</h3>
-                    <p class="feature-description">
-                        开机后自动启动，隐藏在系统托盘，
-                        随时待命，从不打扰。
-                    </p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <div class="icon-wrapper">
-                            <span class="icon">📌</span>
-                        </div>
-                    </div>
-                    <h3 class="feature-title">屏幕吸附</h3>
-                    <p class="feature-description">
-                        像 QQ 一样的窗口吸附体验，
-                        鼠标接近自动展开，离开自动收起。
-                    </p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <div class="icon-wrapper">
-                            <span class="icon">💻</span>
-                        </div>
-                    </div>
-                    <h3 class="feature-title">智能剪切板</h3>
-                    <p class="feature-description">
-                        自动捕获剪切板内容，智能识别代码片段、链接和文本，
-                        支持一键复制、置顶管理和本地持久化存储。
-                    </p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <div class="icon-wrapper">
-                            <span class="icon">✅</span>
-                        </div>
-                    </div>
-                    <h3 class="feature-title">待办清单</h3>
-                    <p class="feature-description">
-                        高效的任务管理系统，支持优先级设置、拖拽排序、
-                        状态筛选，所有数据本地存储，安全可靠。
-                    </p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <div class="icon-wrapper">
-                            <span class="icon">📝</span>
-                        </div>
-                    </div>
-                    <h3 class="feature-title">Markdown 笔记</h3>
-                    <p class="feature-description">
-                        实时预览，完整语法支持，本地文件存储，
-                        让你的想法更有条理，数据永不丢失。
-                    </p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <div class="icon-wrapper">
-                            <span class="icon">🌐</span>
-                        </div>
-                    </div>
-                    <h3 class="feature-title">一键直达任意网站</h3>
-                    <p class="feature-description">
-                        智能识别剪切板中的网址链接，
-                        支持一键快速跳转，让浏览更高效。
-                    </p>
-                </div>
-
-            </div>
-        </div>
-    </section>
-
-    <!-- 截图展示区域 -->
-    <section id="screenshots" class="screenshots">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">精美界面</h2>
-                <p class="section-subtitle">一目了然的设计语言</p>
-            </div>
-            <div class="screenshots-carousel">
-                <div class="screenshot-item active">
-                    <div class="screenshot-window">
-                        <div class="window-header">
-                            <div class="window-controls">
-                                <span class="control red"></span>
-                                <span class="control yellow"></span>
-                                <span class="control green"></span>
-                            </div>
-                        </div>
-                        <div class="screenshot-content clipboard-view">
-                            <div class="tab-nav">
-                                <span class="tab active">📋 剪切板</span>
-                                <span class="tab">✅ 待办</span>
-                                <span class="tab">📝 笔记</span>
-                            </div>
-                            <div class="content-area">
-                                <div class="search-bar">
-                                    <input type="text" placeholder="搜索剪切板内容...">
-                                </div>
-                                <div class="items-list">
-                                    <div class="item">
-                                        <div class="item-icon">💻</div>
-                                        <div class="item-text">const app = require('electron');</div>
-                                        <div class="item-actions">📌</div>
-                                    </div>
-                                    <div class="item">
-                                        <div class="item-icon">📄</div>
-                                        <div class="item-text">用户体验设计的基本原则</div>
-                                        <div class="item-actions">📋</div>
-                                    </div>
-                                    <div class="item">
-                                        <div class="item-icon">🔗</div>
-                                        <div class="item-text">https://github.com/electron/electron</div>
-                                        <div class="item-actions">🔗</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- 下载区域 -->
-    <section id="download" class="download">
-        <div class="container">
-            <div class="download-content">
-                <h2 class="download-title">现在就体验 2.0 版本</h2>
-                <p class="download-description">
-                    全新设计，更强性能。适用于 Windows 10/11，完全免费，开源可信赖。
-                </p>
-                <div class="download-buttons">
-                    <a href="https://explain.name666.top/downloads/移记-Setup-2.0.0.exe" class="btn btn-download"
-                        download="移记-Setup-2.0.0.exe">
-                        <span class="btn-text">下载 Windows 版</span>
-                        <span class="btn-subtitle">v2.0.0 · 免费</span>
-                    </a>
-                    <a href="https://github.com/your-username/clipboard-list" class="btn btn-secondary" target="_blank">
-                        <span>GitHub 源码</span>
-                        <span>🌟</span>
-                    </a>
-                </div>
+            <h1 class="hero-title">
+                <span class="title-line">移记</span>
+                <span class="title-line-sub">QuiverNote</span>
+            </h1>
+            <h2 class="hero-subtitle">智能剪切板管理工具</h2>
+            <p class="hero-description">
+                强大而优雅。智能而简洁。<br>
+                让每一个想法都有价值，让效率工作变得更简单。
+            </p>
+            <div class="hero-cta">
+                <a href="#download" class="btn-apple-primary">
+                    <span>免费下载</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M7 10l5 5 5-5" />
+                    </svg>
+                </a>
                 <div class="download-info">
-                    <div class="info-item">
-                        <span class="info-label">大小</span>
-                        <span class="info-value">~45MB</span>
+                    <span>适用于 Windows 10+</span>
+                    <span>版本 2.3.0</span>
+                </div>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="hero-device">
+                <div class="device-screen">
+                    <div class="app-interface">
+                        <div class="interface-header">
+                            <div class="title-bar">
+                                <img src="assets/app-icon.png" alt="移记" class="app-icon">
+                                <span class="app-title">移记</span>
+                            </div>
+                            <div class="title-bar-controls">
+                                <button class="control-btn minimize">➖</button>
+                                <button class="control-btn close">✖️</button>
+                            </div>
+                        </div>
+                        <div class="interface-tabs">
+                            <button class="tab-btn active">📋 剪切板</button>
+                            <button class="tab-btn">✅ 待办</button>
+                            <button class="tab-btn">📝 笔记</button>
+                            <button class="tab-btn">🌐 在线</button>
+                            <button class="tab-btn">⚙️ 设置</button>
+                        </div>
+                        <div class="interface-content">
+                            <div class="panel-header">
+                                <h3>剪切板历史</h3>
+                                <div class="header-controls">
+                                    <button class="btn btn-secondary">清理</button>
+                                    <input type="text" placeholder="搜索剪切板内容..." class="search-input">
+                                </div>
+                            </div>
+                            <div class="clipboard-preview">
+                                <div class="clipboard-item">
+                                    <div class="clipboard-item-header">
+                                        <span class="clipboard-item-type">🌐 URL</span>
+                                        <div class="clipboard-item-actions">
+                                            <button class="control-btn copy-btn">📋</button>
+                                            <button class="control-btn pin-btn">📌</button>
+                                        </div>
+                                    </div>
+                                    <div class="clipboard-item-content">https://github.com/longdz/clipboard-list</div>
+                                    <div class="clipboard-item-time">2分钟前</div>
+                                </div>
+                                <div class="clipboard-item">
+                                    <div class="clipboard-item-header">
+                                        <span class="clipboard-item-type">💻 CODE</span>
+                                        <div class="clipboard-item-actions">
+                                            <button class="control-btn copy-btn">📋</button>
+                                            <button class="control-btn edit-btn">✏️</button>
+                                        </div>
+                                    </div>
+                                    <div class="clipboard-item-content">const { app, BrowserWindow } =
+                                        require('electron');</div>
+                                    <div class="clipboard-item-time">5分钟前</div>
+                                </div>
+                                <div class="clipboard-item">
+                                    <div class="clipboard-item-header">
+                                        <span class="clipboard-item-type">📝 TEXT</span>
+                                        <div class="clipboard-item-actions">
+                                            <button class="control-btn copy-btn">📋</button>
+                                            <button class="control-btn edit-btn">✏️</button>
+                                        </div>
+                                    </div>
+                                    <div class="clipboard-item-content">移记 QuiverNote - 智能剪切板管理工具</div>
+                                    <div class="clipboard-item-time">8分钟前</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="info-item">
-                        <span class="info-label">系统</span>
-                        <span class="info-value">Windows 10+</span>
+                </div>
+            </div>
+        </div>
+    </section> <!-- 产品概览 - 苹果风格 -->
+    <section id="overview" class="overview-apple">
+        <div class="container">
+            <div class="overview-grid">
+                <div class="overview-text">
+                    <h2 class="section-title-apple">
+                        <span class="title-accent">强大功能</span><br>
+                        全新体验
+                    </h2>
+                    <p class="section-description-apple">
+                        移记 QuiverNote 重新定义了桌面剪切板管理工具。通过智能识别、
+                        数据持久化本地存储和现代化UI设计，让你的每一个想法都有价值。
+                    </p>
+                    <div class="overview-stats">
+                        <div class="stat-item">
+                            <div class="stat-number">∞</div>
+                            <div class="stat-label">无限存储</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">100%</div>
+                            <div class="stat-label">本地安全</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">🖱️</div>
+                            <div class="stat-label">一键记录</div>
+                        </div>
                     </div>
-                    <div class="info-item">
-                        <span class="info-label">版本</span>
-                        <span class="info-value">v2.0.0</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">许可</span>
-                        <span class="info-value">MIT 开源</span>
+                </div>
+                <div class="overview-visual">
+                    <div class="floating-cards">
+                        <div class="feature-card floating">
+                            <div class="card-icon">🚀</div>
+                            <div class="card-title">开机自启</div>
+                            <div class="card-desc">隐藏在系统托盘，随时待命</div>
+                        </div>
+                        <div class="feature-card floating" style="animation-delay: 0.2s;">
+                            <div class="card-icon">📌</div>
+                            <div class="card-title">屏幕吸附</div>
+                            <div class="card-desc">类似QQ的悬浮窗体验</div>
+                        </div>
+                        <div class="feature-card floating" style="animation-delay: 0.4s;">
+                            <div class="card-icon">🖱️</div>
+                            <div class="card-title">一键记录</div>
+                            <div class="card-desc">光标一滑，内容直接展现</div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- 页脚 -->
-    <footer class="footer">
+    <!-- 核心功能展示 -->
+    <section id="features" class="features-apple">
+        <div class="container">
+            <!-- 剪切板管理 -->
+            <div class="feature-showcase">
+                <div class="feature-content">
+                    <div class="feature-badge">核心功能</div>
+                    <h3 class="feature-title-large">
+                        智能剪切板
+                    </h3>
+                    <p class="feature-description-large">
+                        智能识别内容类型，自动分类代码片段、URL链接、邮箱地址。
+                        支持一键保存书签、内容编辑、置顶管理，所有数据本地存储，永不丢失。
+                    </p>
+                    <div class="feature-highlights">
+                        <div class="highlight-item">
+                            <div class="highlight-icon">🔍</div>
+                            <span>智能识别</span>
+                        </div>
+                        <div class="highlight-item">
+                            <div class="highlight-icon">🖼️</div>
+                            <span>放大预览</span>
+                        </div>
+                        <div class="highlight-item">
+                            <div class="highlight-icon">✏️</div>
+                            <span>在线编辑</span>
+                        </div>
+                        <div class="highlight-item">
+                            <div class="highlight-icon">🔄</div>
+                            <span>一键复制</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="feature-visual">
+                    <div class="clipboard-demo">
+                        <div class="demo-header">
+                            <span class="demo-title">📋 剪切板历史</span>
+
+                        </div>
+                        <div class="demo-items">
+                            <div class="demo-item url">
+                                <div class="clipboard-item-header">
+                                    <span class="clipboard-item-type">🌐 URL</span>
+                                    <div class="clipboard-item-actions">
+                                        <button class="control-btn copy-btn">📋</button>
+                                        <button class="control-btn pin-btn">📌</button>
+                                    </div>
+                                </div>
+                                <div class="clipboard-item-content">https://github.com/electron/electron</div>
+                                <div class="clipboard-item-time">2分钟前</div>
+                            </div>
+                            <div class="demo-item code">
+                                <div class="clipboard-item-header">
+                                    <span class="clipboard-item-type">💻 CODE</span>
+                                    <div class="clipboard-item-actions">
+                                        <button class="control-btn copy-btn">📋</button>
+                                        <button class="control-btn edit-btn">✏️</button>
+                                    </div>
+                                </div>
+                                <div class="clipboard-item-content">const { app, BrowserWindow } = require('electron');
+                                </div>
+                                <div class="clipboard-item-time">5分钟前</div>
+                            </div>
+                            <div class="demo-item text">
+                                <div class="clipboard-item-header">
+                                    <span class="clipboard-item-type">📝 TEXT</span>
+                                    <div class="clipboard-item-actions">
+                                        <button class="control-btn copy-btn">📋</button>
+                                        <button class="control-btn edit-btn">✏️</button>
+                                    </div>
+                                </div>
+                                <div class="clipboard-item-content">设计一个现代化的用户界面，注重用户体验</div>
+                                <div class="clipboard-item-time">8分钟前</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- 待办清单 -->
+            <div class="feature-showcase reverse">
+                <div class="feature-visual">
+                    <div class="todo-demo">
+                        <div class="demo-header">
+                            <h3>待办清单</h3>
+                            <div class="header-controls">
+                                <select class="filter-select">
+                                    <option value="all">全部</option>
+                                    <option value="pending">待完成</option>
+                                    <option value="completed">已完成</option>
+                                    <option value="high" selected>高优先级</option>
+                                </select>
+                                <button class="btn btn-primary">➕ 添加</button>
+                            </div>
+                        </div>
+                        <div class="todo-list">
+                            <div class="todo-item completed">
+                                <div class="todo-checkbox checked">✓</div>
+                                <div class="todo-content">
+                                    <div class="todo-title completed">完成产品页面设计</div>
+                                    <div class="todo-desc">采用苹果官网风格，现代化UI设计</div>
+                                    <div class="todo-meta">
+                                        <span class="priority-badge high">🔴 高优先级</span>
+                                        
+                                    </div>
+                                </div>
+                                <div class="todo-actions">
+                                    <button class="action-btn edit" title="编辑">✏️</button>
+                                    <button class="action-btn pomodoro" title="番茄时钟">🍅</button>
+                                    <button class="action-btn delete" title="删除">🗑️</button>
+                                </div>
+                            </div>
+                            <div class="todo-item">
+                                <div class="todo-checkbox"></div>
+                                <div class="todo-content">
+                                    <div class="todo-title">优化剪切板性能</div>
+                                    <div class="todo-desc">减少内存占用，提升响应速度</div>
+                                    <div class="todo-meta">
+                                        <span class="priority-badge medium">🟡 中等优先级</span>
+                                       
+                                    </div>
+                                </div>
+                                <div class="todo-actions">
+                                    <button class="action-btn edit" title="编辑">✏️</button>
+                                    <button class="action-btn pomodoro" title="番茄时钟">🍅</button>
+                                    <button class="action-btn delete" title="删除">🗑️</button>
+                                </div>
+                            </div>
+                            <div class="todo-item">
+                                <div class="todo-checkbox"></div>
+                                <div class="todo-content">
+                                    <div class="todo-title">添加更多快捷键</div>
+                                    <div class="todo-desc">提升用户操作效率</div>
+                                    <div class="todo-meta">
+                                        <span class="priority-badge low">🟢 低优先级</span>
+                                        
+                                    </div>
+                                </div>
+                                <div class="todo-actions">
+                                    <button class="action-btn edit" title="编辑">✏️</button>
+                                    <button class="action-btn pomodoro" title="番茄时钟">🍅</button>
+                                    <button class="action-btn delete" title="删除">🗑️</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="feature-content">
+                    <div class="feature-badge">效率工具</div>
+                    <h3 class="feature-title-large">
+                        待办清单 + 番茄时钟
+                    </h3>
+                    <p class="feature-description-large">
+                        高效的任务管理系统，支持三级优先级、拖拽排序、状态筛选。
+                        集成番茄时钟功能，让工作更专注，效率更高。
+                    </p>
+                    <div class="feature-highlights">
+                        <div class="highlight-item">
+                            <div class="highlight-icon">🏷️</div>
+                            <span>三级优先级</span>
+                        </div>
+                        <div class="highlight-item">
+                            <div class="highlight-icon">🔄</div>
+                            <span>拖拽排序</span>
+                        </div>
+                        <div class="highlight-item">
+                            <div class="highlight-icon">🔍</div>
+                            <span>状态筛选</span>
+                        </div>
+                        <div class="highlight-item">
+                            <div class="highlight-icon">🍅</div>
+                            <span>番茄时钟</span>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- Markdown笔记 -->
+            <div class="feature-showcase">
+                <div class="feature-content">
+                    <div class="feature-badge">创作工具</div>
+                    <h3 class="feature-title-large">
+                        Markdown 笔记
+                    </h3>
+                    <p class="feature-description-large">
+                        实时预览，完整语法支持，分屏模式让编辑和预览同时进行。
+                        自动保存功能，让你的想法更有条理，数据永不丢失。
+                    </p>
+                    <div class="feature-highlights">
+                        <div class="highlight-item">
+                            <div class="highlight-icon">📂</div>
+                            <span>工作文件夹</span>
+                        </div>
+                        <div class="highlight-item">
+                            <div class="highlight-icon">📝</div>
+                            <span>实时编辑</span>
+                        </div>
+                        <div class="highlight-item">
+                            <div class="highlight-icon">👁️</div>
+                            <span>预览切换</span>
+                        </div>
+                        <div class="highlight-item">
+                            <div class="highlight-icon">💾</div>
+                            <span>自动保存</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="feature-visual">
+                    <div class="markdown-demo">
+                        <div class="demo-header">
+                            <h3>Markdown 编辑器</h3>
+                            <div class="header-controls">
+                                <button class="btn btn-primary" title="选择其他工作文件夹">📂</button>
+                                <button class="btn btn-primary" title="收起/展开侧边栏">↔️</button>
+                                <button class="btn btn-primary" title="新建笔记">➕</button>
+                                <button class="btn btn-primary" title="预览/编辑">👁️</button>
+                                <div class="auto-save-status">
+                                    <span class="save-indicator">✅ 已保存</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="notes-container">
+                            <div class="notes-sidebar">
+                                <div class="workspace-info">
+                                    <div class="workspace-header">
+                                        <h4>工作文件夹</h4>
+                                    </div>
+                                    <div class="workspace-name">我的笔记</div>
+                                </div>
+                                <div class="notes-list">
+                                    <div class="note-item active">📄 产品设计思考.md</div>
+                                    <div class="note-item">📄 开发计划.md</div>
+                                    <div class="note-item">📄 用户反馈.md</div>
+                                </div>
+                            </div>
+                            <div class="notes-editor">
+                                <textarea class="markdown-editor" placeholder="选择或创建一个Markdown文件开始编辑...支持 Markdown 语法">
+# 产品设计思考
+
+## 用户体验
+- **简洁**: 界面简洁直观
+- **高效**: 操作流畅快速
+- **智能**: 分类整理内容
+
+```javascript
+const app = new App();
+```</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 在线直达功能 -->
+            <div class="feature-showcase reverse">
+                <div class="feature-visual">
+                    <div class="online-demo">
+                        <div class="demo-header">
+                            <h3>直达</h3>
+                            <div class="header-controls">
+                                <div class="preset-websites">
+                                    <button class="preset-btn">📰 新闻</button>
+                                    <button class="preset-btn">📧 邮箱</button>
+                                    <button class="preset-btn">🔍 搜索</button>
+                                </div>
+                                <button class="btn btn-secondary" title="管理预设网站">🔧</button>
+                                <button class="btn btn-secondary" title="刷新页面">🔄</button>
+                                <button class="btn btn-secondary" title="在外部浏览器打开">🔗</button>
+                            </div>
+                        </div>
+                        <div class="webview-container">
+                            <div class="webview-demo">
+                                <div class="webview-header">
+                                    <div class="webview-controls">
+                                        <div class="webview-btn close"></div>
+                                        <div class="webview-btn minimize"></div>
+                                        <div class="webview-btn maximize"></div>
+                                    </div>
+                                    <div class="webview-url">http://8.130.41.186:3000/</div>
+                                </div>
+                                <div class="webview-content">
+                                    <div class="website-preview">
+                                        <div class="preview-header">
+                                            <h2>🌐 在线服务</h2>
+                                            <p>快速访问常用网站和在线工具</p>
+                                        </div>
+                                        <div class="preview-features">
+                                            <div class="feature-grid">
+                                                <div class="preview-feature">
+                                                    <div class="feature-icon">🔖</div>
+                                                    <span>一键书签</span>
+                                                </div>
+                                                <div class="preview-feature">
+                                                    <div class="feature-icon">⚡</div>
+                                                    <span>快速访问</span>
+                                                </div>
+                                                <div class="preview-feature">
+                                                    <div class="feature-icon">🔧</div>
+                                                    <span>自定义网站</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="feature-content">
+                    <div class="feature-badge">在线服务</div>
+                    <h3 class="feature-title-large">
+                        在线直达 + 一键书签
+                    </h3>
+                    <p class="feature-description-large">
+                        内置浏览器功能，支持快速访问常用网站。可自定义预设网站按钮，
+                        一键直达任意网站，让你的工作流程更加顺畅高效。
+                    </p>
+                    <div class="feature-highlights">
+                        <div class="highlight-item">
+                            <div class="highlight-icon">🌐</div>
+                            <span>内置浏览器</span>
+                        </div>
+                        <div class="highlight-item">
+                            <div class="highlight-icon">🔖</div>
+                            <span>预设网站</span>
+                        </div>
+                        <div class="highlight-item">
+                            <div class="highlight-icon">⚡</div>
+                            <span>快速访问</span>
+                        </div>
+                        <div class="highlight-item">
+                            <div class="highlight-icon">🔧</div>
+                            <span>自定义管理</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 在线功能详细介绍 -->
+    <section class="online-features-section">
+        <div class="container">
+            <!-- <div class="section-intro">
+                <h2 class="section-title-apple">
+                    <span class="title-accent">在线直达</span><br>
+                    高效工作新体验
+                </h2>
+                <p class="section-description-apple">
+                    移记内置强大的在线服务功能，让你无需切换应用即可访问常用网站，
+                    提升工作效率，简化操作流程。
+                </p>
+            </div> -->
+
+            <!-- <div class="online-features-grid">
+                <div class="online-feature-card">
+                    <div class="feature-icon-large">🔖</div>
+                    <h3>一键书签管理</h3>
+                    <p>快速保存和管理网页书签，支持自定义分类，让你的收藏更有条理。点击即可快速访问，告别繁琐的书签查找。</p>
+                    <div class="feature-details">
+                        <div class="detail-item">✓ 快速添加书签</div>
+                        <div class="detail-item">✓ 智能分类管理</div>
+                        <div class="detail-item">✓ 一键快速访问</div>
+                    </div>
+                </div>
+
+                <div class="online-feature-card">
+                    <div class="feature-icon-large">🌐</div>
+                    <h3>内置浏览器</h3>
+                    <p>集成完整的浏览器功能，支持现代网页标准。无需切换窗口，在移记内直接浏览网页，保持工作流程的连贯性。</p>
+                    <div class="feature-details">
+                        <div class="detail-item">✓ 完整浏览器引擎</div>
+                        <div class="detail-item">✓ 支持现代网页</div>
+                        <div class="detail-item">✓ 无缝工作体验</div>
+                    </div>
+                </div>
+
+                <div class="online-feature-card">
+                    <div class="feature-icon-large">⚡</div>
+                    <h3>预设网站</h3>
+                    <p>自定义常用网站快捷按钮，一键直达邮箱、新闻、搜索等常用服务。可根据个人需求灵活配置，打造专属工作台。</p>
+                    <div class="feature-details">
+                        <div class="detail-item">✓ 自定义快捷按钮</div>
+                        <div class="detail-item">✓ 预设常用网站</div>
+                        <div class="detail-item">✓ 灵活配置管理</div>
+                    </div>
+                </div>
+
+                <div class="online-feature-card">
+                    <div class="feature-icon-large">🔧</div>
+                    <h3>智能管理</h3>
+                    <p>提供完善的网站管理功能，包括刷新、外部打开、设置管理等。让你的在线工作更加便捷高效，功能一应俱全。</p>
+                    <div class="feature-details">
+                        <div class="detail-item">✓ 页面刷新控制</div>
+                        <div class="detail-item">✓ 外部浏览器打开</div>
+                        <div class="detail-item">✓ 完善设置管理</div>
+                    </div>
+                </div>
+            </div> -->
+
+            <div class="online-demo-showcase">
+                <div class="demo-container">
+                    <div class="demo-browser">
+                        <div class="browser-header">
+                            <div class="browser-controls">
+                                <div class="control-dot red"></div>
+                                <div class="control-dot yellow"></div>
+                                <div class="control-dot green"></div>
+                            </div>
+                            <div class="browser-title">移记 - 在线直达</div>
+                        </div>
+                        <div class="browser-toolbar">
+                            <div class="preset-buttons">
+                                <button class="preset-quick-btn active">📧 Gmail</button>
+                                <button class="preset-quick-btn">📰 新闻</button>
+                                <button class="preset-quick-btn">🔍 Google</button>
+                                <button class="preset-quick-btn">📺 YouTube</button>
+                            </div>
+                            <div class="toolbar-actions">
+                                <button class="toolbar-btn">🔄</button>
+                                <button class="toolbar-btn">🔗</button>
+                                <button class="toolbar-btn">🔧</button>
+                            </div>
+                        </div>
+                        <div class="browser-content">
+                            <div class="content-preview">
+                                <div class="preview-message">
+                                    <h3>🌐 在线服务已就绪</h3>
+                                    <p>选择上方的预设网站，或添加自定义网站开始使用</p>
+                                    <div class="preview-stats">
+                                        <div class="stat">
+                                            <div class="stat-num">8</div>
+                                            <div class="stat-label">预设网站</div>
+                                        </div>
+                                        <div class="stat">
+                                            <div class="stat-num">12</div>
+                                            <div class="stat-label">书签收藏</div>
+                                        </div>
+                                        <div class="stat">
+                                            <div class="stat-num">∞</div>
+                                            <div class="stat-label">自定义网站</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- 设计理念 -->
+    <section id="design" class="design-apple">
+        <div class="container">
+            <div class="design-content">
+                <h2 class="section-title-apple">
+                    <span class="title-accent">精心设计</span><br>
+                    每一个细节
+                </h2>
+                <p class="section-description-apple">
+                    从毛玻璃效果到流畅动画，从智能识别到本地存储，
+                    每一个功能都经过精心设计，只为给你最好的使用体验。
+                </p>
+            </div>
+            <div class="design-grid">
+                <div class="design-card">
+                    <div class="design-visual ui">
+                        <div class="ui-showcase">
+                            <div class="ui-element glassmorphism"></div>
+                            <div class="ui-element animation"></div>
+                            <div class="ui-element gradient"></div>
+                        </div>
+                    </div>
+                    <div class="design-text">
+                        <h3>现代化 UI</h3>
+                        <p>毛玻璃效果、流畅动画、响应式设计，界面美观且实用</p>
+                    </div>
+                </div>
+                <div class="design-card">
+                    <div class="design-visual ai">
+                        <div class="ai-showcase">
+                            <div class="ai-brain">🌐</div>
+                            <div class="ai-connections">
+                                <div class="connection"></div>
+                                <div class="connection"></div>
+                                <div class="connection"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="design-text">
+                        <h3>在线直达服务</h3>
+                        <p>内置浏览器引擎，一键直达常用网站，支持自定义预设网站，让在线工作更高效</p>
+                    </div>
+                </div>
+                <div class="design-card">
+                    <div class="design-visual security">
+                        <div class="security-showcase">
+                            <div class="security-shield">🛡️</div>
+                            <div class="security-lock">🔒</div>
+                            <div class="security-local">💾</div>
+                        </div>
+                    </div>
+                    <div class="design-text">
+                        <h3>数据安全</h3>
+                        <p>本地存储，数据加密，隐私保护，你的数据只属于你</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 技术规格 -->
+    <section class="tech-specs">
+        <div class="container">
+            <h2 class="section-title-apple">技术规格</h2>
+            <div class="specs-grid">
+                <div class="specs-category">
+                    <h3 class="specs-title">系统要求</h3>
+                    <div class="specs-list">
+                        <div class="spec-item">
+                            <span class="spec-label">操作系统</span>
+                            <span class="spec-value">Windows 10 或更高版本</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">处理器</span>
+                            <span class="spec-value">64位处理器</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">内存</span>
+                            <span class="spec-value">4GB RAM 或更高</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">存储空间</span>
+                            <span class="spec-value">100MB 可用空间</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="specs-category">
+                    <h3 class="specs-title">技术架构</h3>
+                    <div class="specs-list">
+                        <div class="spec-item">
+                            <span class="spec-label">框架</span>
+                            <span class="spec-value">Electron + TypeScript</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">前端</span>
+                            <span class="spec-value">HTML5 + CSS3 + JavaScript</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">数据存储</span>
+                            <span class="spec-value">本地 JSON 文件</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">安全性</span>
+                            <span class="spec-value">本地加密存储</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="specs-category">
+                    <h3 class="specs-title">功能特性</h3>
+                    <div class="specs-list">
+                        <div class="spec-item">
+                            <span class="spec-label">剪切板历史</span>
+                            <span class="spec-value">无限制存储</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">内容识别</span>
+                            <span class="spec-value">代码、URL、文本自动分类</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">快捷键</span>
+                            <span class="spec-value">Ctrl + Shift + V</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">开机自启</span>
+                            <span class="spec-value">系统托盘运行</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section> <!-- 下载区域 - 苹果风格 -->
+    <section id="download" class="download-apple">
+        <div class="container">
+            <div class="download-hero">
+                <h2 class="download-title">
+                    <span class="title-line">现在就开始</span>
+                    <span class="title-line-sub">体验全新的效率工具</span>
+                </h2>
+                <p class="download-description">
+                    免费下载，立即体验。适用于 Windows 10 及更高版本。
+                </p>
+                <div class="download-cta">
+                    <a href="https://explain.name666.top/downloads/移记-Setup-2.3.0.exe" class="btn-download-primary"
+                        download="移记-Setup-2.3.0.exe">
+                        <div class="btn-content">
+                            <div class="btn-icon">⬇️</div>
+                            <div class="btn-text">
+                                <span class="btn-title">免费下载</span>
+                                <span class="btn-subtitle">移记 QuiverNote</span>
+                            </div>
+                        </div>
+                        <div class="btn-info">
+                            <span>版本 2.3.0 · 80MB</span>
+                        </div>
+                    </a>
+                    <div class="download-options">
+                        <a href="https://github.com/longdz/clipboard-list" class="link-secondary" target="_blank">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z" />
+                            </svg>
+                            <span>查看源码</span>
+                        </a>
+                        <a href="#" class="link-secondary">
+                            <span>🔔</span>
+                            <span>获取更新通知</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="download-specs">
+                <div class="spec-grid">
+                    <div class="spec-item">
+                        <div class="spec-icon">💾</div>
+                        <div class="spec-info">
+                            <div class="spec-title">安装大小</div>
+                            <div class="spec-value">约 45MB</div>
+                        </div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="spec-icon">🖥️</div>
+                        <div class="spec-info">
+                            <div class="spec-title">系统要求</div>
+                            <div class="spec-value">Windows 10+</div>
+                        </div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="spec-icon">🆓</div>
+                        <div class="spec-info">
+                            <div class="spec-title">价格</div>
+                            <div class="spec-value">完全免费</div>
+                        </div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="spec-icon">🛡️</div>
+                        <div class="spec-info">
+                            <div class="spec-title">许可协议</div>
+                            <div class="spec-value">MIT 开源</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 - 苹果风格 -->
+    <footer class="footer-apple">
         <div class="container">
             <div class="footer-content">
-                <div class="footer-brand">
-                    <img src="asserts/app-icon.png" alt="移记" class="footer-logo">
-                    <span class="footer-title">移记</span>
+                <div class="footer-main">
+                    <div class="footer-brand">
+                        <img src="assets/app-icon.png" alt="移记" class="footer-logo">
+                        <div class="brand-info">
+                            <h3 class="brand-title">移记 QuiverNote</h3>
+                            <p class="brand-desc">重新定义桌面效率工具</p>
+                        </div>
+                    </div>
+                    <div class="footer-links">
+                        <div class="link-group">
+                            <h4 class="link-title">产品</h4>
+                            <a href="#features" class="footer-link">功能特性</a>
+                            <a href="#design" class="footer-link">设计理念</a>
+                            <a href="#download" class="footer-link">立即下载</a>
+                        </div>
+                        <div class="link-group">
+                            <h4 class="link-title">开发者</h4>
+                            <a href="https://github.com/longdz/clipboard-list" class="footer-link"
+                                target="_blank">GitHub</a>
+                            <a href="#" class="footer-link">API 文档</a>
+                            <a href="#" class="footer-link">贡献指南</a>
+                        </div>
+                        <div class="link-group">
+                            <h4 class="link-title">支持</h4>
+                            <a href="#" class="footer-link">用户手册</a>
+                            <a href="#" class="footer-link">问题反馈</a>
+                            <a href="mailto:contact@quivernote.com" class="footer-link">联系我们</a>
+                        </div>
+                    </div>
                 </div>
-                <div class="footer-text">
-                    <p>用心打造的桌面效率工具</p>
-                    <p>让创意从不丢失，让工作更高效</p>
-                </div>
-                <div class="footer-links">
-                    <a href="https://github.com/your-username/clipboard-list" target="_blank">GitHub</a>
-                    <a href="mailto:your-email@example.com">联系我们</a>
-                    <a href="#privacy">隐私政策</a>
+                <div class="footer-bottom">
+                    <div class="footer-copyright">
+                        <p>&copy; 2024 移记 QuiverNote. 保留所有权利。</p>
+                        <p>用心打造的桌面效率工具，让创意从不丢失。</p>
+                    </div>
+                    <div class="footer-legal">
+                        <a href="#" class="legal-link">隐私政策</a>
+                        <a href="#" class="legal-link">使用条款</a>
+                        <a href="#" class="legal-link">开源许可</a>
+                    </div>
                 </div>
             </div>
         </div>

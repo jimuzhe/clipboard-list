@@ -1,4 +1,4 @@
-# ClipBoard List - 智能剪切板管理工具
+# 移记 QuiverNote- 智能剪切板管理工具
 
 一个功能丰富的 Windows 桌面应用程序，基于 Electron 开发，提供剪切板管理、待办清单、Markdown 笔记等多种生产力工具。
 
