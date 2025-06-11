@@ -90,8 +90,7 @@ class IPCService extends events_1.EventEmitter {
         this.registerHandler('auto-start:get-status', this.handleGetAutoStartStatus.bind(this));
         this.registerHandler('auto-start:toggle', this.handleToggleAutoStart.bind(this));
         this.registerHandler('auto-start:enable', this.handleEnableAutoStart.bind(this));
-        this.registerHandler('auto-start:disable', this.handleDisableAutoStart.bind(this));
-        // 文件和文件夹操作
+        this.registerHandler('auto-start:disable', this.handleDisableAutoStart.bind(this)); // 文件和文件夹操作
         this.registerHandler('get-default-notes-folder', this.handleGetDefaultNotesFolder.bind(this));
         this.registerHandler('open-folder-dialog', this.handleOpenFolderDialog.bind(this));
         this.registerHandler('list-markdown-files', this.handleListMarkdownFiles.bind(this));
@@ -99,6 +98,10 @@ class IPCService extends events_1.EventEmitter {
         this.registerHandler('write-file', this.handleWriteFile.bind(this));
         this.registerHandler('delete-file', this.handleDeleteFile.bind(this));
         this.registerHandler('open-external', this.handleOpenExternal.bind(this));
+        // 开发者工具相关
+        this.registerHandler('open-devtools', this.handleOpenDevTools.bind(this));
+        this.registerHandler('close-devtools', this.handleCloseDevTools.bind(this));
+        this.registerHandler('toggle-devtools', this.handleToggleDevTools.bind(this));
         // 兼容性别名
         this.setupCompatibilityAliases();
         Logger_1.logger.info('IPC handlers registered');
@@ -444,6 +447,45 @@ class IPCService extends events_1.EventEmitter {
         }
         catch (error) {
             Logger_1.logger.error('Open external URL error:', error);
+            throw error;
+        }
+    }
+    /**
+     * 处理打开开发者工具请求
+     */
+    async handleOpenDevTools(event) {
+        try {
+            this.emit('devtools:open');
+            Logger_1.logger.info('DevTools open requested from renderer');
+        }
+        catch (error) {
+            Logger_1.logger.error('Open DevTools error:', error);
+            throw error;
+        }
+    }
+    /**
+     * 处理关闭开发者工具请求
+     */
+    async handleCloseDevTools(event) {
+        try {
+            this.emit('devtools:close');
+            Logger_1.logger.info('DevTools close requested from renderer');
+        }
+        catch (error) {
+            Logger_1.logger.error('Close DevTools error:', error);
+            throw error;
+        }
+    }
+    /**
+     * 处理切换开发者工具请求
+     */
+    async handleToggleDevTools(event) {
+        try {
+            this.emit('devtools:toggle');
+            Logger_1.logger.info('DevTools toggle requested from renderer');
+        }
+        catch (error) {
+            Logger_1.logger.error('Toggle DevTools error:', error);
             throw error;
         }
     }

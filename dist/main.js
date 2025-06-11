@@ -150,11 +150,14 @@ class ClipboardListApp {
      * 设置IPC监听器
      */
     setupIPCListeners() {
-        // 窗口控制
         this.ipcService.on('window-minimize', () => this.windowManager.hide());
         this.ipcService.on('window-close', () => this.windowManager.hide());
         this.ipcService.on('window-show', () => this.windowManager.show());
         this.ipcService.on('window-hide', () => this.windowManager.hide());
+        // 开发者工具控制
+        this.ipcService.on('devtools:open', () => this.windowManager.openDevTools());
+        this.ipcService.on('devtools:close', () => this.windowManager.closeDevTools());
+        this.ipcService.on('devtools:toggle', () => this.windowManager.toggleDevTools());
         this.ipcService.on('window-get-bounds', () => {
             const bounds = this.windowManager.getBounds();
             this.ipcService.emit('window-bounds-response', bounds);

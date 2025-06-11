@@ -98,9 +98,7 @@ export class WindowManager extends EventEmitter {
             if (this.config.dockToSide) {
                 this.checkDocking();
             }
-        });
-
-        // 鼠标进入窗口
+        });        // 鼠标进入窗口
         this.window.webContents.on('dom-ready', () => {
             this.window?.webContents.executeJavaScript(`
         document.addEventListener('mouseenter', () => {
@@ -111,6 +109,21 @@ export class WindowManager extends EventEmitter {
           window.electronAPI?.windowEvents?.mouseLeave();
         });
       `);
+        });
+
+        // 开发者工具快捷键支持
+        this.window.webContents.on('before-input-event', (event, input) => {
+            // F12 或 Ctrl+Shift+I 打开/关闭开发者工具
+            if (input.key === 'F12' ||
+                (input.control && input.shift && input.key === 'I')) {
+                if (this.window?.webContents.isDevToolsOpened()) {
+                    this.window.webContents.closeDevTools();
+                    logger.info('DevTools closed');
+                } else {
+                    this.window?.webContents.openDevTools({ mode: 'detach' });
+                    logger.info('DevTools opened');
+                }
+            }
         });
     }
 
@@ -696,9 +709,7 @@ export class WindowManager extends EventEmitter {
         if (this.alwaysOnTopTimer) {
             clearInterval(this.alwaysOnTopTimer);
             this.alwaysOnTopTimer = null;
-        }
-
-        if (this.window && this.config.alwaysOnTop) {
+        } if (this.window && this.config.alwaysOnTop) {
             // 定期检查并强制置顶
             this.alwaysOnTopTimer = setInterval(() => {
                 if (this.window && !this.window.isDestroyed() && this.config.alwaysOnTop) {
@@ -708,6 +719,39 @@ export class WindowManager extends EventEmitter {
             }, 1000); // 每秒检查一次
 
             logger.info('Always on top enforcement started');
+        }
+    }
+
+    /**
+     * 打开开发者工具
+     */
+    openDevTools(): void {
+        if (this.window && !this.window.webContents.isDevToolsOpened()) {
+            this.window.webContents.openDevTools({ mode: 'detach' });
+            logger.info('DevTools opened manually');
+        }
+    }
+
+    /**
+     * 关闭开发者工具
+     */
+    closeDevTools(): void {
+        if (this.window && this.window.webContents.isDevToolsOpened()) {
+            this.window.webContents.closeDevTools();
+            logger.info('DevTools closed manually');
+        }
+    }
+
+    /**
+     * 切换开发者工具状态
+     */
+    toggleDevTools(): void {
+        if (this.window) {
+            if (this.window.webContents.isDevToolsOpened()) {
+                this.closeDevTools();
+            } else {
+                this.openDevTools();
+            }
         }
     }
 }

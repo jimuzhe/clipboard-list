@@ -35,6 +35,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     readFile: (filePath: string) => ipcRenderer.invoke('read-file', filePath),
     writeFile: (filePath: string, content: string) => ipcRenderer.invoke('write-file', filePath, content),
     deleteFile: (filePath: string) => ipcRenderer.invoke('delete-file', filePath),
+
+    // 开发者工具
+    openDevTools: () => ipcRenderer.invoke('open-devtools'),
+    closeDevTools: () => ipcRenderer.invoke('close-devtools'),
+    toggleDevTools: () => ipcRenderer.invoke('toggle-devtools'),
 });
 
 // 类型声明
@@ -52,11 +57,13 @@ export interface ElectronAPI {
     showNotification: (title: string, body: string) => Promise<void>;
     openExternal: (url: string) => Promise<void>;
     getDefaultNotesFolder: () => Promise<any>;
-    openFolderDialog: (options?: any) => Promise<any>;
-    listMarkdownFiles: (folderPath: string) => Promise<any>;
+    openFolderDialog: (options?: any) => Promise<any>; listMarkdownFiles: (folderPath: string) => Promise<any>;
     readFile: (filePath: string) => Promise<any>;
     writeFile: (filePath: string, content: string) => Promise<void>;
     deleteFile: (filePath: string) => Promise<void>;
+    openDevTools: () => Promise<void>;
+    closeDevTools: () => Promise<void>;
+    toggleDevTools: () => Promise<void>;
 }
 
 declare global {

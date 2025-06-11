@@ -1715,62 +1715,107 @@ class NotesManager {
                 await this.refreshWorkspaceFiles();
 
                 console.log('默认工作文件夹已设置:', this.workspacePath);
+
+                // 检查是否为首次使用，如果是空目录可以显示欢迎提示
+                if (this.workspaceFiles.length === 0) {
+                    console.log('默认工作目录为空，用户可以开始创建笔记');
+                }
+            } else {
+                console.warn('无法获取默认工作文件夹，将使用内存笔记模式');
             }
         } catch (error) {
             console.error('初始化默认工作文件夹失败:', error);
             // 如果失败，保持原有的内存笔记模式
+            this.workspacePath = null;
+            this.showNotification('提示', '无法初始化默认工作目录，将使用内存笔记模式');
         }
     }
     setupEventListeners() {
         // 新建笔记
-        console.log('开始设置新建笔记事件监听器...');
+        console.log('🔧 开始设置新建笔记事件监听器...');
 
         // 直接尝试查找按钮
         const newNoteBtn = document.getElementById('new-note');
-        console.log('新建笔记按钮元素:', newNoteBtn);
-        console.log('DOM readyState:', document.readyState);
+        console.log('🔍 查找新建笔记按钮元素:', newNoteBtn);
+        console.log('📄 DOM readyState:', document.readyState);
 
         if (newNoteBtn) {
-            console.log('找到新建笔记按钮，设置事件监听器');
+            console.log('✅ 找到新建笔记按钮，设置事件监听器');
+            console.log('🔗 按钮元素信息:', {
+                id: newNoteBtn.id,
+                className: newNoteBtn.className,
+                textContent: newNoteBtn.textContent,
+                disabled: newNoteBtn.disabled,
+                style: newNoteBtn.style.display
+            });
+
             newNoteBtn.addEventListener('click', (e) => {
+                console.log('🖱️ ================ 点击事件触发 ================');
+                console.log('⏰ 点击时间:', new Date().toLocaleString());
+                console.log('🎯 事件目标:', e.target);
+                console.log('📍 事件类型:', e.type);
+                console.log('🚫 防止默认行为和冒泡');
+
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('新建笔记按钮被点击了！');
-                this.createNewNote();
+
+                console.log('🚀 调用 createNewNote() 方法...');
+                try {
+                    this.createNewNote();
+                    console.log('✅ createNewNote() 调用成功');
+                } catch (error) {
+                    console.error('❌ createNewNote() 调用失败:', error);
+                    console.error('💥 错误堆栈:', error.stack);
+                }
+                console.log('🖱️ ================ 点击事件结束 ================');
             });
-            console.log('新建笔记按钮事件监听器已添加');
+            console.log('✅ 新建笔记按钮事件监听器已添加');
         } else {
-            console.error('找不到新建笔记按钮元素！');
+            console.error('❌ 找不到新建笔记按钮元素！');
             // 使用querySelctor 作为备选
             const backupBtn = document.querySelector('#new-note');
-            console.log('使用querySelector查找按钮:', backupBtn);
+            console.log('🔄 使用querySelector查找按钮:', backupBtn);
 
             if (backupBtn) {
-                console.log('通过querySelector找到按钮，设置事件监听器');
+                console.log('✅ 通过querySelector找到按钮，设置事件监听器');
                 backupBtn.addEventListener('click', (e) => {
+                    console.log('🖱️ ================ 备用按钮点击事件触发 ================');
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('新建笔记按钮被点击了！(backup)');
-                    this.createNewNote();
+                    console.log('🚀 调用 createNewNote() 方法(backup)...');
+                    try {
+                        this.createNewNote();
+                        console.log('✅ createNewNote() 调用成功(backup)');
+                    } catch (error) {
+                        console.error('❌ createNewNote() 调用失败(backup):', error);
+                    }
+                    console.log('🖱️ ================ 备用按钮点击事件结束 ================');
                 });
             } else {
                 // 延迟重试
                 setTimeout(() => {
                     const retryBtn = document.getElementById('new-note');
-                    console.log('延迟重试查找按钮:', retryBtn);
+                    console.log('⏰ 延迟重试查找按钮:', retryBtn);
                     if (retryBtn) {
                         retryBtn.addEventListener('click', (e) => {
+                            console.log('🖱️ ================ 重试按钮点击事件触发 ================');
                             e.preventDefault();
                             e.stopPropagation();
-                            console.log('新建笔记按钮被点击了！(重试)');
-                            this.createNewNote();
+                            console.log('🚀 调用 createNewNote() 方法(重试)...');
+                            try {
+                                this.createNewNote();
+                                console.log('✅ createNewNote() 调用成功(重试)');
+                            } catch (error) {
+                                console.error('❌ createNewNote() 调用失败(重试):', error);
+                            }
+                            console.log('🖱️ ================ 重试按钮点击事件结束 ================');
                         });
-                        console.log('新建笔记按钮事件监听器已添加(重试)');
+                        console.log('✅ 新建笔记按钮事件监听器已添加(重试)');
                     } else {
-                        console.error('重试后仍然找不到新建笔记按钮元素！');
+                        console.error('❌ 重试后仍然找不到新建笔记按钮元素！');
                         // 打印所有按钮供调试
                         const allButtons = document.querySelectorAll('button');
-                        console.log('页面中的所有按钮:', Array.from(allButtons).map(btn => ({
+                        console.log('🔍 页面中的所有按钮:', Array.from(allButtons).map(btn => ({
                             id: btn.id,
                             className: btn.className,
                             textContent: btn.textContent
@@ -2117,75 +2162,219 @@ class NotesManager {
                 this.updatePreview();
             }
         }
-    }
+    } // 创建新笔记
+    async createNewNote() {
+        console.log('🚀 ================== 新建笔记 DEBUG START ==================');
+        console.log('📅 当前时间:', new Date().toLocaleString());
+        console.log('📁 当前工作区路径:', this.workspacePath);
+        console.log('📊 工作区路径类型:', typeof this.workspacePath);
+        console.log('📏 工作区路径长度:', this.workspacePath ? this.workspacePath.length : 'null');
+        console.log('✅ 工作区路径是否为真值:', !!this.workspacePath);
+        console.log('📋 当前工作区文件数量:', this.workspaceFiles.length);
 
-    // 创建新笔记
-    createNewNote() {
-        console.log('创建新笔记被调用');
-        console.log('当前工作路径:', this.workspacePath);
+        // 检查 API 可用性
+        console.log('🔍 检查 API 可用性:');
+        console.log('  - window.electronAPI:', !!window.electronAPI);
+        console.log('  - window.api:', !!window.api);
+        console.log('  - window.api?.fileSystem:', !!window.api ? .fileSystem);
+        console.log('  - window.api?.fileSystem?.exists:', !!window.api ? .fileSystem ? .exists);
 
-        if (this.workspacePath) {
-            console.log('在工作区中创建新文件');
-            this.createNewFileInWorkspace();
-        } else {
-            console.log('创建内存笔记');
-            this.createNewMemoryNote();
+        try {
+            // 优先在工作区创建文件，如果没有工作区则创建内存笔记
+            if (this.workspacePath) {
+                console.log('✅ 工作区存在，准备在工作区创建文件');
+                console.log('📂 工作区完整路径:', this.workspacePath);
+
+                // 验证工作区路径是否有效
+                try {
+                    if (window.api ? .fileSystem ? .exists) {
+                        console.log('🔍 验证工作区目录是否存在...');
+                        const workspaceExists = await window.api.fileSystem.exists(this.workspacePath);
+                        console.log('📁 工作区目录是否存在:', workspaceExists);
+
+                        if (!workspaceExists) {
+                            console.warn('⚠️  工作区目录不存在，尝试创建目录');
+                            if (window.api ? .fileSystem ? .createDirectory) {
+                                const createResult = await window.api.fileSystem.createDirectory(this.workspacePath);
+                                console.log('📁 创建目录结果:', createResult);
+                            } else {
+                                console.warn('❌ createDirectory API 不可用');
+                            }
+                        }
+                    } else {
+                        console.warn('⚠️  exists API 不可用，跳过目录验证');
+                    }
+                } catch (error) {
+                    console.error('❌ 验证工作区时出错:', error);
+                    console.error('💥 验证错误堆栈:', error.stack);
+                }
+
+                console.log('🚀 开始调用 createNewFileInWorkspace()');
+                await this.createNewFileInWorkspace();
+                console.log('✅ createNewFileInWorkspace() 执行完成');
+            } else {
+                console.log('❌ 工作区不存在，创建内存笔记');
+                console.log('🚀 开始调用 createNewMemoryNote()');
+                this.createNewMemoryNote();
+                console.log('✅ createNewMemoryNote() 执行完成');
+            }
+        } catch (error) {
+            console.error('❌ createNewNote 执行过程中出错:', error);
+            console.error('💥 错误堆栈:', error.stack);
+            console.error('🔍 错误详细信息:', {
+                name: error.name,
+                message: error.message,
+                stack: error.stack
+            });
+            this.showNotification('创建笔记失败', error.message);
         }
-    }
 
-    // 在工作文件夹中创建新文件
+        console.log('🚀 ================== 新建笔记 DEBUG END ==================');
+    } // 在工作文件夹中创建新文件
     async createNewFileInWorkspace() {
+        console.log('📝 ============== createNewFileInWorkspace START ==============');
+
         if (!this.workspacePath) {
-
-
-
+            console.error('❌ 工作区路径为空，无法创建文件');
             this.showNotification('错误', '请先选择工作文件夹');
             return;
         }
+        console.log('📁 当前工作区路径:', this.workspacePath);
+        console.log('💬 准备显示文件名输入对话框');
 
-        const fileName = prompt('请输入文件名（不需要扩展名）：', '新建笔记');
-        if (!fileName) return;
+        // 使用自定义输入对话框替代 prompt()
+        const fileName = await this.showInputDialog('新建笔记', '请输入文件名（不需要扩展名）：', `笔记_${new Date().getMonth() + 1}-${new Date().getDate()}`);
+        console.log('📝 用户输入的文件名:', fileName);
 
-        const safeName = fileName.replace(/[<>:"/\\|?*]/g, '_');
+        if (!fileName || fileName.trim() === '') {
+            console.log('❌ 用户取消了文件名输入或输入为空');
+            return;
+        }
+
+        const cleanFileName = fileName.trim();
+        const safeName = cleanFileName.replace(/[<>:"/\\|?*]/g, '_');
         const filePath = `${this.workspacePath}\\${safeName}.md`;
+
+        console.log('🔧 处理后的文件名:', safeName);
+        console.log('📄 完整文件路径:', filePath);
 
         try {
             // 检查文件是否已存在
+            console.log('🔍 检查文件是否已存在');
+            console.log('📊 当前工作区文件列表长度:', this.workspaceFiles.length);
+            console.log('📋 当前工作区文件列表:', this.workspaceFiles.map(f => ({
+                name: f.name,
+                path: f.path
+            })));
+
             const exists = this.workspaceFiles.some(file => file.path === filePath);
+            console.log('❓ 文件是否已存在:', exists);
+
             if (exists) {
-                this.showNotification('错误', '同名文件已存在');
+                console.warn('❌ 同名文件已存在');
+                this.showNotification('错误', '同名文件已存在，请使用其他文件名');
                 return;
-            } // 创建新文件
-            const initialContent = `# ${fileName}\n\n`;
+            }
+
+            // 创建新文件，增加更丰富的初始内容
+            console.log('📝 开始创建新文件');
+
+            const currentDate = new Date().toLocaleDateString('zh-CN');
+            const currentTime = new Date().toLocaleTimeString('zh-CN', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            const initialContent = `# ${cleanFileName}
+
+> 创建时间：${currentDate} ${currentTime}
+
+## 内容
+
+`;
+            console.log('📄 初始内容准备完成，长度:', initialContent.length);
+            console.log('📄 初始内容预览:', initialContent.substring(0, 100) + '...');
+
+            console.log('🔧 准备调用 window.electronAPI.writeFile API');
+            console.log('🔍 检查 API 可用性:');
+            console.log('  - window.electronAPI:', !!window.electronAPI);
+            console.log('  - window.electronAPI.writeFile:', !!window.electronAPI ? .writeFile);
+
+            if (!window.electronAPI || !window.electronAPI.writeFile) {
+                throw new Error('writeFile API 不可用');
+            }
+
             const response = await window.electronAPI.writeFile(filePath, initialContent);
+            console.log('📤 writeFile API 调用完成');
+            console.log('📥 API 响应:', JSON.stringify(response, null, 2));
 
             // 检查IPC调用是否成功
             if (!response.success) {
+                console.error('❌ 文件创建失败:', response.error);
                 throw new Error(response.error || '创建文件失败');
             }
 
+            console.log('✅ 文件创建成功');
+
             // 刷新工作区文件列表
+            console.log('🔄 开始刷新工作区文件列表');
             await this.refreshWorkspaceFiles();
+            console.log('✅ 工作区文件列表刷新完成');
+            console.log('📊 刷新后文件列表长度:', this.workspaceFiles.length);
 
             // 打开新创建的文件
             const fileInfo = this.workspaceFiles.find(file => file.path === filePath);
+            console.log('🔍 查找新创建的文件:', fileInfo ? '找到' : '未找到');
+
             if (fileInfo) {
+                console.log('📂 开始打开新创建的文件');
                 await this.openWorkspaceFile(fileInfo);
+
+                // 自动聚焦到编辑器并定位到内容区域
+                setTimeout(() => {
+                    const editor = document.getElementById('markdown-editor');
+                    if (editor) {
+                        console.log('🎯 设置编辑器焦点和光标位置');
+                        editor.focus();
+                        // 将光标定位到内容区域
+                        const contentIndex = editor.value.indexOf('\n## 内容\n\n') + 7;
+                        editor.setSelectionRange(contentIndex, contentIndex);
+                    }
+                }, 100);
             }
 
             this.showNotification('创建成功', `文件已创建: ${safeName}.md`);
+
         } catch (error) {
-            console.error('创建文件失败:', error);
+            console.error('❌ 创建文件失败:', error);
+            console.error('💥 错误堆栈:', error.stack);
+            console.error('🔍 错误详细信息:', {
+                name: error.name,
+                message: error.message,
+                stack: error.stack
+            });
             this.showNotification('创建失败', error.message || '无法创建文件');
         }
-    }
 
-    // 创建内存笔记
+        console.log('📝 ============== createNewFileInWorkspace END ==============');
+    } // 创建内存笔记
     createNewMemoryNote() {
+        const currentDate = new Date().toLocaleDateString('zh-CN');
+        const currentTime = new Date().toLocaleTimeString('zh-CN', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
         const note = {
             id: Date.now(),
-            title: '新建笔记',
-            content: '',
+            title: `笔记_${new Date().getMonth() + 1}-${new Date().getDate()}`,
+            content: `# 新建笔记
+
+> 创建时间：${currentDate} ${currentTime}
+
+## 内容
+
+`,
             createdAt: new Date(),
             updatedAt: new Date()
         };
@@ -2198,9 +2387,18 @@ class NotesManager {
         document.getElementById('markdown-editor').value = note.content;
         this.renderFilesList();
 
-        // 聚焦到编辑器
-        document.getElementById('markdown-editor').focus();
-        this.showNotification('笔记创建成功', '新笔记已创建');
+        // 聚焦到编辑器并定位到内容区域
+        setTimeout(() => {
+            const editor = document.getElementById('markdown-editor');
+            if (editor) {
+                editor.focus();
+                // 将光标定位到内容区域
+                const contentIndex = editor.value.indexOf('\n## 内容\n\n') + 7;
+                editor.setSelectionRange(contentIndex, contentIndex);
+            }
+        }, 100);
+
+        this.showNotification('笔记创建成功', '新笔记已创建（内存模式）');
     }
 
     // 自动保存当前笔记
@@ -2371,7 +2569,7 @@ class NotesManager {
 
         if (!sidebar.classList.contains('collapsed')) {
             sidebar.classList.add('collapsed');
-            toggleBtn.textContent = '📂';
+            toggleBtn.textContent = '▶️';
             toggleBtn.title = '展开侧边栏';
         }
     }
@@ -2470,11 +2668,86 @@ class NotesManager {
         div.textContent = text;
         return div.innerHTML;
     }
-
     showNotification(title, body) {
         if (window.electronAPI && window.electronAPI.showNotification) {
             window.electronAPI.showNotification(title, body);
         }
+    }
+
+    // 显示自定义输入对话框
+    showInputDialog(title, message, defaultValue = '') {
+        return new Promise((resolve) => {
+            // 创建模态对话框
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content input-dialog-modal">
+                    <div class="modal-header">
+                        <h3>${title}</h3>
+                        <button class="modal-close-btn">✖️</button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="input-dialog-message">${message}</p>
+                        <input type="text" class="input-dialog-field" value="${defaultValue}" placeholder="请输入...">
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary modal-cancel">取消</button>
+                        <button class="btn btn-primary modal-confirm">确定</button>
+                    </div>
+                </div>
+            `;
+
+            // 添加到文档
+            document.body.appendChild(modal);
+
+            // 获取元素
+            const input = modal.querySelector('.input-dialog-field');
+            const confirmBtn = modal.querySelector('.modal-confirm');
+            const cancelBtn = modal.querySelector('.modal-cancel');
+            const closeBtn = modal.querySelector('.modal-close-btn');
+
+            // 自动聚焦并选择文本
+            setTimeout(() => {
+                input.focus();
+                input.select();
+            }, 100);
+
+            // 确定按钮事件
+            const handleConfirm = () => {
+                const value = input.value.trim();
+                document.body.removeChild(modal);
+                resolve(value || null);
+            };
+
+            // 取消按钮事件
+            const handleCancel = () => {
+                document.body.removeChild(modal);
+                resolve(null);
+            };
+
+            // 绑定事件
+            confirmBtn.addEventListener('click', handleConfirm);
+            cancelBtn.addEventListener('click', handleCancel);
+            closeBtn.addEventListener('click', handleCancel);
+
+            // Enter键确定，Escape键取消
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleConfirm();
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    handleCancel();
+                }
+            });
+
+            // 点击遮罩层取消
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    handleCancel();
+                }
+            });
+        });
     }
 }
 
@@ -3280,7 +3553,7 @@ class App {
 
             if (name && url) {
                 newPresets.push({
-                    id: this.state.settings.online.presetWebsites[index] ?.id || `custom_${Date.now()}_${index}`,
+                    id: this.state.settings.online.presetWebsites[index] ? .id || `custom_${Date.now()}_${index}`,
                     name,
                     url,
                     icon: icon || '🌐',

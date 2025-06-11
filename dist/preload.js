@@ -32,5 +32,9 @@ electron_1.contextBridge.exposeInMainWorld('electronAPI', {
     readFile: (filePath) => electron_1.ipcRenderer.invoke('read-file', filePath),
     writeFile: (filePath, content) => electron_1.ipcRenderer.invoke('write-file', filePath, content),
     deleteFile: (filePath) => electron_1.ipcRenderer.invoke('delete-file', filePath),
+    // 开发者工具
+    openDevTools: () => electron_1.ipcRenderer.invoke('open-devtools'),
+    closeDevTools: () => electron_1.ipcRenderer.invoke('close-devtools'),
+    toggleDevTools: () => electron_1.ipcRenderer.invoke('toggle-devtools'),
 });
 //# sourceMappingURL=preload.js.map

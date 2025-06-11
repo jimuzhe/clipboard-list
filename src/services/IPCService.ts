@@ -67,9 +67,7 @@ export class IPCService extends EventEmitter {
         this.registerHandler('auto-start:get-status', this.handleGetAutoStartStatus.bind(this));
         this.registerHandler('auto-start:toggle', this.handleToggleAutoStart.bind(this));
         this.registerHandler('auto-start:enable', this.handleEnableAutoStart.bind(this));
-        this.registerHandler('auto-start:disable', this.handleDisableAutoStart.bind(this));
-
-        // 文件和文件夹操作
+        this.registerHandler('auto-start:disable', this.handleDisableAutoStart.bind(this));        // 文件和文件夹操作
         this.registerHandler('get-default-notes-folder', this.handleGetDefaultNotesFolder.bind(this));
         this.registerHandler('open-folder-dialog', this.handleOpenFolderDialog.bind(this));
         this.registerHandler('list-markdown-files', this.handleListMarkdownFiles.bind(this));
@@ -77,6 +75,11 @@ export class IPCService extends EventEmitter {
         this.registerHandler('write-file', this.handleWriteFile.bind(this));
         this.registerHandler('delete-file', this.handleDeleteFile.bind(this));
         this.registerHandler('open-external', this.handleOpenExternal.bind(this));
+
+        // 开发者工具相关
+        this.registerHandler('open-devtools', this.handleOpenDevTools.bind(this));
+        this.registerHandler('close-devtools', this.handleCloseDevTools.bind(this));
+        this.registerHandler('toggle-devtools', this.handleToggleDevTools.bind(this));
 
         // 兼容性别名
         this.setupCompatibilityAliases();
@@ -465,14 +468,51 @@ export class IPCService extends EventEmitter {
             logger.error('Delete file error:', error);
             throw error;
         }
-    }
-
-    private async handleOpenExternal(event: IpcMainInvokeEvent, url: string): Promise<void> {
+    } private async handleOpenExternal(event: IpcMainInvokeEvent, url: string): Promise<void> {
         try {
             await shell.openExternal(url);
             logger.info(`Opened external URL: ${url}`);
         } catch (error) {
             logger.error('Open external URL error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 处理打开开发者工具请求
+     */
+    private async handleOpenDevTools(event: IpcMainInvokeEvent): Promise<void> {
+        try {
+            this.emit('devtools:open');
+            logger.info('DevTools open requested from renderer');
+        } catch (error) {
+            logger.error('Open DevTools error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 处理关闭开发者工具请求
+     */
+    private async handleCloseDevTools(event: IpcMainInvokeEvent): Promise<void> {
+        try {
+            this.emit('devtools:close');
+            logger.info('DevTools close requested from renderer');
+        } catch (error) {
+            logger.error('Close DevTools error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 处理切换开发者工具请求
+     */
+    private async handleToggleDevTools(event: IpcMainInvokeEvent): Promise<void> {
+        try {
+            this.emit('devtools:toggle');
+            logger.info('DevTools toggle requested from renderer');
+        } catch (error) {
+            logger.error('Toggle DevTools error:', error);
             throw error;
         }
     }

@@ -124,8 +124,7 @@ class WindowManager extends events_1.EventEmitter {
             if (this.config.dockToSide) {
                 this.checkDocking();
             }
-        });
-        // 鼠标进入窗口
+        }); // 鼠标进入窗口
         this.window.webContents.on('dom-ready', () => {
             this.window?.webContents.executeJavaScript(`
         document.addEventListener('mouseenter', () => {
@@ -136,6 +135,21 @@ class WindowManager extends events_1.EventEmitter {
           window.electronAPI?.windowEvents?.mouseLeave();
         });
       `);
+        });
+        // 开发者工具快捷键支持
+        this.window.webContents.on('before-input-event', (event, input) => {
+            // F12 或 Ctrl+Shift+I 打开/关闭开发者工具
+            if (input.key === 'F12' ||
+                (input.control && input.shift && input.key === 'I')) {
+                if (this.window?.webContents.isDevToolsOpened()) {
+                    this.window.webContents.closeDevTools();
+                    Logger_1.logger.info('DevTools closed');
+                }
+                else {
+                    this.window?.webContents.openDevTools({ mode: 'detach' });
+                    Logger_1.logger.info('DevTools opened');
+                }
+            }
         });
     }
     initDocking() {
@@ -675,6 +689,37 @@ class WindowManager extends events_1.EventEmitter {
                 }
             }, 1000); // 每秒检查一次
             Logger_1.logger.info('Always on top enforcement started');
+        }
+    }
+    /**
+     * 打开开发者工具
+     */
+    openDevTools() {
+        if (this.window && !this.window.webContents.isDevToolsOpened()) {
+            this.window.webContents.openDevTools({ mode: 'detach' });
+            Logger_1.logger.info('DevTools opened manually');
+        }
+    }
+    /**
+     * 关闭开发者工具
+     */
+    closeDevTools() {
+        if (this.window && this.window.webContents.isDevToolsOpened()) {
+            this.window.webContents.closeDevTools();
+            Logger_1.logger.info('DevTools closed manually');
+        }
+    }
+    /**
+     * 切换开发者工具状态
+     */
+    toggleDevTools() {
+        if (this.window) {
+            if (this.window.webContents.isDevToolsOpened()) {
+                this.closeDevTools();
+            }
+            else {
+                this.openDevTools();
+            }
         }
     }
 }

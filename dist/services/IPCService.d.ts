@@ -67,6 +67,18 @@ export declare class IPCService extends EventEmitter {
     private handleDeleteFile;
     private handleOpenExternal;
     /**
+     * 处理打开开发者工具请求
+     */
+    private handleOpenDevTools;
+    /**
+     * 处理关闭开发者工具请求
+     */
+    private handleCloseDevTools;
+    /**
+     * 处理切换开发者工具请求
+     */
+    private handleToggleDevTools;
+    /**
      * 移除处理程序
      */
     removeHandler(channel: string): void;

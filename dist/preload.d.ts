@@ -18,6 +18,9 @@ export interface ElectronAPI {
     readFile: (filePath: string) => Promise<any>;
     writeFile: (filePath: string, content: string) => Promise<void>;
     deleteFile: (filePath: string) => Promise<void>;
+    openDevTools: () => Promise<void>;
+    closeDevTools: () => Promise<void>;
+    toggleDevTools: () => Promise<void>;
 }
 declare global {
     interface Window {

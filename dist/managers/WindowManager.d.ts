@@ -94,5 +94,17 @@ export declare class WindowManager extends EventEmitter {
      * 强制窗口置顶并保持在最前面
      */
     private enforceAlwaysOnTop;
+    /**
+     * 打开开发者工具
+     */
+    openDevTools(): void;
+    /**
+     * 关闭开发者工具
+     */
+    closeDevTools(): void;
+    /**
+     * 切换开发者工具状态
+     */
+    toggleDevTools(): void;
 }
 //# sourceMappingURL=WindowManager.d.ts.map
