@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "start": "npm run build && electron .",
-    "dev": "set NODE_ENV=development && tsc && electron . --dev",
+    "dev": "set NODE_ENV=development&& tsc && electron . --dev",
     "watch": "tsc --watch",
     "clean": "rimraf dist-installer/win-unpacked && rimraf dist-installer/*.exe",
     "predist": "npm run clean",

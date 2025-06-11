@@ -13,7 +13,8 @@ export declare class WindowManager extends EventEmitter {
     private lastCursorPos;
     private triggerZoneWidth;
     private isInTriggerZone;
-    constructor(config: WindowConfig);
+    private isDev;
+    constructor(config: WindowConfig, isDev?: boolean);
     createWindow(): BrowserWindow;
     private setupWindowEvents;
     private initDocking;

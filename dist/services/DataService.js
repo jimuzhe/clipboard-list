@@ -460,6 +460,82 @@ class DataService extends events_1.EventEmitter {
         this.removeAllListeners();
         Logger_1.logger.info('DataService destroyed');
     }
+    /**
+     * 保存设置数据
+     */
+    async saveSettings(settings) {
+        const settingsFile = path.join(this.dataPath, 'settings.json');
+        try {
+            await this.createBackup('settings.json');
+            await this.writeJsonFile(settingsFile, {
+                version: '1.0',
+                timestamp: new Date().toISOString(),
+                settings
+            });
+            Logger_1.logger.info('Saved settings data');
+            this.emit('settings-saved', settings);
+        }
+        catch (error) {
+            Logger_1.logger.error('Failed to save settings:', error);
+            throw error;
+        }
+    }
+    /**
+     * 加载设置数据
+     */
+    async loadSettings() {
+        const settingsFile = path.join(this.dataPath, 'settings.json');
+        try {
+            const data = await this.readJsonFile(settingsFile);
+            if (data && data.settings) {
+                Logger_1.logger.info('Loaded settings data');
+                return data.settings;
+            }
+            return null;
+        }
+        catch (error) {
+            Logger_1.logger.warn('Failed to load settings:', error);
+            return null;
+        }
+    }
+    /**
+     * 保存番茄时钟数据
+     */
+    async savePomodoroTimer(timer) {
+        const timerFile = path.join(this.dataPath, 'pomodoro-timer.json');
+        try {
+            await this.createBackup('pomodoro-timer.json');
+            await this.writeJsonFile(timerFile, {
+                version: '1.0',
+                timestamp: new Date().toISOString(),
+                timer
+            });
+            Logger_1.logger.info('Saved pomodoro timer data');
+            this.emit('pomodoro-timer-saved', timer);
+        }
+        catch (error) {
+            Logger_1.logger.error('Failed to save pomodoro timer:', error);
+            throw error;
+        }
+    }
+    /**
+     * 加载番茄时钟数据
+     */
+    async loadPomodoroTimer() {
+        const timerFile = path.join(this.dataPath, 'pomodoro-timer.json');
+        try {
+            const data = await this.readJsonFile(timerFile);
+            if (data && data.timer) {
+                Logger_1.logger.info('Loaded pomodoro timer data');
+                return data.timer;
+            }
+            return null;
+        }
+        catch (error) {
+            Logger_1.logger.warn('Failed to load pomodoro timer:', error);
+            return null;
+        }
+    }
 }
 exports.DataService = DataService;
 //# sourceMappingURL=DataService.js.map

@@ -62,36 +62,194 @@ class AppState {
     }
     async loadData() {
         try {
-            const data = await window.electronAPI.loadData();
-            if (data) {
-                this.clipboardItems = data.clipboardItems || [];
-                this.todoItems = data.todoItems || [];
-                this.notes = data.notes || [];
-                this.settings = {
-                    ...this.settings,
-                    ...data.settings
-                };
-                this.pomodoroTimer = {
-                    ...this.pomodoroTimer,
-                    ...data.pomodoroTimer
-                };
+            // 分别加载各种数据类型
+            await Promise.all([
+                this.loadClipboardData(),
+                this.loadTodoData(),
+                this.loadNotesData(),
+                this.loadSettingsData(),
+                this.loadPomodoroData()
+            ]);
+            console.log('✅ 所有数据加载完成');
+        } catch (error) {
+            console.error('❌ 数据加载失败:', error);
+        }
+    }
+    async loadClipboardData() {
+        try {
+            console.log('🔄 开始加载剪切板数据...');
+
+            // 获取数据文件路径
+            if (window.electronAPI.getDataPath) {
+                const dataPath = await window.electronAPI.getDataPath();
+                console.log('📁 数据目录路径:', dataPath);
+                console.log('📄 剪切板数据文件路径:', dataPath + '/clipboard-history.json');
+            }
+            const response = await window.electronAPI.loadClipboardHistory();
+            console.log('📥 从文件加载的原始数据:', response);
+
+            if (response && response.success && Array.isArray(response.data)) {
+                this.clipboardItems = response.data;
+                console.log(`✅ 剪切板数据加载完成: ${response.data.length} 项`);
+                console.log('📋 加载的剪切板项目详情:', this.clipboardItems); // 验证数据结构
+                this.clipboardItems.forEach((item, index) => {
+                    console.log(`📄 项目 ${index + 1}:`, {
+                        id: item.id,
+                        type: item.type,
+                        content: item.content ? item.content.substring(0, 50) + (item.content.length > 50 ? '...' : '') : 'null',
+                        timestamp: item.timestamp,
+                        pinned: item.pinned
+                    });
+                });
+            } else {
+                console.log('⚠️ 剪切板数据为空或格式不正确，response:', response);
+                this.clipboardItems = [];
             }
         } catch (error) {
-            console.error('Failed to load data:', error);
+            console.error('❌ 剪切板数据加载失败:', error);
+            this.clipboardItems = [];
+        }
+    }
+    async loadTodoData() {
+        try {
+            console.log('🔄 开始加载待办数据...');
+            const response = await window.electronAPI.loadTodos();
+            console.log('📥 从文件加载的待办原始数据:', response);
+
+            if (response && response.success && Array.isArray(response.data)) {
+                this.todoItems = response.data;
+                console.log(`✅ 待办数据加载完成: ${response.data.length} 项`);
+                console.log('📋 加载的待办项目详情:', this.todoItems);
+            } else {
+                console.log('⚠️ 待办数据为空或格式不正确，response:', response);
+                this.todoItems = [];
+            }
+        } catch (error) {
+            console.error('❌ 待办数据加载失败:', error);
+            this.todoItems = [];
+        }
+    }
+    async loadNotesData() {
+        try {
+            console.log('🔄 开始加载笔记数据...');
+            const response = await window.electronAPI.loadNotes();
+            console.log('📥 从文件加载的笔记原始数据:', response);
+
+            if (response && response.success && Array.isArray(response.data)) {
+                this.notes = response.data;
+                console.log(`✅ 笔记数据加载完成: ${response.data.length} 项`);
+                console.log('📋 加载的笔记详情:', this.notes);
+            } else {
+                console.log('⚠️ 笔记数据为空或格式不正确，response:', response);
+                this.notes = [];
+            }
+        } catch (error) {
+            console.error('❌ 笔记数据加载失败:', error);
+            this.notes = [];
+        }
+    }
+    async loadSettingsData() {
+        try {
+            const response = await window.electronAPI.loadSettings();
+            if (response && response.success && response.data && typeof response.data === 'object') {
+                this.settings = {
+                    ...this.settings,
+                    ...response.data
+                };
+                console.log('✅ 设置数据加载完成');
+            } else if (response && typeof response === 'object' && !response.success) {
+                // 向后兼容：如果返回的是直接数据而不是包装格式
+                this.settings = {
+                    ...this.settings,
+                    ...response
+                };
+                console.log('✅ 设置数据加载完成（向后兼容模式）');
+            }
+        } catch (error) {
+            console.error('设置数据加载失败:', error);
+        }
+    }
+
+    async loadPomodoroData() {
+        try {
+            const response = await window.electronAPI.loadPomodoroTimer();
+            if (response && response.success && response.data && typeof response.data === 'object') {
+                this.pomodoroTimer = {
+                    ...this.pomodoroTimer,
+                    ...response.data
+                };
+                console.log('✅ 番茄时钟数据加载完成');
+            } else if (response && typeof response === 'object' && !response.success) {
+                // 向后兼容：如果返回的是直接数据而不是包装格式
+                this.pomodoroTimer = {
+                    ...this.pomodoroTimer,
+                    ...response
+                };
+                console.log('✅ 番茄时钟数据加载完成（向后兼容模式）');
+            }
+        } catch (error) {
+            console.error('番茄时钟数据加载失败:', error);
         }
     }
 
     async saveData() {
         try {
-            await window.electronAPI.saveData({
-                clipboardItems: this.clipboardItems,
-                todoItems: this.todoItems,
-                notes: this.notes,
-                settings: this.settings,
-                pomodoroTimer: this.pomodoroTimer
-            });
+            // 分别保存各种数据类型
+            await Promise.all([
+                this.saveClipboardData(),
+                this.saveTodoData(),
+                this.saveNotesData(),
+                this.saveSettingsData(),
+                this.savePomodoroData()
+            ]);
+            console.log('✅ 所有数据保存完成');
         } catch (error) {
-            console.error('Failed to save data:', error);
+            console.error('❌ 数据保存失败:', error);
+        }
+    }
+
+    async saveClipboardData() {
+        try {
+            await window.electronAPI.saveClipboardHistory(this.clipboardItems);
+            console.log(`✅ 剪切板数据保存完成: ${this.clipboardItems.length} 项`);
+        } catch (error) {
+            console.error('剪切板数据保存失败:', error);
+        }
+    }
+
+    async saveTodoData() {
+        try {
+            await window.electronAPI.saveTodos(this.todoItems);
+            console.log(`✅ 待办数据保存完成: ${this.todoItems.length} 项`);
+        } catch (error) {
+            console.error('待办数据保存失败:', error);
+        }
+    }
+
+    async saveNotesData() {
+        try {
+            await window.electronAPI.saveNotes(this.notes);
+            console.log(`✅ 笔记数据保存完成: ${this.notes.length} 项`);
+        } catch (error) {
+            console.error('笔记数据保存失败:', error);
+        }
+    }
+
+    async saveSettingsData() {
+        try {
+            await window.electronAPI.saveSettings(this.settings);
+            console.log('✅ 设置数据保存完成');
+        } catch (error) {
+            console.error('设置数据保存失败:', error);
+        }
+    }
+
+    async savePomodoroData() {
+        try {
+            await window.electronAPI.savePomodoroTimer(this.pomodoroTimer);
+            console.log('✅ 番茄时钟数据保存完成');
+        } catch (error) {
+            console.error('番茄时钟数据保存失败:', error);
         }
     }
 }
@@ -101,18 +259,29 @@ class ClipboardManager {
     constructor(appState) {
         this.appState = appState;
         this.lastClipboardContent = '';
-        this.init();
+        // 只设置事件监听器，不立即渲染
+        this.setupEventListeners();
     }
-    init() {
+
+    setupEventListeners() {
         // 监听剪切板变化事件
         if (window.electronAPI.onClipboardChange) {
             window.electronAPI.onClipboardChange((clipboardItem) => {
                 this.handleClipboardChange(clipboardItem);
             });
         }
+    }
+    init() {
+        // 这个方法现在由App类调用，确保数据已加载
+        console.log('🔧 剪切板管理器初始化...');
+        console.log('📊 当前剪切板数据状态:', {
+            totalItems: this.appState.clipboardItems.length,
+            pinnedItems: this.appState.clipboardItems.filter(item => item.pinned).length,
+            unpinnedItems: this.appState.clipboardItems.filter(item => !item.pinned).length
+        });
 
-        // 注意：移除了定期检查剪切板的轮询，现在只依赖 Ctrl+C 事件监听
-        // 注意：checkClipboard 方法已移除，现在只使用基于事件的剪切板监控
+        this.renderClipboardList();
+        console.log('✅ 剪切板管理器初始化完成');
     }
 
     handleClipboardChange(clipboardItem) {
@@ -232,27 +401,43 @@ class ClipboardManager {
         return /\.(jpg|jpeg|png|gif|bmp|svg|webp)$/i.test(content);
     }
     renderClipboardList() {
+        console.log('🎨 开始渲染剪切板列表...');
         const container = document.getElementById('clipboard-list');
-        if (!container) return;
+        if (!container) {
+            console.error('❌ 找不到剪切板容器元素 #clipboard-list');
+            return;
+        }
 
+        console.log('📋 准备渲染的剪切板项目:', this.appState.clipboardItems.length);
         container.innerHTML = '';
 
         // 分离置顶和非置顶项目
         const pinnedItems = this.appState.clipboardItems.filter(item => item.pinned);
         const unpinnedItems = this.appState.clipboardItems.filter(item => !item.pinned);
 
+        console.log('📌 置顶项目:', pinnedItems.length, '个');
+        console.log('📄 普通项目:', unpinnedItems.length, '个');
+
         // 先显示置顶项目，然后显示普通项目
         const sortedItems = [...pinnedItems, ...unpinnedItems];
 
-        sortedItems.forEach(item => {
+        sortedItems.forEach((item, index) => {
+            console.log(`🔧 创建第 ${index + 1} 个剪切板项目:`, {
+                id: item.id,
+                type: item.type,
+                pinned: item.pinned
+            });
             const element = this.createClipboardItemElement(item);
             container.appendChild(element);
         });
 
         // 添加置顶分隔线（如果有置顶项目）
         if (pinnedItems.length > 0 && unpinnedItems.length > 0) {
+            console.log('➕ 添加置顶分隔线');
             this.addPinnedSeparator(container, pinnedItems.length);
         }
+
+        console.log('✅ 剪切板列表渲染完成，容器中现有:', container.children.length, '个元素');
     }
     createClipboardItemElement(item) {
         const div = document.createElement('div');
@@ -551,7 +736,7 @@ class ClipboardManager {
         const totalItems = this.appState.clipboardItems.length;
 
         if (pinnedItems.length === totalItems) {
-            this.showNotification('提示', '所有项目都已置顶，无需清理');
+            this.showNotification('提示', '项目为空或都已置顶，无需清理');
             return;
         }
 
@@ -611,12 +796,20 @@ class TodoManager {
     constructor(appState) {
         this.appState = appState;
         this.currentFilter = 'all';
-        this.init();
-    }
-
-    init() {
-        this.renderTodoList();
+        // 只设置事件监听器，不立即渲染
         this.setupEventListeners();
+    }
+    init() {
+        // 这个方法现在由App类调用，确保数据已加载
+        console.log('🔧 待办管理器初始化...');
+        console.log('📊 当前待办数据状态:', {
+            totalItems: this.appState.todoItems.length,
+            pendingItems: this.appState.todoItems.filter(item => !item.completed).length,
+            completedItems: this.appState.todoItems.filter(item => item.completed).length
+        });
+
+        this.renderTodoList();
+        console.log('✅ 待办管理器初始化完成');
     }
     setupEventListeners() {
         // 添加待办按钮
@@ -826,8 +1019,8 @@ class TodoManager {
     }
 
     clearValidationMessages() {
-        const inputs = document.querySelectorAll('#add-todo-modal .form-input, #add-todo-modal .form-textarea');
-        const feedbacks = document.querySelectorAll('#add-todo-modal .input-feedback');
+        const inputs = document.querySelectorAll('#add-todo-modal.form-input, #add-todo-modal.form-textarea');
+        const feedbacks = document.querySelectorAll('#add-todo-modal.input-feedback');
 
         inputs.forEach(input => {
             input.classList.remove('field-error', 'field-success');
@@ -899,18 +1092,29 @@ class TodoManager {
             pomodoro: document.getElementById('todo-pomodoro').checked
         };
     }
-
     renderTodoList() {
+        console.log('🎨 开始渲染待办列表...');
         const container = document.getElementById('todo-list');
-        if (!container) return;
+        if (!container) {
+            console.error('❌ 找不到待办容器元素 #todo-list');
+            return;
+        }
 
         const filteredTodos = this.filterTodos();
+        console.log('📋 准备渲染的待办项目:', filteredTodos.length, '个（过滤条件:', this.currentFilter, ')');
         container.innerHTML = '';
 
-        filteredTodos.forEach(todo => {
+        filteredTodos.forEach((todo, index) => {
+            console.log(`🔧 创建第 ${index + 1} 个待办项目:`, {
+                id: todo.id,
+                title: todo.title,
+                completed: todo.completed
+            });
             const element = this.createTodoElement(todo);
             container.appendChild(element);
         });
+
+        console.log('✅ 待办列表渲染完成，容器中现有:', container.children.length, '个元素');
     }
 
     filterTodos() {
@@ -1304,7 +1508,7 @@ class PomodoroManager {
         });
 
         // 模态框关闭
-        const closeBtn = document.querySelector('#pomodoro-modal .modal-close');
+        const closeBtn = document.querySelector('#pomodoro-modal.modal-close');
         if (closeBtn) {
             closeBtn.addEventListener('click', () => {
                 this.closeModal();
@@ -1461,7 +1665,7 @@ class PomodoroManager {
     }
 
     updateProgressDots() {
-        const dots = document.querySelectorAll('.progress-dots .dot');
+        const dots = document.querySelectorAll('.progress-dots.dot');
         const currentSession = this.sessionCount % 4;
 
         dots.forEach((dot, index) => {
@@ -1685,10 +1889,11 @@ class NotesManager {
         this.workspacePath = null; // 当前工作文件夹路径
         this.workspaceFiles = []; // 工作文件夹中的文件列表
         this.currentFilePath = null; // 当前编辑的文件路径
-        this.init();
+        // 只设置事件监听器，不立即渲染
+        this.setupEventListenersOnly();
     }
-    async init() {
-        this.renderFilesList();
+
+    setupEventListenersOnly() {
         // 确保DOM已经准备好再设置事件监听器
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
@@ -1698,9 +1903,15 @@ class NotesManager {
             // DOM已经准备好，直接设置
             this.setupEventListeners();
         }
+    }
+    async init() {
+        // 这个方法现在由App类调用，确保数据已加载
+        this.renderFilesList();
         // 自动设置默认工作目录为应用的 notes 文件夹
         await this.initializeDefaultWorkspace();
-    } // 初始化默认工作区
+    }
+
+    // 初始化默认工作区
     async initializeDefaultWorkspace() {
         try {
             const response = await window.electronAPI.getDefaultNotesFolder();
@@ -2170,31 +2381,27 @@ class NotesManager {
         console.log('📊 工作区路径类型:', typeof this.workspacePath);
         console.log('📏 工作区路径长度:', this.workspacePath ? this.workspacePath.length : 'null');
         console.log('✅ 工作区路径是否为真值:', !!this.workspacePath);
-        console.log('📋 当前工作区文件数量:', this.workspaceFiles.length);
-
-        // 检查 API 可用性
+        console.log('📋 当前工作区文件数量:', this.workspaceFiles.length); // 检查 API 可用性
         console.log('🔍 检查 API 可用性:');
         console.log('  - window.electronAPI:', !!window.electronAPI);
         console.log('  - window.api:', !!window.api);
-        console.log('  - window.api?.fileSystem:', !!window.api ?.fileSystem);
-        console.log('  - window.api?.fileSystem?.exists:', !!window.api ?.fileSystem ?.exists);
+        console.log('  - window.api?.fileSystem:', !!window.api ? .fileSystem);
+        console.log('  - window.api?.fileSystem?.exists:', !!window.api ? .fileSystem ? .exists);
 
         try {
             // 优先在工作区创建文件，如果没有工作区则创建内存笔记
             if (this.workspacePath) {
                 console.log('✅ 工作区存在，准备在工作区创建文件');
-                console.log('📂 工作区完整路径:', this.workspacePath);
-
-                // 验证工作区路径是否有效
+                console.log('📂 工作区完整路径:', this.workspacePath); // 验证工作区路径是否有效
                 try {
-                    if (window.api ?.fileSystem ?.exists) {
+                    if (window.api ? .fileSystem ? .exists) {
                         console.log('🔍 验证工作区目录是否存在...');
                         const workspaceExists = await window.api.fileSystem.exists(this.workspacePath);
                         console.log('📁 工作区目录是否存在:', workspaceExists);
 
                         if (!workspaceExists) {
                             console.warn('⚠️  工作区目录不存在，尝试创建目录');
-                            if (window.api ?.fileSystem ?.createDirectory) {
+                            if (window.api ? .fileSystem ? .createDirectory) {
                                 const createResult = await window.api.fileSystem.createDirectory(this.workspacePath);
                                 console.log('📁 创建目录结果:', createResult);
                             } else {
@@ -2298,7 +2505,7 @@ class NotesManager {
             console.log('🔧 准备调用 window.electronAPI.writeFile API');
             console.log('🔍 检查 API 可用性:');
             console.log('  - window.electronAPI:', !!window.electronAPI);
-            console.log('  - window.electronAPI.writeFile:', !!window.electronAPI ?.writeFile);
+            console.log('  - window.electronAPI.writeFile:', !!window.electronAPI ? .writeFile);
 
             if (!window.electronAPI || !window.electronAPI.writeFile) {
                 throw new Error('writeFile API 不可用');
@@ -2816,12 +3023,11 @@ class App {
         this.isFirstCommunityVisit = true;
         this.init();
     }
-
     async init() {
         // 加载数据
         await this.state.loadData();
 
-        // 初始化管理器
+        // 初始化管理器（不立即渲染）
         this.clipboardManager = new ClipboardManager(this.state);
         this.todoManager = new TodoManager(this.state);
         this.pomodoroManager = new PomodoroManager(this.state);
@@ -2832,7 +3038,8 @@ class App {
         this.setupEventListeners();
 
         // 初始化UI
-        this.initializeUI();
+        this.initializeUI(); // 数据加载完成后，重新渲染所有组件
+        await this.renderAllComponents();
     }
 
     setupEventListeners() {
@@ -2998,7 +3205,6 @@ class App {
             });
         }
     }
-
     async initializeUI() {
         // 设置版本号
         try {
@@ -3023,10 +3229,41 @@ class App {
         this.initializeCommunityWebview();
 
         // 应用主题
-        this.themeManager.applyTheme(this.state.settings.theme); // 渲染数据
-        this.clipboardManager.renderClipboardList();
-        this.todoManager.renderTodoList();
-        this.notesManager.renderFilesList();
+        this.themeManager.applyTheme(this.state.settings.theme);
+    }
+    async renderAllComponents() {
+        console.log('🎨 开始渲染所有组件...');
+        console.log('🔍 检查数据状态:');
+        console.log('📋 剪切板项目数量:', this.state.clipboardItems.length);
+        console.log('✅ 待办事项数量:', this.state.todoItems.length);
+        console.log('📝 笔记数量:', this.state.notes.length);
+
+        // 详细检查剪切板数据
+        if (this.state.clipboardItems.length > 0) {
+            console.log('📄 剪切板数据详情:');
+            this.state.clipboardItems.forEach((item, index) => {
+                console.log(`  项目 ${index + 1}:`, {
+                    id: item.id,
+                    type: item.type,
+                    content: item.content ? item.content.substring(0, 30) + '...' : 'null',
+                    timestamp: item.timestamp
+                });
+            });
+        } else {
+            console.log('⚠️ 剪切板数据为空，检查加载过程...');
+        }
+
+        // 调用各个管理器的init方法，确保数据已加载后再渲染
+        console.log('🔧 初始化剪切板管理器...');
+        this.clipboardManager.init();
+
+        console.log('🔧 初始化待办管理器...');
+        this.todoManager.init();
+
+        console.log('🔧 初始化笔记管理器...');
+        await this.notesManager.init();
+
+        console.log('✅ 所有组件渲染完成');
     }
     switchTab(tabName) {
         // 更新选项卡按钮状态
@@ -3095,12 +3332,12 @@ class App {
         };
 
         const handleLoadCommit = () => {
-            console.log('社区页面加载提交');
+            console.log('页面加载提交');
         };
 
         // 监听加载失败
         const handleLoadFail = (event) => {
-            console.error('社区页面加载失败:', event);
+            console.error('页面加载失败:', event);
             loading.innerHTML = `
                 <div class="loading-spinner">
                     <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
@@ -3145,7 +3382,7 @@ class App {
         // 设置一个超时，如果15秒后还在加载，显示错误信息
         setTimeout(() => {
             if (!loading.classList.contains('hidden')) {
-                console.warn('社区页面加载超时');
+                console.warn('页面加载超时');
                 loading.innerHTML = `
                     <div class="loading-spinner">
                         <div style="font-size: 48px; margin-bottom: 16px;">⏱️</div>
@@ -3173,12 +3410,12 @@ class App {
             loading.innerHTML = `
                 <div class="loading-spinner">
                     <div class="spinner"></div>
-                    <span>正在加载社区页面...</span>
+                    <span>正在加载页面...</span>
                 </div>
             `;
             loading.classList.remove('hidden');
 
-            console.log('刷新社区页面');
+            console.log('刷新页面');
 
             // 重新加载webview
             if (webview.reload) {
@@ -3205,15 +3442,31 @@ class App {
     searchClipboard(query) {
         const items = document.querySelectorAll('.clipboard-item');
         items.forEach(item => {
-            // 检查是否是图片类型，如果是图片则跳过搜索
-            const isImage = item.classList.contains('image-type');
-            if (isImage) {
-                item.style.display = 'block'; // 图片始终显示
-                return;
+            // 检查是否有内容元素
+            const contentElement = item.querySelector('.clipboard-item-content');
+            const imageContainer = item.querySelector('.clipboard-image-container');
+
+            let matches = false;
+
+            if (contentElement) {
+                // 文本内容搜索
+                const content = contentElement.textContent;
+                matches = content.toLowerCase().includes(query.toLowerCase());
+            } else if (imageContainer) {
+                // 对于图片类型，检查图片信息或类型标签
+                const typeElement = item.querySelector('.clipboard-item-type');
+                const imageInfo = item.querySelector('.image-info');
+
+                if (typeElement) {
+                    matches = typeElement.textContent.toLowerCase().includes(query.toLowerCase());
+                }
+
+                // 如果查询为空，显示所有项目
+                if (!query.trim()) {
+                    matches = true;
+                }
             }
 
-            const content = item.querySelector('.clipboard-item-content').textContent;
-            const matches = content.toLowerCase().includes(query.toLowerCase());
             item.style.display = matches ? 'block' : 'none';
         });
     }
@@ -3250,10 +3503,11 @@ class App {
 
             // 更新webview的src属性
             webview.src = newUrl;
-
-            console.log('社区页面URL已更新为:', newUrl);
+            console.log('页面URL已更新为:', newUrl);
         }
-    } // 显示URL更新成功提示
+    }
+
+    // 显示URL更新成功提示
     showUrlUpdateSuccess() {
         const button = document.getElementById('apply-community-url');
         if (button) {
@@ -3268,14 +3522,16 @@ class App {
                 button.disabled = false;
             }, 2000);
         }
-    } // 初始化社区webview
+    }
+
+    // 初始化社区webview
     initializeCommunityWebview() {
         const webview = document.getElementById('community-webview');
         if (webview && this.state.settings.communityUrl) {
             // 只有当webview的src与设置不同时才更新
             if (webview.src !== this.state.settings.communityUrl) {
                 webview.src = this.state.settings.communityUrl;
-                console.log('社区webview初始化为:', this.state.settings.communityUrl);
+                console.log('webview初始化为:', this.state.settings.communityUrl);
             }
         }
 
@@ -3550,10 +3806,9 @@ class App {
             const name = item.querySelector('.preset-name').value.trim();
             const url = item.querySelector('.preset-url').value.trim();
             const description = item.querySelector('.preset-description').value.trim();
-
             if (name && url) {
                 newPresets.push({
-                    id: this.state.settings.online.presetWebsites[index] ?.id || `custom_${Date.now()}_${index}`,
+                    id: this.state.settings.online.presetWebsites[index] ? .id || `custom_${Date.now()}_${index}`,
                     name,
                     url,
                     icon: icon || '🌐',

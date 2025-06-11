@@ -39,7 +39,7 @@ const events_1 = require("events");
 const path = __importStar(require("path"));
 const Logger_1 = require("../utils/Logger");
 class WindowManager extends events_1.EventEmitter {
-    constructor(config) {
+    constructor(config, isDev = false) {
         super();
         this.config = config;
         this.window = null;
@@ -52,6 +52,7 @@ class WindowManager extends events_1.EventEmitter {
         this.lastCursorPos = { x: 0, y: 0 };
         this.triggerZoneWidth = 5; // 触发区域宽度（像素）
         this.isInTriggerZone = false; // 跟踪鼠标是否在触发区域
+        this.isDev = isDev;
     }
     createWindow() {
         const { width: screenWidth, height: screenHeight } = electron_1.screen.getPrimaryDisplay().workAreaSize;
@@ -139,7 +140,7 @@ class WindowManager extends events_1.EventEmitter {
         this.window.webContents.on('before-input-event', (event, input) => {
             // 只在开发模式下允许 F12 或 Ctrl+Shift+I 打开/关闭开发者工具
             if ((input.key === 'F12' || (input.control && input.shift && input.key === 'I')) &&
-                process.env.NODE_ENV === 'development') {
+                this.isDev) {
                 if (this.window?.webContents.isDevToolsOpened()) {
                     this.window.webContents.closeDevTools();
                     Logger_1.logger.info('DevTools closed (development mode)');
@@ -150,7 +151,7 @@ class WindowManager extends events_1.EventEmitter {
                 }
             }
             else if ((input.key === 'F12' || (input.control && input.shift && input.key === 'I')) &&
-                process.env.NODE_ENV !== 'development') {
+                !this.isDev) {
                 Logger_1.logger.warn('DevTools access denied - not in development mode');
             }
         });
@@ -697,7 +698,7 @@ class WindowManager extends events_1.EventEmitter {
      * 打开开发者工具（仅开发模式）
      */
     openDevTools() {
-        if (process.env.NODE_ENV !== 'development') {
+        if (!this.isDev) {
             Logger_1.logger.warn('DevTools access denied - not in development mode');
             return;
         }
@@ -710,7 +711,7 @@ class WindowManager extends events_1.EventEmitter {
      * 关闭开发者工具（仅开发模式）
      */
     closeDevTools() {
-        if (process.env.NODE_ENV !== 'development') {
+        if (!this.isDev) {
             Logger_1.logger.warn('DevTools access denied - not in development mode');
             return;
         }
@@ -723,7 +724,7 @@ class WindowManager extends events_1.EventEmitter {
      * 切换开发者工具状态（仅开发模式）
      */
     toggleDevTools() {
-        if (process.env.NODE_ENV !== 'development') {
+        if (!this.isDev) {
             Logger_1.logger.warn('DevTools access denied - not in development mode');
             return;
         }

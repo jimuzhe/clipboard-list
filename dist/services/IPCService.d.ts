@@ -27,6 +27,7 @@ export declare class IPCService extends EventEmitter {
      */
     broadcast(channel: string, data?: any): void;
     private handleGetAppVersion;
+    private handleGetDataPath;
     private handleGetConfig;
     private handleSetConfig;
     private handleShowNotification;
@@ -53,6 +54,12 @@ export declare class IPCService extends EventEmitter {
     private handleLoadTodos;
     private handleSaveNotes;
     private handleLoadNotes;
+    private handleSaveClipboardHistory;
+    private handleLoadClipboardHistory;
+    private handleSaveSettings;
+    private handleLoadSettings;
+    private handleSavePomodoroTimer;
+    private handleLoadPomodoroTimer;
     private handleGetTheme;
     private handleSetTheme;
     private handleGetAutoStartStatus;

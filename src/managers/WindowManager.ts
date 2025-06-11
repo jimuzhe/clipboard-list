@@ -14,9 +14,11 @@ export class WindowManager extends EventEmitter {
     private lastCursorPos = { x: 0, y: 0 };
     private triggerZoneWidth = 5; // 触发区域宽度（像素）
     private isInTriggerZone = false; // 跟踪鼠标是否在触发区域
+    private isDev: boolean;
 
-    constructor(private config: WindowConfig) {
+    constructor(private config: WindowConfig, isDev = false) {
         super();
+        this.isDev = isDev;
     } createWindow(): BrowserWindow {
         const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
 
@@ -113,7 +115,7 @@ export class WindowManager extends EventEmitter {
         this.window.webContents.on('before-input-event', (event, input) => {
             // 只在开发模式下允许 F12 或 Ctrl+Shift+I 打开/关闭开发者工具
             if ((input.key === 'F12' || (input.control && input.shift && input.key === 'I')) &&
-                process.env.NODE_ENV === 'development') {
+                this.isDev) {
                 if (this.window?.webContents.isDevToolsOpened()) {
                     this.window.webContents.closeDevTools();
                     logger.info('DevTools closed (development mode)');
@@ -122,7 +124,7 @@ export class WindowManager extends EventEmitter {
                     logger.info('DevTools opened (development mode)');
                 }
             } else if ((input.key === 'F12' || (input.control && input.shift && input.key === 'I')) &&
-                process.env.NODE_ENV !== 'development') {
+                !this.isDev) {
                 logger.warn('DevTools access denied - not in development mode');
             }
         });
@@ -725,7 +727,7 @@ export class WindowManager extends EventEmitter {
      * 打开开发者工具（仅开发模式）
      */
     openDevTools(): void {
-        if (process.env.NODE_ENV !== 'development') {
+        if (!this.isDev) {
             logger.warn('DevTools access denied - not in development mode');
             return;
         }
@@ -740,7 +742,7 @@ export class WindowManager extends EventEmitter {
      * 关闭开发者工具（仅开发模式）
      */
     closeDevTools(): void {
-        if (process.env.NODE_ENV !== 'development') {
+        if (!this.isDev) {
             logger.warn('DevTools access denied - not in development mode');
             return;
         }
@@ -755,7 +757,7 @@ export class WindowManager extends EventEmitter {
      * 切换开发者工具状态（仅开发模式）
      */
     toggleDevTools(): void {
-        if (process.env.NODE_ENV !== 'development') {
+        if (!this.isDev) {
             logger.warn('DevTools access denied - not in development mode');
             return;
         }

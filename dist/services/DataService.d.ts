@@ -119,5 +119,21 @@ export declare class DataService extends EventEmitter {
      * éćŻćĺ?
      */
     destroy(): void;
+    /**
+     * 保存设置数据
+     */
+    saveSettings(settings: any): Promise<void>;
+    /**
+     * 加载设置数据
+     */
+    loadSettings(): Promise<any>;
+    /**
+     * 保存番茄时钟数据
+     */
+    savePomodoroTimer(timer: any): Promise<void>;
+    /**
+     * 加载番茄时钟数据
+     */
+    loadPomodoroTimer(): Promise<any>;
 }
 //# sourceMappingURL=DataService.d.ts.map

@@ -5,18 +5,28 @@ const electron_1 = require("electron");
 electron_1.contextBridge.exposeInMainWorld('electronAPI', {
     // 窗口控制
     minimizeWindow: () => electron_1.ipcRenderer.invoke('minimize-window'),
-    closeWindow: () => electron_1.ipcRenderer.invoke('close-window'),
-    // 应用信息
-    getAppVersion: () => electron_1.ipcRenderer.invoke('get-app-version'), // 剪切板相关
+    closeWindow: () => electron_1.ipcRenderer.invoke('close-window'), // 应用信息
+    getAppVersion: () => electron_1.ipcRenderer.invoke('get-app-version'),
+    getDataPath: () => electron_1.ipcRenderer.invoke('get-data-path'), // 剪切板相关
     writeToClipboard: (text) => electron_1.ipcRenderer.invoke('write-clipboard', text),
     writeImageToClipboard: (imageData) => electron_1.ipcRenderer.invoke('write-image-clipboard', imageData),
     readFromClipboard: () => electron_1.ipcRenderer.invoke('read-clipboard'),
     onClipboardChange: (callback) => {
         electron_1.ipcRenderer.on('clipboard-changed', (_, item) => callback(item));
-    },
-    // 文件操作
+    }, // 文件操作 - 保持向后兼容
     saveData: (data) => electron_1.ipcRenderer.invoke('save-data', data),
     loadData: () => electron_1.ipcRenderer.invoke('load-data'),
+    // 新的分类数据持久化 API
+    saveClipboardHistory: (items) => electron_1.ipcRenderer.invoke('save-clipboard-history', items),
+    loadClipboardHistory: () => electron_1.ipcRenderer.invoke('load-clipboard-history'),
+    saveTodos: (todos) => electron_1.ipcRenderer.invoke('save-todos', todos),
+    loadTodos: () => electron_1.ipcRenderer.invoke('load-todos'),
+    saveNotes: (notes) => electron_1.ipcRenderer.invoke('save-notes', notes),
+    loadNotes: () => electron_1.ipcRenderer.invoke('load-notes'),
+    saveSettings: (settings) => electron_1.ipcRenderer.invoke('save-settings', settings),
+    loadSettings: () => electron_1.ipcRenderer.invoke('load-settings'),
+    savePomodoroTimer: (timer) => electron_1.ipcRenderer.invoke('save-pomodoro-timer', timer),
+    loadPomodoroTimer: () => electron_1.ipcRenderer.invoke('load-pomodoro-timer'),
     // 主题相关
     setTheme: (theme) => electron_1.ipcRenderer.invoke('set-theme', theme),
     getTheme: () => electron_1.ipcRenderer.invoke('get-theme'), // 通知

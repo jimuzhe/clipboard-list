@@ -4,20 +4,29 @@ import { contextBridge, ipcRenderer } from 'electron';
 contextBridge.exposeInMainWorld('electronAPI', {
     // 窗口控制
     minimizeWindow: () => ipcRenderer.invoke('minimize-window'),
-    closeWindow: () => ipcRenderer.invoke('close-window'),
-
-    // 应用信息
-    getAppVersion: () => ipcRenderer.invoke('get-app-version'),    // 剪切板相关
+    closeWindow: () => ipcRenderer.invoke('close-window'),    // 应用信息
+    getAppVersion: () => ipcRenderer.invoke('get-app-version'),
+    getDataPath: () => ipcRenderer.invoke('get-data-path'),// 剪切板相关
     writeToClipboard: (text: string) => ipcRenderer.invoke('write-clipboard', text),
     writeImageToClipboard: (imageData: string) => ipcRenderer.invoke('write-image-clipboard', imageData),
     readFromClipboard: () => ipcRenderer.invoke('read-clipboard'),
     onClipboardChange: (callback: (item: any) => void) => {
         ipcRenderer.on('clipboard-changed', (_, item) => callback(item));
-    },
-
-    // 文件操作
+    },    // 文件操作 - 保持向后兼容
     saveData: (data: any) => ipcRenderer.invoke('save-data', data),
     loadData: () => ipcRenderer.invoke('load-data'),
+
+    // 新的分类数据持久化 API
+    saveClipboardHistory: (items: any[]) => ipcRenderer.invoke('save-clipboard-history', items),
+    loadClipboardHistory: () => ipcRenderer.invoke('load-clipboard-history'),
+    saveTodos: (todos: any[]) => ipcRenderer.invoke('save-todos', todos),
+    loadTodos: () => ipcRenderer.invoke('load-todos'),
+    saveNotes: (notes: any[]) => ipcRenderer.invoke('save-notes', notes),
+    loadNotes: () => ipcRenderer.invoke('load-notes'),
+    saveSettings: (settings: any) => ipcRenderer.invoke('save-settings', settings),
+    loadSettings: () => ipcRenderer.invoke('load-settings'),
+    savePomodoroTimer: (timer: any) => ipcRenderer.invoke('save-pomodoro-timer', timer),
+    loadPomodoroTimer: () => ipcRenderer.invoke('load-pomodoro-timer'),
 
     // 主题相关
     setTheme: (theme: string) => ipcRenderer.invoke('set-theme', theme),
@@ -47,12 +56,29 @@ export interface ElectronAPI {
     minimizeWindow: () => Promise<void>;
     closeWindow: () => Promise<void>;
     getAppVersion: () => Promise<string>;
+    getDataPath: () => Promise<string>;
     writeToClipboard: (text: string) => Promise<void>;
     writeImageToClipboard: (imageData: string) => Promise<void>;
     readFromClipboard: () => Promise<string>;
     onClipboardChange: (callback: (item: any) => void) => void;
+
+    // 数据持久化 - 保持向后兼容
     saveData: (data: any) => Promise<void>;
-    loadData: () => Promise<any>; setTheme: (theme: string) => Promise<void>;
+    loadData: () => Promise<any>;
+
+    // 新的分类数据持久化 API
+    saveClipboardHistory: (items: any[]) => Promise<void>;
+    loadClipboardHistory: () => Promise<any[]>;
+    saveTodos: (todos: any[]) => Promise<void>;
+    loadTodos: () => Promise<any[]>;
+    saveNotes: (notes: any[]) => Promise<void>;
+    loadNotes: () => Promise<any[]>;
+    saveSettings: (settings: any) => Promise<void>;
+    loadSettings: () => Promise<any>;
+    savePomodoroTimer: (timer: any) => Promise<void>;
+    loadPomodoroTimer: () => Promise<any>;
+
+    setTheme: (theme: string) => Promise<void>;
     getTheme: () => Promise<string>;
     showNotification: (title: string, body: string) => Promise<void>;
     openExternal: (url: string) => Promise<void>;

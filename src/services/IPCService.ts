@@ -49,15 +49,23 @@ export class IPCService extends EventEmitter {
         this.registerHandler('clipboard:get-history', this.handleGetClipboardHistory.bind(this));
         this.registerHandler('clipboard:clear-history', this.handleClearClipboardHistory.bind(this));
         this.registerHandler('clipboard:toggle-pin', this.handleToggleClipboardPin.bind(this));
-        this.registerHandler('clipboard:remove-item', this.handleRemoveClipboardItem.bind(this));
-
-        // 数据存储相关
+        this.registerHandler('clipboard:remove-item', this.handleRemoveClipboardItem.bind(this));        // 数据存储相关
         this.registerHandler('data:save', this.handleSaveData.bind(this));
         this.registerHandler('data:load', this.handleLoadData.bind(this));
         this.registerHandler('data:save-todos', this.handleSaveTodos.bind(this));
         this.registerHandler('data:load-todos', this.handleLoadTodos.bind(this));
         this.registerHandler('data:save-notes', this.handleSaveNotes.bind(this));
-        this.registerHandler('data:load-notes', this.handleLoadNotes.bind(this));
+        this.registerHandler('data:load-notes', this.handleLoadNotes.bind(this));        // 新的分类数据存储处理程序
+        this.registerHandler('save-clipboard-history', this.handleSaveClipboardHistory.bind(this));
+        this.registerHandler('load-clipboard-history', this.handleLoadClipboardHistory.bind(this));
+        this.registerHandler('save-todos', this.handleSaveTodos.bind(this));
+        this.registerHandler('load-todos', this.handleLoadTodos.bind(this));
+        this.registerHandler('save-notes', this.handleSaveNotes.bind(this));
+        this.registerHandler('load-notes', this.handleLoadNotes.bind(this));
+        this.registerHandler('save-settings', this.handleSaveSettings.bind(this));
+        this.registerHandler('load-settings', this.handleLoadSettings.bind(this));
+        this.registerHandler('save-pomodoro-timer', this.handleSavePomodoroTimer.bind(this));
+        this.registerHandler('load-pomodoro-timer', this.handleLoadPomodoroTimer.bind(this));
 
         // 主题相关
         this.registerHandler('theme:get', this.handleGetTheme.bind(this));
@@ -90,9 +98,9 @@ export class IPCService extends EventEmitter {
     /**
      * 设置兼容性别名
      */
-    private setupCompatibilityAliases(): void {
-        // 应用相关
+    private setupCompatibilityAliases(): void {        // 应用相关
         this.registerHandler('get-app-version', this.handleGetAppVersion.bind(this));
+        this.registerHandler('get-data-path', this.handleGetDataPath.bind(this));
         this.registerHandler('get-config', this.handleGetConfig.bind(this));
         this.registerHandler('set-config', this.handleSetConfig.bind(this));
         this.registerHandler('show-notification', this.handleShowNotification.bind(this));
@@ -112,15 +120,12 @@ export class IPCService extends EventEmitter {
         this.registerHandler('get-clipboard-history', this.handleGetClipboardHistory.bind(this));
         this.registerHandler('clear-clipboard-history', this.handleClearClipboardHistory.bind(this));
         this.registerHandler('toggle-clipboard-pin', this.handleToggleClipboardPin.bind(this));
-        this.registerHandler('remove-clipboard-item', this.handleRemoveClipboardItem.bind(this));
-
-        // 数据存储相关
+        this.registerHandler('remove-clipboard-item', this.handleRemoveClipboardItem.bind(this));        // 数据存储相关
         this.registerHandler('save-data', this.handleSaveData.bind(this));
         this.registerHandler('load-data', this.handleLoadData.bind(this));
-        this.registerHandler('save-todos', this.handleSaveTodos.bind(this));
-        this.registerHandler('load-todos', this.handleLoadTodos.bind(this));
-        this.registerHandler('save-notes', this.handleSaveNotes.bind(this));
-        this.registerHandler('load-notes', this.handleLoadNotes.bind(this));
+
+        // 注意：新的分类数据存储处理程序已在 setupHandlers 中注册，这里不需要重复注册
+        // 以下处理程序已在主要设置中注册：save-todos, load-todos, save-notes, load-notes
 
         // 主题相关
         this.registerHandler('get-theme', this.handleGetTheme.bind(this));
@@ -172,11 +177,13 @@ export class IPCService extends EventEmitter {
      */
     public broadcast(channel: string, data?: any): void {
         this.emit('broadcast', { channel, data });
-    }
-
-    // === 应用相关处理程序 ===
+    }    // === 应用相关处理程序 ===
     private async handleGetAppVersion(): Promise<string> {
         return app.getVersion();
+    }
+
+    private async handleGetDataPath(): Promise<string> {
+        return app.getPath('userData');
     }
 
     private async handleGetConfig(): Promise<any> {
@@ -323,6 +330,40 @@ export class IPCService extends EventEmitter {
         return new Promise((resolve) => {
             this.emit('data-load-notes');
             this.once('data-notes-response', resolve);
+        });
+    }
+
+    // === 新的分类数据存储处理程序 ===
+    private async handleSaveClipboardHistory(event: IpcMainInvokeEvent, items: ClipboardItem[]): Promise<void> {
+        this.emit('save-clipboard-history', items);
+    }
+
+    private async handleLoadClipboardHistory(): Promise<ClipboardItem[]> {
+        return new Promise((resolve) => {
+            this.emit('load-clipboard-history');
+            this.once('clipboard-history-response', resolve);
+        });
+    }
+
+    private async handleSaveSettings(event: IpcMainInvokeEvent, settings: any): Promise<void> {
+        this.emit('save-settings', settings);
+    }
+
+    private async handleLoadSettings(): Promise<any> {
+        return new Promise((resolve) => {
+            this.emit('load-settings');
+            this.once('settings-response', resolve);
+        });
+    }
+
+    private async handleSavePomodoroTimer(event: IpcMainInvokeEvent, timer: any): Promise<void> {
+        this.emit('save-pomodoro-timer', timer);
+    }
+
+    private async handleLoadPomodoroTimer(): Promise<any> {
+        return new Promise((resolve) => {
+            this.emit('load-pomodoro-timer');
+            this.once('pomodoro-timer-response', resolve);
         });
     }
 

@@ -52,7 +52,7 @@ const Config_1 = require("./utils/Config");
 class ClipboardListApp {
     constructor() {
         this.isQuiting = false;
-        this.isDev = process.env.NODE_ENV === 'development';
+        this.isDev = process.env.NODE_ENV === 'development' || process.argv.includes('--dev') || !electron_1.app.isPackaged;
         this.initializeApp();
     }
     /**
@@ -63,7 +63,7 @@ class ClipboardListApp {
             // 初始化服务
             this.dataService = new DataService_1.DataService();
             this.ipcService = new IPCService_1.IPCService(); // 初始化管理器
-            this.windowManager = new WindowManager_1.WindowManager(Config_1.config.getWindowConfig());
+            this.windowManager = new WindowManager_1.WindowManager(Config_1.config.getWindowConfig(), this.isDev);
             this.trayManager = new TrayManager_1.TrayManager();
             this.clipboardManager = new ClipboardManager_advanced_1.AdvancedClipboardManager(this.windowManager.getWindow() || undefined);
             this.autoStartManager = new AutoStartManager_1.AutoStartManager();
@@ -194,8 +194,7 @@ class ClipboardListApp {
         });
         this.ipcService.on('set-config', async (configUpdate) => {
             Config_1.config.updateConfig(configUpdate);
-        });
-        // 数据持久化
+        }); // 数据持久化 - 保持向后兼容的统一保存
         this.ipcService.on('data-save', async (data) => {
             await this.dataService.saveData('app-data', data);
         });
@@ -203,6 +202,48 @@ class ClipboardListApp {
             const data = await this.dataService.loadData('app-data');
             this.ipcService.emit('data-load-response', data);
         });
+        // 新的分类数据持久化 IPC 监听器
+        // 剪切板历史数据
+        this.ipcService.on('save-clipboard-history', async (items) => {
+            await this.dataService.saveClipboardHistory(items);
+        });
+        this.ipcService.on('load-clipboard-history', async () => {
+            const items = await this.dataService.loadClipboardHistory();
+            this.ipcService.emit('clipboard-history-response', items);
+        });
+        // 待办事项数据
+        this.ipcService.on('save-todos', async (todos) => {
+            await this.dataService.saveTodos(todos);
+        });
+        this.ipcService.on('load-todos', async () => {
+            const todos = await this.dataService.loadTodos();
+            this.ipcService.emit('todos-response', todos);
+        });
+        // 笔记数据
+        this.ipcService.on('save-notes', async (notes) => {
+            await this.dataService.saveNotes(notes);
+        });
+        this.ipcService.on('load-notes', async () => {
+            const notes = await this.dataService.loadNotes();
+            this.ipcService.emit('notes-response', notes);
+        });
+        // 设置数据
+        this.ipcService.on('save-settings', async (settings) => {
+            await this.dataService.saveData('settings', settings);
+        });
+        this.ipcService.on('load-settings', async () => {
+            const settings = await this.dataService.loadData('settings');
+            this.ipcService.emit('settings-response', settings);
+        });
+        // 番茄时钟数据
+        this.ipcService.on('save-pomodoro-timer', async (timer) => {
+            await this.dataService.saveData('pomodoro-timer', timer);
+        });
+        this.ipcService.on('load-pomodoro-timer', async () => {
+            const timer = await this.dataService.loadData('pomodoro-timer');
+            this.ipcService.emit('pomodoro-timer-response', timer);
+        });
+        // 保持向后兼容的旧API（已过时的单独保存方法）
         this.ipcService.on('data-save-todos', async (todos) => {
             await this.dataService.saveTodos(todos);
         });
@@ -266,23 +307,30 @@ class ClipboardListApp {
             const enabled = this.windowManager.isEdgeTriggerEnabled();
             this.ipcService.emit('edge-trigger-enabled-response', enabled);
         });
-    }
-    /**
+    } /**
      * 创建应用窗口
      */
     async createWindow() {
         const window = this.windowManager.createWindow();
-        // 加载HTML文件
-        const htmlPath = this.isDev
-            ? 'http://localhost:3000'
-            : path.join(__dirname, '../renderer/index.html');
-        if (this.isDev) {
-            await window.loadURL(htmlPath);
-        }
-        else {
+        // 加载HTML文件 - 统一使用本地文件
+        const htmlPath = path.join(__dirname, '../renderer/index.html');
+        try {
             await window.loadFile(htmlPath);
+            Logger_1.logger.info('Main window created and loaded successfully');
         }
-        Logger_1.logger.info('Main window created and loaded');
+        catch (error) {
+            Logger_1.logger.error('Failed to load HTML file:', error);
+            // 尝试备用路径
+            const fallbackPath = path.join(process.cwd(), 'renderer/index.html');
+            try {
+                await window.loadFile(fallbackPath);
+                Logger_1.logger.info('Main window loaded with fallback path');
+            }
+            catch (fallbackError) {
+                Logger_1.logger.error('Failed to load HTML file with fallback path:', fallbackError);
+                throw fallbackError;
+            }
+        }
     } /**
    * 创建系统托盘
    */
