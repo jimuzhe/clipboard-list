@@ -6,6 +6,17 @@ import { autoUpdater } from 'electron-updater';
 import { ClipboardItem } from './types/clipboard';
 import { AutoStartOptions } from './managers/AutoStartManager';
 
+// 单例检查 - 防止多个实例同时运行
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+    // 如果没有获得锁，说明已经有实例在运行，直接退出
+    console.log('❌ 应用已在运行，第二个实例将退出');
+    app.quit();
+} else {
+    console.log('✅ 获得应用锁，正常启动');
+}
+
 // 导入模块化组件
 import { WindowManager } from './managers/WindowManager';
 import { TrayManager } from './managers/TrayManager';
@@ -13,6 +24,7 @@ import { AdvancedClipboardManager } from './managers/ClipboardManager_advanced';
 import { AutoStartManager } from './managers/AutoStartManager';
 import { IPCService } from './services/IPCService';
 import { DataService } from './services/DataService';
+import { UpdateService } from './services/UpdateService';
 import { logger } from './utils/Logger';
 import { config } from './utils/Config';
 
@@ -27,12 +39,55 @@ class ClipboardListApp {
     private clipboardManager!: AdvancedClipboardManager;
     private autoStartManager!: AutoStartManager;
     private ipcService!: IPCService;
+    private updateService!: UpdateService;
     private isQuiting: boolean = false;
     private isDev: boolean; constructor() {
         this.isDev = process.env.NODE_ENV === 'development' || process.argv.includes('--dev') || !app.isPackaged;
 
+        // 设置第二个实例处理
+        this.setupSecondInstanceHandler();
+
         this.initializeApp();
+    }    /**
+     * 设置第二个实例处理
+     */
+    private setupSecondInstanceHandler(): void {
+        // 当有第二个实例尝试运行时的处理
+        app.on('second-instance', (event, commandLine, workingDirectory) => {
+            logger.info('Second instance detected, focusing main window');
+
+            // 如果应用已经运行，聚焦主窗口
+            if (this.windowManager && this.windowManager.getWindow()) {
+                const window = this.windowManager.getWindow();
+
+                if (window && window.isMinimized()) {
+                    window.restore();
+                }
+
+                // 显示并聚焦窗口
+                this.windowManager.show();
+                this.windowManager.focus();
+
+                // 将窗口置于最前
+                if (window) {
+                    window.setAlwaysOnTop(true);
+                    window.setAlwaysOnTop(false);
+                }
+
+                logger.info('Main window focused and brought to front');
+            } else {
+                // 如果窗口还未创建，创建并显示
+                logger.info('Main window not found, creating new window');
+                this.createWindow().then(() => {
+                    this.windowManager.show();
+                    this.windowManager.focus();
+                }).catch((error) => {
+                    logger.error('Failed to create window for second instance:', error);
+                });
+            }
+        });
     }
+
     /**
      * 初始化应用程序
      */
@@ -40,7 +95,8 @@ class ClipboardListApp {
         try {
             // 初始化服务
             this.dataService = new DataService();
-            this.ipcService = new IPCService();            // 初始化管理器
+            this.ipcService = new IPCService();
+            this.updateService = new UpdateService();            // 初始化管理器
             this.windowManager = new WindowManager(config.getWindowConfig(), this.isDev);
             this.trayManager = new TrayManager();
             this.clipboardManager = new AdvancedClipboardManager(this.windowManager.getWindow() || undefined);
@@ -286,7 +342,11 @@ class ClipboardListApp {
             this.autoStartManager.disable();
         });        // 通知
         this.ipcService.on('show-notification', ({ title, body, icon }) => {
-            new Notification({ title, body, icon }).show();
+            // 检查是否启用了桌面通知
+            const currentConfig = config.getConfig();
+            if (currentConfig.clipboard.enableNotification) {
+                new Notification({ title, body, icon }).show();
+            }
         });
 
         // IPC广播处理
@@ -319,6 +379,84 @@ class ClipboardListApp {
         this.ipcService.on('window-get-edge-trigger-enabled', () => {
             const enabled = this.windowManager.isEdgeTriggerEnabled();
             this.ipcService.emit('edge-trigger-enabled-response', enabled);
+        });
+
+        // 更新服务事件监听
+        this.updateService.on('update-available', (updateInfo) => {
+            if (this.windowManager.getWindow()) {
+                this.ipcService.sendToRenderer(
+                    this.windowManager.getWindow()!.webContents,
+                    'update-available',
+                    updateInfo
+                );
+            }
+        });
+
+        this.updateService.on('update-not-available', () => {
+            if (this.windowManager.getWindow()) {
+                this.ipcService.sendToRenderer(
+                    this.windowManager.getWindow()!.webContents,
+                    'update-not-available'
+                );
+            }
+        });
+
+        this.updateService.on('update-error', (error) => {
+            if (this.windowManager.getWindow()) {
+                this.ipcService.sendToRenderer(
+                    this.windowManager.getWindow()!.webContents,
+                    'update-error',
+                    error
+                );
+            }
+        });
+
+        this.updateService.on('download-started', (updateInfo) => {
+            if (this.windowManager.getWindow()) {
+                this.ipcService.sendToRenderer(
+                    this.windowManager.getWindow()!.webContents,
+                    'update-download-started',
+                    updateInfo
+                );
+            }
+        });
+
+        this.updateService.on('download-progress', (progress) => {
+            if (this.windowManager.getWindow()) {
+                this.ipcService.sendToRenderer(
+                    this.windowManager.getWindow()!.webContents,
+                    'update-download-progress',
+                    progress
+                );
+            }
+        });
+
+        this.updateService.on('download-completed', (result) => {
+            if (this.windowManager.getWindow()) {
+                this.ipcService.sendToRenderer(
+                    this.windowManager.getWindow()!.webContents,
+                    'update-download-completed',
+                    result
+                );
+            }
+        });
+
+        this.updateService.on('download-error', (error) => {
+            if (this.windowManager.getWindow()) {
+                this.ipcService.sendToRenderer(
+                    this.windowManager.getWindow()!.webContents,
+                    'update-download-error',
+                    error
+                );
+            }
+        });
+
+        this.updateService.on('install-started', (filePath) => {
+            logger.info('Update installation started:', filePath);
+        });
+
+        this.updateService.on('install-error', (error) => {
+            logger.error('Update installation error:', error);
         });
     }    /**
      * 创建应用窗口

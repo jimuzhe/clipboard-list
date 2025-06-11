@@ -1,0 +1,14 @@
+{
+    "version": "1.1.0",
+    "description": "新版本包含了重要的功能更新和错误修复",
+    "downloadUrl": "https://example.com/download/clipboardlist-1.1.0.exe",
+    "releaseDate": "2025-06-11",
+    "changelog": [
+        "添加了自动更新功能",
+        "优化了剪切板监控性能",
+        "修复了已知的界面显示问题",
+        "增强了数据同步功能"
+    ],
+    "minSupportedVersion": "1.0.0",
+    "isForced": false
+}

@@ -1,7 +1,7 @@
 {
   "name": "quiver-note",
   "productName": "移记",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "移记 - 智能剪切板管理工具，支持屏幕吸附、待办清单、笔记功能",
   "main": "dist/main.js",
   "scripts": {

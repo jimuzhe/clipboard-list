@@ -109,7 +109,7 @@
                     <div class="preset-websites" id="preset-websites">
                         <!-- 预设网站按钮将在这里动态生成 -->
                     </div>
-                    <button id="settings-preview" class="btn btn-secondary" title="管理预设网站">🌐</button>
+                    <button id="settings-preview" class="btn btn-secondary" title="管理预设网站">🔧</button>
                     <button id="refresh-community" class="btn btn-secondary" title="刷新页面">🔄</button>
                     <button id="open-external-community" class="btn btn-secondary" title="在外部浏览器打开">🔗</button>
                 </div>
@@ -186,6 +186,14 @@
                         </label>
                     </div>
                     <div class="setting-item">
+                        <label class="setting-label checkbox-setting">
+                            <span class="setting-icon">🔔</span>
+                            <span class="setting-text">启用桌面通知</span>
+                            <input type="checkbox" id="enable-notifications" checked class="setting-checkbox">
+                            <span class="checkbox-slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
                         <label for="max-clipboard-items" class="setting-label">
                             <span class="setting-icon">📊</span>
                             剪切板历史数量
@@ -219,11 +227,7 @@
                                     <option value="https://www.google.com/">🌏 Google</option>
                                     <option value="custom">✏️ 自定义...</option>
                                 </select>
-                                <button id="manage-preset-websites" class="btn btn-secondary btn-small manage-btn"
-                                    title="管理预设网站">
-                                    <span class="btn-icon">⚙️</span>
-                                    <span>管理</span>
-                                </button>
+
                             </div>
                             <div class="url-input-container">
                                 <label for="community-url" class="url-label">自定义地址：</label>
@@ -263,7 +267,7 @@
                             <span class="setting-icon">📦</span>
                             应用版本
                         </label>
-                        <span class="version-display">v<span id="app-version">1.0.0</span></span>
+                        <span class="version-display">v<span id="app-version">加载中...</span></span>
                     </div>
                     <div class="setting-item">
                         <div class="setting-label">

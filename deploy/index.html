@@ -1,27 +1,29 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>移记 - 智能剪切板管理工具</title>
+    <title>移记 2.0 - 智能剪切板管理工具</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <meta name="description" content="移记 - 智能剪切板管理工具，支持屏幕吸附、待办清单、Markdown笔记。优雅而强大的桌面效率工具。">
-    <meta name="keywords" content="剪切板管理,待办清单,Markdown笔记,桌面工具,效率软件">
-    <meta property="og:title" content="移记 - 智能剪切板管理工具">
-    <meta property="og:description" content="让你的创意从不丢失。支持屏幕吸附、待办清单、Markdown笔记的智能桌面工具。">
+    <meta name="description" content="移记 2.0 - 智能剪切板管理工具，数据持久化本地存储，UI全新升级，一键直达任意网站。高效的桌面效率工具。">
+    <meta name="keywords" content="剪切板管理,数据持久化,本地存储,一键跳转,待办清单,Markdown笔记,桌面工具,效率软件">
+    <meta property="og:title" content="移记 2.0 - 智能剪切板管理工具">
+    <meta property="og:description" content="2.0版本重磅升级：数据持久化本地存储，UI全新升级，一键直达任意网站。让你的创意从不丢失。">
     <meta property="og:image" content="assets/app-icon.png">
     <meta property="og:type" content="website">
-    <link rel="icon" type="image/png" href="assets/app-icon.png">
+    <link rel="icon" type="image/png" href="asserts/app-icon.png">
 </head>
+
 <body>
     <!-- 导航栏 -->
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-brand">
-                <img src="assets/app-icon.png" alt="移记" class="nav-logo">
+                <img src="asserts/app-icon.png" alt="移记" class="nav-logo">
                 <span class="nav-title">移记</span>
             </div>
             <div class="nav-links">
@@ -41,9 +43,9 @@
                     <span class="hero-title-sub">捕捉每一个好点子</span>
                 </h1>
                 <p class="hero-description">
-                    智能剪切板管理工具，让你的创意从不丢失。
-                    支持屏幕吸附、待办清单、Markdown 笔记。
-                    优雅而强大，就像你习惯的那样。
+                    智能剪切板管理工具 2.0 重磅升级！全新UI界面设计，
+                    数据持久化本地存储，一键直达任意网站。
+                    让你的每一次复制都有价值，让效率工作变得更简单。
                 </p>
                 <div class="hero-buttons">
                     <a href="#download" class="btn btn-primary">
@@ -75,20 +77,54 @@
                             </div>
                             <div class="clipboard-items">
                                 <div class="clipboard-item">
+                                    <div class="item-content">https://github.com/electron/electron</div>
+                                    <div class="item-meta">网址链接 · 一键直达 · 1分钟前</div>
+                                </div>
+                                <div class="clipboard-item">
                                     <div class="item-content">console.log('Hello World');</div>
-                                    <div class="item-meta">代码片段 · 2分钟前</div>
+                                    <div class="item-meta">代码片段 · 本地存储 · 3分钟前</div>
                                 </div>
                                 <div class="clipboard-item">
                                     <div class="item-content">设计一个现代化的用户界面</div>
-                                    <div class="item-meta">文本 · 5分钟前</div>
-                                </div>
-                                <div class="clipboard-item">
-                                    <div class="item-content">https://example.com/api/data</div>
-                                    <div class="item-meta">链接 · 10分钟前</div>
+                                    <div class="item-meta">文本内容 · 已保存 · 5分钟前</div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </section> <!-- 2.0 版本亮点 -->
+    <section class="version-highlights">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">✨ 2.0 版本重磅升级</h2>
+                <p class="section-subtitle">三大核心功能，全新体验</p>
+            </div>
+            <div class="highlights-grid">
+                <div class="highlight-card">
+                    <div class="highlight-icon">💾</div>
+                    <h3 class="highlight-title">数据持久化本地存储</h3>
+                    <p class="highlight-description">
+                        全新的本地数据存储系统，所有剪切板历史、
+                        待办清单和笔记内容安全保存在本地，永不丢失。
+                    </p>
+                </div>
+                <div class="highlight-card">
+                    <div class="highlight-icon">🎨</div>
+                    <h3 class="highlight-title">UI 界面全新升级</h3>
+                    <p class="highlight-description">
+                        采用现代化设计语言，毛玻璃效果和流畅动画，
+                        界面更美观，交互更自然，使用更舒适。
+                    </p>
+                </div>
+                <div class="highlight-card">
+                    <div class="highlight-icon">🌐</div>
+                    <h3 class="highlight-title">一键直达任意网站</h3>
+                    <p class="highlight-description">
+                        智能识别网址链接，支持一键快速跳转，
+                        让你的工作流程更加高效便捷。
+                    </p>
                 </div>
             </div>
         </div>
@@ -99,7 +135,7 @@
         <div class="container">
             <div class="section-header">
                 <h2 class="section-title">强大功能，简单易用</h2>
-                <p class="section-subtitle">让每一个功能都恰到好处</p>
+                <p class="section-subtitle">2.0 版本全新升级，让每一个功能都恰到好处</p>
             </div>
             <div class="features-grid">
                 <div class="feature-card">
@@ -134,8 +170,8 @@
                     </div>
                     <h3 class="feature-title">智能剪切板</h3>
                     <p class="feature-description">
-                        自动识别代码片段，支持内容修改、
-                        一键复制和置顶管理。
+                        自动捕获剪切板内容，智能识别代码片段、链接和文本，
+                        支持一键复制、置顶管理和本地持久化存储。
                     </p>
                 </div>
                 <div class="feature-card">
@@ -146,8 +182,8 @@
                     </div>
                     <h3 class="feature-title">待办清单</h3>
                     <p class="feature-description">
-                        支持优先级设置、拖拽排序、
-                        状态筛选，还有番茄时钟助力专注。
+                        高效的任务管理系统，支持优先级设置、拖拽排序、
+                        状态筛选，所有数据本地存储，安全可靠。
                     </p>
                 </div>
                 <div class="feature-card">
@@ -158,22 +194,23 @@
                     </div>
                     <h3 class="feature-title">Markdown 笔记</h3>
                     <p class="feature-description">
-                        实时预览，完整语法支持，
-                        让你的想法更有条理。
+                        实时预览，完整语法支持，本地文件存储，
+                        让你的想法更有条理，数据永不丢失。
                     </p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
                         <div class="icon-wrapper">
-                            <span class="icon">🎨</span>
+                            <span class="icon">🌐</span>
                         </div>
                     </div>
-                    <h3 class="feature-title">现代设计</h3>
+                    <h3 class="feature-title">一键直达任意网站</h3>
                     <p class="feature-description">
-                        毛玻璃效果，可切换主题，
-                        每一个细节都精心雕琢。
+                        智能识别剪切板中的网址链接，
+                        支持一键快速跳转，让浏览更高效。
                     </p>
                 </div>
+
             </div>
         </div>
     </section>
@@ -234,20 +271,17 @@
     <section id="download" class="download">
         <div class="container">
             <div class="download-content">
-                <h2 class="download-title">现在就开始使用</h2>
+                <h2 class="download-title">现在就体验 2.0 版本</h2>
                 <p class="download-description">
-                    适用于 Windows 10/11，完全免费，开源可信赖。
+                    全新设计，更强性能。适用于 Windows 10/11，完全免费，开源可信赖。
                 </p>
                 <div class="download-buttons">
-                    <a href="https://github.com/your-username/clipboard-list/releases/latest/download/移记-Setup-1.0.0.exe" 
-                       class="btn btn-download" 
-                       download="移记-Setup-1.0.0.exe">
+                    <a href="https://explain.name666.top/downloads/移记-Setup-2.0.0.exe" class="btn btn-download"
+                        download="移记-Setup-2.0.0.exe">
                         <span class="btn-text">下载 Windows 版</span>
-                        <span class="btn-subtitle">v1.0.0 · 免费</span>
+                        <span class="btn-subtitle">v2.0.0 · 免费</span>
                     </a>
-                    <a href="https://github.com/your-username/clipboard-list" 
-                       class="btn btn-secondary"
-                       target="_blank">
+                    <a href="https://github.com/your-username/clipboard-list" class="btn btn-secondary" target="_blank">
                         <span>GitHub 源码</span>
                         <span>🌟</span>
                     </a>
@@ -255,11 +289,15 @@
                 <div class="download-info">
                     <div class="info-item">
                         <span class="info-label">大小</span>
-                        <span class="info-value">~50MB</span>
+                        <span class="info-value">~45MB</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">系统</span>
                         <span class="info-value">Windows 10+</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">版本</span>
+                        <span class="info-value">v2.0.0</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">许可</span>
@@ -275,7 +313,7 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-brand">
-                    <img src="assets/app-icon.png" alt="移记" class="footer-logo">
+                    <img src="asserts/app-icon.png" alt="移记" class="footer-logo">
                     <span class="footer-title">移记</span>
                 </div>
                 <div class="footer-text">
@@ -293,4 +331,5 @@
 
     <script src="script.js"></script>
 </body>
+
 </html>

@@ -46,5 +46,32 @@ electron_1.contextBridge.exposeInMainWorld('electronAPI', {
     openDevTools: () => electron_1.ipcRenderer.invoke('open-devtools'),
     closeDevTools: () => electron_1.ipcRenderer.invoke('close-devtools'),
     toggleDevTools: () => electron_1.ipcRenderer.invoke('toggle-devtools'),
+    // 更新相关
+    checkForUpdates: () => electron_1.ipcRenderer.invoke('update:check'),
+    downloadUpdate: (updateInfo) => electron_1.ipcRenderer.invoke('update:download', updateInfo),
+    installUpdate: (filePath) => electron_1.ipcRenderer.invoke('update:install', filePath),
+    getCurrentVersion: () => electron_1.ipcRenderer.invoke('update:get-current-version'),
+    // 更新事件监听
+    onUpdateAvailable: (callback) => {
+        electron_1.ipcRenderer.on('update-available', (_, updateInfo) => callback(updateInfo));
+    },
+    onUpdateNotAvailable: (callback) => {
+        electron_1.ipcRenderer.on('update-not-available', () => callback());
+    },
+    onUpdateError: (callback) => {
+        electron_1.ipcRenderer.on('update-error', (_, error) => callback(error));
+    },
+    onUpdateDownloadStarted: (callback) => {
+        electron_1.ipcRenderer.on('update-download-started', (_, updateInfo) => callback(updateInfo));
+    },
+    onUpdateDownloadProgress: (callback) => {
+        electron_1.ipcRenderer.on('update-download-progress', (_, progress) => callback(progress));
+    },
+    onUpdateDownloadCompleted: (callback) => {
+        electron_1.ipcRenderer.on('update-download-completed', (_, result) => callback(result));
+    },
+    onUpdateDownloadError: (callback) => {
+        electron_1.ipcRenderer.on('update-download-error', (_, error) => callback(error));
+    },
 });
 //# sourceMappingURL=preload.js.map

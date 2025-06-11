@@ -49,6 +49,35 @@ contextBridge.exposeInMainWorld('electronAPI', {
     openDevTools: () => ipcRenderer.invoke('open-devtools'),
     closeDevTools: () => ipcRenderer.invoke('close-devtools'),
     toggleDevTools: () => ipcRenderer.invoke('toggle-devtools'),
+
+    // 更新相关
+    checkForUpdates: () => ipcRenderer.invoke('update:check'),
+    downloadUpdate: (updateInfo: any) => ipcRenderer.invoke('update:download', updateInfo),
+    installUpdate: (filePath: string) => ipcRenderer.invoke('update:install', filePath),
+    getCurrentVersion: () => ipcRenderer.invoke('update:get-current-version'),
+
+    // 更新事件监听
+    onUpdateAvailable: (callback: (updateInfo: any) => void) => {
+        ipcRenderer.on('update-available', (_, updateInfo) => callback(updateInfo));
+    },
+    onUpdateNotAvailable: (callback: () => void) => {
+        ipcRenderer.on('update-not-available', () => callback());
+    },
+    onUpdateError: (callback: (error: string) => void) => {
+        ipcRenderer.on('update-error', (_, error) => callback(error));
+    },
+    onUpdateDownloadStarted: (callback: (updateInfo: any) => void) => {
+        ipcRenderer.on('update-download-started', (_, updateInfo) => callback(updateInfo));
+    },
+    onUpdateDownloadProgress: (callback: (progress: any) => void) => {
+        ipcRenderer.on('update-download-progress', (_, progress) => callback(progress));
+    },
+    onUpdateDownloadCompleted: (callback: (result: any) => void) => {
+        ipcRenderer.on('update-download-completed', (_, result) => callback(result));
+    },
+    onUpdateDownloadError: (callback: (error: string) => void) => {
+        ipcRenderer.on('update-download-error', (_, error) => callback(error));
+    },
 });
 
 // 类型声明
@@ -90,6 +119,21 @@ export interface ElectronAPI {
     openDevTools: () => Promise<void>;
     closeDevTools: () => Promise<void>;
     toggleDevTools: () => Promise<void>;
+
+    // 更新相关
+    checkForUpdates: () => Promise<any>;
+    downloadUpdate: (updateInfo: any) => Promise<any>;
+    installUpdate: (filePath: string) => Promise<void>;
+    getCurrentVersion: () => Promise<string>;
+
+    // 更新事件监听
+    onUpdateAvailable: (callback: (updateInfo: any) => void) => void;
+    onUpdateNotAvailable: (callback: () => void) => void;
+    onUpdateError: (callback: (error: string) => void) => void;
+    onUpdateDownloadStarted: (callback: (updateInfo: any) => void) => void;
+    onUpdateDownloadProgress: (callback: (progress: any) => void) => void;
+    onUpdateDownloadCompleted: (callback: (result: any) => void) => void;
+    onUpdateDownloadError: (callback: (error: string) => void) => void;
 }
 
 declare global {

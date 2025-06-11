@@ -11,6 +11,7 @@ class AppState {
             autoStart: true,
             clipboardMonitor: true,
             clearClipboardOnRestart: true,
+            enableNotifications: true,
             maxClipboardItems: 100,
             communityUrl: 'http://8.130.41.186:3000/',
             online: {
@@ -802,8 +803,12 @@ class ClipboardManager {
         div.textContent = text;
         return div.innerHTML;
     }
-
     showNotification(title, body) {
+        // 检查是否启用了桌面通知
+        if (!this.appState.settings.enableNotifications) {
+            return;
+        }
+
         if (window.electronAPI.showNotification) {
             window.electronAPI.showNotification(title, body);
         }
@@ -1451,7 +1456,7 @@ class TodoManager {
             // 设置当前任务
             const title = modal.querySelector('.modal-header h3');
             if (title) {
-                title.textContent = `🍅 ${todo.title}`;
+                title.textContent = `${todo.title}`;
             }
 
             // 重置到初始状态
@@ -1483,8 +1488,12 @@ class TodoManager {
         div.textContent = text;
         return div.innerHTML;
     }
-
     showNotification(title, body) {
+        // 检查是否启用了桌面通知
+        if (!this.appState.settings.enableNotifications) {
+            return;
+        }
+
         if (window.electronAPI && window.electronAPI.showNotification) {
             window.electronAPI.showNotification(title, body);
         }
@@ -1524,15 +1533,15 @@ class PomodoroManager {
 
         document.getElementById('pomodoro-reset').addEventListener('click', () => {
             this.reset();
-        });
-
-        // 模态框关闭
-        const closeBtn = document.querySelector('#pomodoro-modal.modal-close');
+        }); // 模态框关闭
+        const closeBtn = document.querySelector('#pomodoro-modal .modal-close');
         if (closeBtn) {
             closeBtn.addEventListener('click', () => {
                 this.closeModal();
             });
-        } // 高级设置切换
+        }
+
+        // 高级设置切换
         const advancedToggle = document.getElementById('advanced-toggle');
         if (advancedToggle) {
             advancedToggle.addEventListener('change', (e) => {
@@ -1550,8 +1559,10 @@ class PomodoroManager {
             });
         } // 输入按钮事件
         this.setupInputButtons();
-    }
 
+        // 设置输入框变化事件监听器
+        this.setupSettingsInputListeners();
+    }
     setupInputButtons() {
         // 为所有输入按钮添加事件监听
         document.querySelectorAll('.input-btn').forEach(btn => {
@@ -1577,6 +1588,84 @@ class PomodoroManager {
                 }
             });
         });
+    }
+
+    setupSettingsInputListeners() {
+        // 工作时长设置
+        const workDurationInput = document.getElementById('work-duration');
+        if (workDurationInput) {
+            workDurationInput.addEventListener('change', (e) => {
+                const value = parseInt(e.target.value);
+                if (value >= 1 && value <= 60) {
+                    this.appState.pomodoroTimer.workDuration = value;
+                    // 如果当前是工作时间且未运行，更新当前时间
+                    if (this.appState.pomodoroTimer.isWork && !this.appState.pomodoroTimer.isRunning) {
+                        this.appState.pomodoroTimer.currentTime = value * 60;
+                        this.updateDisplay();
+                    }
+                    this.saveSettings();
+                }
+            });
+        }
+
+        // 休息时长设置
+        const breakDurationInput = document.getElementById('break-duration');
+        if (breakDurationInput) {
+            breakDurationInput.addEventListener('change', (e) => {
+                const value = parseInt(e.target.value);
+                if (value >= 1 && value <= 30) {
+                    this.appState.pomodoroTimer.breakDuration = value;
+                    // 如果当前是休息时间且未运行，更新当前时间
+                    if (!this.appState.pomodoroTimer.isWork && !this.appState.pomodoroTimer.isRunning) {
+                        this.appState.pomodoroTimer.currentTime = value * 60;
+                        this.updateDisplay();
+                    }
+                    this.saveSettings();
+                }
+            });
+        }
+
+        // 长休息时长设置
+        const longBreakDurationInput = document.getElementById('long-break-duration');
+        if (longBreakDurationInput) {
+            longBreakDurationInput.addEventListener('change', (e) => {
+                const value = parseInt(e.target.value);
+                if (value >= 5 && value <= 60) {
+                    this.appState.pomodoroTimer.longBreakDuration = value;
+                    this.saveSettings();
+                }
+            });
+        }
+
+        // 长休息间隔设置
+        const sessionsUntilLongBreakInput = document.getElementById('sessions-until-long-break');
+        if (sessionsUntilLongBreakInput) {
+            sessionsUntilLongBreakInput.addEventListener('change', (e) => {
+                const value = parseInt(e.target.value);
+                if (value >= 2 && value <= 8) {
+                    this.appState.pomodoroTimer.sessionsUntilLongBreak = value;
+                    this.saveSettings();
+                }
+            });
+        }
+
+        // 自动开始休息设置
+        const autoStartBreaksInput = document.getElementById('auto-start-breaks');
+        if (autoStartBreaksInput) {
+            autoStartBreaksInput.addEventListener('change', (e) => {
+                this.appState.pomodoroTimer.autoStartBreaks = e.target.checked;
+                this.saveSettings();
+            });
+        }
+
+        // 声音通知设置
+        const soundNotificationsInput = document.getElementById('sound-notifications');
+        if (soundNotificationsInput) {
+            soundNotificationsInput.addEventListener('change', (e) => {
+                this.appState.pomodoroTimer.soundNotifications = e.target.checked;
+                this.saveSettings();
+            });
+        }
     }
     start() {
         this.appState.pomodoroTimer.isRunning = true;
@@ -1758,10 +1847,9 @@ class PomodoroManager {
             soundNotifications.checked = timer.soundNotifications !== false;
         }
     }
-
     saveSettings() {
-        // 保存设置到appState
-        this.appState.saveData();
+        // 保存番茄时钟设置到appState
+        this.appState.savePomodoroData();
     }
 
     updateModalState() {
@@ -1883,8 +1971,12 @@ class PomodoroManager {
             }, 300);
         }
     }
-
     showNotification(title, body) {
+        // 检查是否启用了桌面通知
+        if (!this.appState.settings.enableNotifications) {
+            return;
+        }
+
         if (window.electronAPI && window.electronAPI.showNotification) {
             window.electronAPI.showNotification(title, body);
         } else {
@@ -2892,9 +2984,7 @@ class NotesManager {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
-    }
-
-    // 显示自定义输入对话框
+    } // 显示自定义输入对话框
     showInputDialog(title, message, defaultValue = '') {
         return new Promise((resolve) => {
             // 创建模态对话框
@@ -2968,6 +3058,18 @@ class NotesManager {
                 }
             });
         });
+    }
+
+    // 显示通知
+    showNotification(title, body) {
+        // 检查是否启用了桌面通知
+        if (!this.appState.settings.enableNotifications) {
+            return;
+        }
+
+        if (window.electronAPI && window.electronAPI.showNotification) {
+            window.electronAPI.showNotification(title, body);
+        }
     }
 }
 
@@ -3080,6 +3182,9 @@ class App {
         }); // 设置项监听
         this.setupSettingsListeners(); // 社区面板监听器
         this.setupCommunityListeners();
+
+        // 设置更新事件监听器
+        this.setupUpdateListeners();
     }
 
     setupSettingsListeners() {
@@ -3135,6 +3240,16 @@ class App {
             });
         }
 
+        // 启用桌面通知
+        const enableNotifications = document.getElementById('enable-notifications');
+        if (enableNotifications) {
+            enableNotifications.addEventListener('change', (e) => {
+                this.state.settings.enableNotifications = e.target.checked;
+                this.state.saveData();
+                console.log('设置桌面通知:', e.target.checked);
+            });
+        }
+
         // URL预设选择器
         const urlPreset = document.getElementById('url-preset');
         if (urlPreset) {
@@ -3187,13 +3302,20 @@ class App {
                     console.log('社区URL已更新为:', newUrl);
                 }
             });
-        }
-
-        // 管理预设网站按钮
+        } // 管理预设网站按钮
         const managePresetWebsites = document.getElementById('manage-preset-websites');
         if (managePresetWebsites) {
             managePresetWebsites.addEventListener('click', () => {
                 this.showPresetWebsitesManager();
+            });
+        }
+
+        // 检查更新按钮
+        const checkUpdatesBtn = document.getElementById('check-updates');
+        if (checkUpdatesBtn) {
+            checkUpdatesBtn.addEventListener('click', () => {
+                console.log('检查更新按钮被点击');
+                this.checkUpdates();
             });
         }
     }
@@ -3222,19 +3344,123 @@ class App {
             });
         }
     }
+
+    setupUpdateListeners() {
+        // 设置更新事件监听器
+        if (window.electronAPI) {
+            // 监听更新可用事件
+            window.electronAPI.onUpdateAvailable((updateInfo) => {
+                console.log('收到更新可用事件:', updateInfo);
+                this.showUpdateAvailableDialog(updateInfo);
+            });
+
+            // 监听下载进度事件
+            window.electronAPI.onUpdateDownloadProgress((progress) => {
+                console.log('更新下载进度:', progress);
+                this.updateDownloadProgress(progress);
+            }); // 监听下载完成事件
+            window.electronAPI.onUpdateDownloadCompleted((info) => {
+                console.log('更新下载完成:', info);
+                this.showUpdateDownloadComplete(info);
+            }); // 监听更新错误事件（包括检查更新错误）
+            window.electronAPI.onUpdateError((error) => {
+                console.error('更新错误:', error);
+                this.showUpdateError(error);
+            });
+
+            console.log('✅ 更新事件监听器设置完成');
+        } else {
+            console.warn('⚠️ electronAPI 不可用，无法设置更新事件监听器');
+        }
+    }
+
+    // 更新下载进度
+    updateDownloadProgress(progress) {
+        const modal = document.querySelector('.modal-overlay');
+        if (!modal) return;
+
+        const progressFill = modal.querySelector('#progress-fill');
+        const progressText = modal.querySelector('#progress-text');
+        const progressPercent = modal.querySelector('#progress-percent');
+
+        if (progressFill) {
+            progressFill.style.width = `${progress.percent}%`;
+        }
+
+        if (progressText) {
+            const speed = progress.bytesPerSecond ? this.formatBytes(progress.bytesPerSecond) + '/s' : '';
+            progressText.textContent = `正在下载更新... ${speed}`;
+        }
+
+        if (progressPercent) {
+            progressPercent.textContent = `${Math.round(progress.percent)}%`;
+        }
+    }
+
+    // 显示更新下载完成
+    showUpdateDownloadComplete(info) {
+        this.createNotification('更新下载完成', '更新文件已下载完成，准备安装', 'success');
+
+        const modal = document.querySelector('.modal-overlay');
+        if (modal) {
+            this.showInstallDialog(info.filePath, modal);
+        }
+    }
+
+    // 显示更新错误
+    showUpdateError(error) {
+        this.createNotification('更新失败', error.message || '更新过程中发生错误', 'error');
+
+        const modal = document.querySelector('.modal-overlay');
+        if (modal) {
+            this.handleDownloadError(error.message || '更新失败', modal);
+        }
+    }
+
+    // 显示检查更新错误
+    showUpdateCheckError(error) {
+        this.createNotification('检查更新失败', error.message || '无法检查更新', 'warning');
+    }
+
+    // 格式化字节数
+    formatBytes(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
     async initializeUI() {
         // 设置版本号
         try {
-            const version = await window.electronAPI.getAppVersion();
-            document.getElementById('app-version').textContent = version;
+            console.log('开始获取应用版本...');
+            const response = await window.electronAPI.getAppVersion();
+            console.log('获取到的版本响应:', response);
+
+            // 处理包装的响应格式
+            const version = response.success ? response.data : response;
+            console.log('解析后的版本:', version);
+
+            const versionElement = document.getElementById('app-version');
+            if (versionElement) {
+                versionElement.textContent = version;
+                console.log('版本号已更新到UI:', version);
+            } else {
+                console.error('找不到版本显示元素 #app-version');
+            }
         } catch (error) {
             console.error('Failed to get app version:', error);
+            const versionElement = document.getElementById('app-version');
+            if (versionElement) {
+                versionElement.textContent = '未知版本';
+            }
         } // 应用设置
         document.getElementById('theme-select').value = this.state.settings.theme;
         document.getElementById('glass-effect').checked = this.state.settings.glassEffect;
         document.getElementById('auto-start').checked = this.state.settings.autoStart;
         document.getElementById('clipboard-monitor').checked = this.state.settings.clipboardMonitor;
         document.getElementById('clear-clipboard-on-restart').checked = this.state.settings.clearClipboardOnRestart;
+        document.getElementById('enable-notifications').checked = this.state.settings.enableNotifications;
         document.getElementById('max-clipboard-items').value = this.state.settings.maxClipboardItems; // 设置社区URL
         const communityUrlInput = document.getElementById('community-url');
         if (communityUrlInput && this.state.settings.communityUrl) {
@@ -3490,8 +3716,214 @@ class App {
         });
     }
     async checkUpdates() {
-        // 这里可以实现更新检查逻辑
-        alert('当前已是最新版本！');
+        try {
+            // 显示检查中状态
+            this.showUpdateCheckingStatus();
+
+            const result = await window.electronAPI.checkForUpdates();
+            console.log('检查更新结果:', result);
+
+            if (result.hasUpdate) {
+                // 有更新可用
+                this.showUpdateAvailableDialog(result.updateInfo);
+            } else if (result.error) {
+                // 检查更新时出错
+                this.showUpdateErrorDialog(result.error);
+            } else {
+                // 已是最新版本
+                this.showNoUpdateDialog();
+            }
+        } catch (error) {
+            console.error('检查更新失败:', error);
+            this.showUpdateErrorDialog('检查更新时发生错误');
+        }
+    }
+
+    // 显示检查更新中状态
+    showUpdateCheckingStatus() {
+        const notification = this.createNotification('检查更新', '正在检查更新...', 'info');
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+
+    // 显示有更新可用的对话框
+    showUpdateAvailableDialog(updateInfo) {
+        const modal = document.createElement('div');
+        modal.className = 'modal update-modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">
+                        <span class="modal-icon">🎉</span>
+                        <h3>发现新版本</h3>
+                    </div>
+                    <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="update-info">
+                        <div class="version-info">
+                            <p><strong>当前版本:</strong> <span id="current-version">加载中...</span></p>
+                            <p><strong>最新版本:</strong> <span class="highlight">${updateInfo.version}</span></p>
+                            <p><strong>发布日期:</strong> ${new Date(updateInfo.releaseDate).toLocaleDateString('zh-CN')}</p>
+                        </div>
+                        
+                        <div class="update-description">
+                            <h4>更新说明</h4>
+                            <p>${updateInfo.description}</p>
+                        </div>
+                        
+                        <div class="changelog">
+                            <h4>更新内容</h4>
+                            <ul>
+                                ${updateInfo.changelog.map(item => `<li>${item}</li>`).join('')}
+                            </ul>
+                        </div>
+                        
+                        ${updateInfo.isForced ? `
+                            <div class="forced-update-notice">
+                                <span class="warning-icon">⚠️</span>
+                                <span>这是一个重要更新，建议立即安装</span>
+                            </div>
+                        ` : ''}
+                        
+                        <div class="download-progress" id="download-progress" style="display: none;">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progress-fill"></div>
+                            </div>
+                            <div class="progress-text" id="progress-text">准备下载...</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">稍后更新</button>
+                    <button class="btn btn-primary" id="download-update-btn">立即下载</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // 获取并显示当前版本
+        window.electronAPI.getCurrentVersion().then(version => {
+            const currentVersionEl = document.getElementById('current-version');
+            if (currentVersionEl) {
+                currentVersionEl.textContent = version;
+            }
+        });
+
+        // 绑定下载按钮事件
+        const downloadBtn = modal.querySelector('#download-update-btn');
+        downloadBtn.addEventListener('click', () => {
+            this.startUpdateDownload(updateInfo, modal);
+        });
+    }
+
+    // 显示无更新对话框
+    showNoUpdateDialog() {
+        const notification = this.createNotification(
+            '检查更新',
+            '当前已是最新版本！',
+            'success'
+        );
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+
+    // 显示更新错误对话框
+    showUpdateErrorDialog(errorMessage) {
+        const notification = this.createNotification(
+            '检查更新失败',
+            errorMessage,
+            'error'
+        );
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.remove();
+        }, 5000);
+    }
+
+    // 开始下载更新
+    async startUpdateDownload(updateInfo, modal) {
+        const downloadBtn = modal.querySelector('#download-update-btn');
+        const progressContainer = modal.querySelector('#download-progress');
+        const progressFill = modal.querySelector('#progress-fill');
+        const progressText = modal.querySelector('#progress-text');
+
+        // 显示下载进度
+        downloadBtn.style.display = 'none';
+        progressContainer.style.display = 'block';
+
+        try {
+            const result = await window.electronAPI.downloadUpdate(updateInfo);
+
+            if (result.success) {
+                progressText.textContent = '下载完成！';
+                progressFill.style.width = '100%';
+
+                // 显示安装按钮
+                setTimeout(() => {
+                    this.showInstallDialog(result.data.filePath, modal);
+                }, 1000);
+            } else {
+                this.handleDownloadError(result.error, modal);
+            }
+        } catch (error) {
+            this.handleDownloadError(error.message || '下载失败', modal);
+        }
+    }
+
+    // 显示安装对话框
+    showInstallDialog(filePath, modal) {
+        const modalFooter = modal.querySelector('.modal-footer');
+        modalFooter.innerHTML = `
+            <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">稍后安装</button>
+            <button class="btn btn-primary" id="install-update-btn">立即安装</button>
+        `;
+
+        const installBtn = modal.querySelector('#install-update-btn');
+        installBtn.addEventListener('click', async () => {
+            try {
+                await window.electronAPI.installUpdate(filePath);
+                modal.remove();
+            } catch (error) {
+                console.error('安装更新失败:', error);
+                this.showUpdateErrorDialog('安装更新失败: ' + error.message);
+            }
+        });
+    }
+
+    // 处理下载错误
+    handleDownloadError(errorMessage, modal) {
+        const progressText = modal.querySelector('#progress-text');
+        const downloadBtn = modal.querySelector('#download-update-btn');
+        const progressContainer = modal.querySelector('#download-progress');
+
+        progressText.textContent = '下载失败: ' + errorMessage;
+        progressContainer.style.display = 'none';
+        downloadBtn.style.display = 'block';
+        downloadBtn.textContent = '重试下载';
+    }
+
+    // 创建通知元素
+    createNotification(title, message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.innerHTML = `
+            <div class="notification-content">
+                <div class="notification-title">${title}</div>
+                <div class="notification-message">${message}</div>
+            </div>
+            <button class="notification-close" onclick="this.parentElement.remove()">&times;</button>
+        `;
+
+        return notification;
     }
 
     // URL验证方法
@@ -3563,9 +3995,7 @@ class App {
         const customOption = document.createElement('option');
         customOption.value = 'custom';
         customOption.textContent = '✏️ 自定义...';
-        urlPresetSelect.appendChild(customOption);
-
-        // 设置当前选中的值
+        urlPresetSelect.appendChild(customOption); // 设置当前选中的值
         const currentUrl = this.state.settings.online ? .currentUrl || this.state.settings.communityUrl;
         if (currentUrl) {
             // 查找匹配的预设
@@ -4071,5 +4501,4 @@ window.addEventListener('unhandledrejection', (event) => {
     console.error('未处理的Promise rejection:', event.reason);
 
     // 防止错误传播到控制台（可选）
-    event.preventDefault();
-});
+    even

@@ -32,6 +32,17 @@ export interface ElectronAPI {
     openDevTools: () => Promise<void>;
     closeDevTools: () => Promise<void>;
     toggleDevTools: () => Promise<void>;
+    checkForUpdates: () => Promise<any>;
+    downloadUpdate: (updateInfo: any) => Promise<any>;
+    installUpdate: (filePath: string) => Promise<void>;
+    getCurrentVersion: () => Promise<string>;
+    onUpdateAvailable: (callback: (updateInfo: any) => void) => void;
+    onUpdateNotAvailable: (callback: () => void) => void;
+    onUpdateError: (callback: (error: string) => void) => void;
+    onUpdateDownloadStarted: (callback: (updateInfo: any) => void) => void;
+    onUpdateDownloadProgress: (callback: (progress: any) => void) => void;
+    onUpdateDownloadCompleted: (callback: (result: any) => void) => void;
+    onUpdateDownloadError: (callback: (error: string) => void) => void;
 }
 declare global {
     interface Window {
