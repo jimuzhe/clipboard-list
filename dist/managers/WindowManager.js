@@ -135,20 +135,23 @@ class WindowManager extends events_1.EventEmitter {
           window.electronAPI?.windowEvents?.mouseLeave();
         });
       `);
-        });
-        // 开发者工具快捷键支持
+        }); // 开发者工具快捷键支持（仅开发模式）
         this.window.webContents.on('before-input-event', (event, input) => {
-            // F12 或 Ctrl+Shift+I 打开/关闭开发者工具
-            if (input.key === 'F12' ||
-                (input.control && input.shift && input.key === 'I')) {
+            // 只在开发模式下允许 F12 或 Ctrl+Shift+I 打开/关闭开发者工具
+            if ((input.key === 'F12' || (input.control && input.shift && input.key === 'I')) &&
+                process.env.NODE_ENV === 'development') {
                 if (this.window?.webContents.isDevToolsOpened()) {
                     this.window.webContents.closeDevTools();
-                    Logger_1.logger.info('DevTools closed');
+                    Logger_1.logger.info('DevTools closed (development mode)');
                 }
                 else {
                     this.window?.webContents.openDevTools({ mode: 'detach' });
-                    Logger_1.logger.info('DevTools opened');
+                    Logger_1.logger.info('DevTools opened (development mode)');
                 }
+            }
+            else if ((input.key === 'F12' || (input.control && input.shift && input.key === 'I')) &&
+                process.env.NODE_ENV !== 'development') {
+                Logger_1.logger.warn('DevTools access denied - not in development mode');
             }
         });
     }
@@ -690,29 +693,40 @@ class WindowManager extends events_1.EventEmitter {
             }, 1000); // 每秒检查一次
             Logger_1.logger.info('Always on top enforcement started');
         }
-    }
-    /**
-     * 打开开发者工具
+    } /**
+     * 打开开发者工具（仅开发模式）
      */
     openDevTools() {
+        if (process.env.NODE_ENV !== 'development') {
+            Logger_1.logger.warn('DevTools access denied - not in development mode');
+            return;
+        }
         if (this.window && !this.window.webContents.isDevToolsOpened()) {
             this.window.webContents.openDevTools({ mode: 'detach' });
-            Logger_1.logger.info('DevTools opened manually');
+            Logger_1.logger.info('DevTools opened manually (development mode)');
         }
     }
     /**
-     * 关闭开发者工具
+     * 关闭开发者工具（仅开发模式）
      */
     closeDevTools() {
+        if (process.env.NODE_ENV !== 'development') {
+            Logger_1.logger.warn('DevTools access denied - not in development mode');
+            return;
+        }
         if (this.window && this.window.webContents.isDevToolsOpened()) {
             this.window.webContents.closeDevTools();
-            Logger_1.logger.info('DevTools closed manually');
+            Logger_1.logger.info('DevTools closed manually (development mode)');
         }
     }
     /**
-     * 切换开发者工具状态
+     * 切换开发者工具状态（仅开发模式）
      */
     toggleDevTools() {
+        if (process.env.NODE_ENV !== 'development') {
+            Logger_1.logger.warn('DevTools access denied - not in development mode');
+            return;
+        }
         if (this.window) {
             if (this.window.webContents.isDevToolsOpened()) {
                 this.closeDevTools();

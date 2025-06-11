@@ -2176,8 +2176,8 @@ class NotesManager {
         console.log('🔍 检查 API 可用性:');
         console.log('  - window.electronAPI:', !!window.electronAPI);
         console.log('  - window.api:', !!window.api);
-        console.log('  - window.api?.fileSystem:', !!window.api ? .fileSystem);
-        console.log('  - window.api?.fileSystem?.exists:', !!window.api ? .fileSystem ? .exists);
+        console.log('  - window.api?.fileSystem:', !!window.api ?.fileSystem);
+        console.log('  - window.api?.fileSystem?.exists:', !!window.api ?.fileSystem ?.exists);
 
         try {
             // 优先在工作区创建文件，如果没有工作区则创建内存笔记
@@ -2187,14 +2187,14 @@ class NotesManager {
 
                 // 验证工作区路径是否有效
                 try {
-                    if (window.api ? .fileSystem ? .exists) {
+                    if (window.api ?.fileSystem ?.exists) {
                         console.log('🔍 验证工作区目录是否存在...');
                         const workspaceExists = await window.api.fileSystem.exists(this.workspacePath);
                         console.log('📁 工作区目录是否存在:', workspaceExists);
 
                         if (!workspaceExists) {
                             console.warn('⚠️  工作区目录不存在，尝试创建目录');
-                            if (window.api ? .fileSystem ? .createDirectory) {
+                            if (window.api ?.fileSystem ?.createDirectory) {
                                 const createResult = await window.api.fileSystem.createDirectory(this.workspacePath);
                                 console.log('📁 创建目录结果:', createResult);
                             } else {
@@ -2298,7 +2298,7 @@ class NotesManager {
             console.log('🔧 准备调用 window.electronAPI.writeFile API');
             console.log('🔍 检查 API 可用性:');
             console.log('  - window.electronAPI:', !!window.electronAPI);
-            console.log('  - window.electronAPI.writeFile:', !!window.electronAPI ? .writeFile);
+            console.log('  - window.electronAPI.writeFile:', !!window.electronAPI ?.writeFile);
 
             if (!window.electronAPI || !window.electronAPI.writeFile) {
                 throw new Error('writeFile API 不可用');
@@ -3553,7 +3553,7 @@ class App {
 
             if (name && url) {
                 newPresets.push({
-                    id: this.state.settings.online.presetWebsites[index] ? .id || `custom_${Date.now()}_${index}`,
+                    id: this.state.settings.online.presetWebsites[index] ?.id || `custom_${Date.now()}_${index}`,
                     name,
                     url,
                     icon: icon || '🌐',

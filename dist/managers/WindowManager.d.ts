@@ -93,17 +93,16 @@ export declare class WindowManager extends EventEmitter {
     /**
      * 强制窗口置顶并保持在最前面
      */
-    private enforceAlwaysOnTop;
-    /**
-     * 打开开发者工具
+    private enforceAlwaysOnTop; /**
+     * 打开开发者工具（仅开发模式）
      */
     openDevTools(): void;
     /**
-     * 关闭开发者工具
+     * 关闭开发者工具（仅开发模式）
      */
     closeDevTools(): void;
     /**
-     * 切换开发者工具状态
+     * 切换开发者工具状态（仅开发模式）
      */
     toggleDevTools(): void;
 }
