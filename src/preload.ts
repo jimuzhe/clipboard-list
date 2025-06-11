@@ -1,10 +1,16 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
 // 暴露安全的 API 给渲染进程
-contextBridge.exposeInMainWorld('electronAPI', {
-    // 窗口控制
+contextBridge.exposeInMainWorld('electronAPI', {    // 窗口控制
     minimizeWindow: () => ipcRenderer.invoke('minimize-window'),
-    closeWindow: () => ipcRenderer.invoke('close-window'),    // 应用信息
+    closeWindow: () => ipcRenderer.invoke('close-window'),
+
+    // 窗口置顶功能
+    setAlwaysOnTop: (enabled: boolean) => ipcRenderer.invoke('window:set-always-on-top', enabled),
+    getAlwaysOnTop: () => ipcRenderer.invoke('window:get-always-on-top'),
+    toggleAlwaysOnTop: () => ipcRenderer.invoke('window:toggle-always-on-top'),
+
+    // 应用信息
     getAppVersion: () => ipcRenderer.invoke('get-app-version'),
     getDataPath: () => ipcRenderer.invoke('get-data-path'),// 剪切板相关
     writeToClipboard: (text: string) => ipcRenderer.invoke('write-clipboard', text),
@@ -53,9 +59,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     downloadUpdate: (updateInfo: any) => ipcRenderer.invoke('update:download', updateInfo),
     installUpdate: (filePath: string) => ipcRenderer.invoke('update:install', filePath),
     getCurrentVersion: () => ipcRenderer.invoke('update:get-current-version'),
-    
+
     // 动画设置
-    updateAnimationSettings: (settings: { showAnimationDuration: number; hideAnimationDuration: number }) => 
+    updateAnimationSettings: (settings: { showAnimationDuration: number; hideAnimationDuration: number }) =>
         ipcRenderer.invoke('update-animation-settings', settings),
 
     // 更新事件监听
@@ -86,6 +92,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
 export interface ElectronAPI {
     minimizeWindow: () => Promise<void>;
     closeWindow: () => Promise<void>;
+
+    // 窗口置顶功能
+    setAlwaysOnTop: (enabled: boolean) => Promise<void>;
+    getAlwaysOnTop: () => Promise<boolean>;
+    toggleAlwaysOnTop: () => Promise<boolean>;
+
     getAppVersion: () => Promise<string>;
     getDataPath: () => Promise<string>;
     writeToClipboard: (text: string) => Promise<void>;
@@ -119,14 +131,14 @@ export interface ElectronAPI {
     writeFile: (filePath: string, content: string) => Promise<void>;
     deleteFile: (filePath: string) => Promise<void>;
     openDevTools: () => Promise<void>;
-    closeDevTools: () => Promise<void>;    toggleDevTools: () => Promise<void>;
+    closeDevTools: () => Promise<void>; toggleDevTools: () => Promise<void>;
 
     // 更新相关
     checkForUpdates: () => Promise<any>;
     downloadUpdate: (updateInfo: any) => Promise<any>;
     installUpdate: (filePath: string) => Promise<void>;
     getCurrentVersion: () => Promise<string>;
-    
+
     // 动画设置
     updateAnimationSettings: (settings: { showAnimationDuration: number; hideAnimationDuration: number }) => Promise<void>;
 

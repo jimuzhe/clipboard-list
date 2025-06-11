@@ -894,11 +894,6 @@ html, body {
   opacity: 1;
 }
 
-.pin-btn.pinned {
-  background: var(--warning-color) !important;
-  color: white !important;
-}
-
 .clipboard-item-content {
   font-size: 12px;
   line-height: 1.4;

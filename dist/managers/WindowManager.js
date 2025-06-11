@@ -55,6 +55,8 @@ class WindowManager extends events_1.EventEmitter {
         // 动画持续时间配置
         this.showAnimationDuration = 150; // 显示动画持续时间(毫秒)
         this.hideAnimationDuration = 40; // 隐藏动画持续时间(毫秒)
+        // 储存窗口的原始尺寸，用于展开/收缩动画
+        this.originalWindowBounds = null;
         this.isDev = isDev;
     }
     createWindow() {
@@ -79,6 +81,11 @@ class WindowManager extends events_1.EventEmitter {
             },
         }); // 设置初始隐藏状态，因为窗口创建时 show: false
         this.isHidden = true;
+        // 保存原始窗口尺寸
+        this.originalWindowBounds = {
+            width: this.config.width,
+            height: Math.min(this.config.height, screenHeight - 100)
+        };
         this.setupWindowEvents();
         this.initDocking();
         // 初始化强制置顶功能
@@ -97,19 +104,18 @@ class WindowManager extends events_1.EventEmitter {
     setupWindowEvents() {
         if (!this.window)
             return;
-        // 窗口关闭事件
+        // 窗口关闭事件 - 直接退出应用而不是隐藏
         this.window.on('close', (event) => {
-            event.preventDefault();
-            this.hide();
-            Logger_1.logger.debug('Window close prevented, hiding instead');
+            // 不阻止关闭事件，让应用直接退出
+            Logger_1.logger.debug('Window close - application will exit');
         });
         // 窗口最小化事件
         this.window.on('minimize', () => {
             this.hide();
-        });
-        // 窗口失去焦点
+        }); // 窗口失去焦点
         this.window.on('blur', () => {
-            if (this.config.autoHide && !this.isDocked) {
+            // 如果窗口置顶，则不自动隐藏
+            if (this.config.autoHide && !this.isDocked && !this.config.alwaysOnTop) {
                 this.startHideTimer();
             }
         });
@@ -122,11 +128,23 @@ class WindowManager extends events_1.EventEmitter {
             // 不自动显示窗口，让用户通过托盘或快捷键显示
             // 窗口显示逻辑现在由主进程的 handleCommandLineArgs 方法控制
             Logger_1.logger.info('Window ready to show (controlled by startup logic)');
-        });
-        // 窗口移动事件
+        }); // 窗口移动事件
         this.window.on('moved', () => {
             if (this.config.dockToSide) {
                 this.checkDocking();
+            }
+        });
+        // 窗口大小改变事件
+        this.window.on('resized', () => {
+            // 更新原始窗口尺寸，确保展开动画使用正确的尺寸
+            const newBounds = this.window?.getBounds();
+            if (newBounds && this.originalWindowBounds) {
+                this.originalWindowBounds.width = newBounds.width;
+                this.originalWindowBounds.height = newBounds.height;
+                Logger_1.logger.debug('Window bounds updated after resize', {
+                    width: newBounds.width,
+                    height: newBounds.height
+                });
             }
         }); // 鼠标进入窗口
         this.window.webContents.on('dom-ready', () => {
@@ -223,7 +241,8 @@ class WindowManager extends events_1.EventEmitter {
     startHideTimer() {
         this.clearHideTimer();
         this.mouseLeaveTimer = setTimeout(() => {
-            if (this.config.autoHide && !this.window?.isFocused()) {
+            // 如果窗口置顶，则不自动隐藏
+            if (this.config.autoHide && !this.window?.isFocused() && !this.config.alwaysOnTop) {
                 this.hide();
             }
         }, 2000); // 2秒后隐藏
@@ -339,59 +358,128 @@ class WindowManager extends events_1.EventEmitter {
             let startX = currentBounds.x;
             let startY = currentBounds.y;
             let targetX = currentBounds.x;
-            let targetY = currentBounds.y;
-            // 根据吸附方向计算起始和目标位置
-            switch (this.dockSide) {
-                case 'left':
-                    startX = screenX - currentBounds.width + this.config.dockOffset;
-                    targetX = screenX + 10; // 显示时稍微偏移一点
-                    break;
-                case 'right':
-                    startX = screenX + screenWidth - this.config.dockOffset;
-                    targetX = screenX + screenWidth - currentBounds.width - 10;
-                    break;
-                case 'top':
-                    startY = screenY - currentBounds.height + this.config.dockOffset;
-                    targetY = screenY + 10;
-                    break;
-            }
-            // 设置起始位置并显示窗口
-            this.window.setBounds({
-                x: startX,
-                y: startY,
-                width: currentBounds.width,
-                height: currentBounds.height
-            });
-            this.show(); // 显示窗口            // 快速滑入动画
-            const startTime = Date.now();
-            const duration = this.showAnimationDuration; // 使用可配置的显示动画持续时间
-            const deltaX = targetX - startX;
-            const deltaY = targetY - startY;
-            const animate = () => {
-                if (!this.window || this.window.isDestroyed() || this.isHidden)
-                    return;
-                const elapsed = Date.now() - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                // 使用easeOut缓动
-                const easeProgress = 1 - Math.pow(1 - progress, 2);
-                const currentX = startX + deltaX * easeProgress;
-                const currentY = startY + deltaY * easeProgress;
+            let targetY = currentBounds.y; // 根据吸附方向选择不同的动画策略
+            if (this.dockSide === 'top') {
+                // 顶部吸附：使用高度展开动画（从上到下）
+                // 使用保存的原始尺寸作为目标尺寸，确保高度一致
+                const finalWidth = this.originalWindowBounds?.width || this.config.width;
+                const finalHeight = this.originalWindowBounds?.height || this.config.height;
+                // 计算正确的展开位置：应该在屏幕可见区域内
+                const expandTargetX = currentBounds.x;
+                const expandTargetY = screenY + 10; // 稍微偏移一点，避免贴着屏幕边缘                // 设置初始状态：高度为1（避免0高度的问题），位置在目标位置
                 this.window.setBounds({
-                    x: Math.round(currentX),
-                    y: Math.round(currentY),
+                    x: expandTargetX,
+                    y: expandTargetY,
+                    width: finalWidth,
+                    height: 1 // 初始高度为1像素，避免完全隐藏
+                });
+                this.show(); // 显示窗口
+                // 展开动画 - 使用更平滑的实现
+                const startTime = Date.now();
+                const duration = this.showAnimationDuration;
+                const frameInterval = 1000 / 60; // 60fps
+                let lastFrameTime = 0;
+                const animate = () => {
+                    if (!this.window || this.window.isDestroyed() || this.isHidden)
+                        return;
+                    const now = Date.now();
+                    const elapsed = now - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    // 使用三次贝塞尔曲线进行更平滑的缓动（类似CSS ease-out）
+                    // bezier(0.25, 0.46, 0.45, 0.94) - 平滑的ease-out效果
+                    const cubicBezier = (t) => {
+                        const p0 = 0, p1 = 0.25, p2 = 0.45, p3 = 1;
+                        const u = 1 - t;
+                        return u * u * u * p0 + 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t * p3;
+                    };
+                    const easeProgress = cubicBezier(progress);
+                    // 计算当前高度，确保精确到像素
+                    const currentHeight = Math.round(1 + (finalHeight - 1) * easeProgress);
+                    // 限制更新频率以减少闪烁，但在动画结束时确保设置最终状态
+                    if (progress >= 1 || now - lastFrameTime >= frameInterval) {
+                        lastFrameTime = now;
+                        this.window.setBounds({
+                            x: expandTargetX,
+                            y: expandTargetY,
+                            width: finalWidth,
+                            height: currentHeight
+                        });
+                    }
+                    if (progress < 1) {
+                        // 使用requestAnimationFrame的替代方案，保持60fps
+                        setTimeout(animate, 16); // ~60fps
+                    }
+                    else {
+                        // 动画完成，确保最终状态精确
+                        this.window.setBounds({
+                            x: expandTargetX,
+                            y: expandTargetY,
+                            width: finalWidth,
+                            height: finalHeight
+                        });
+                        // 开始监听鼠标离开
+                        this.startMouseLeaveMonitoring();
+                        Logger_1.logger.debug(`Window expanded from top with animation in ${Date.now() - startTime}ms, final size: ${finalWidth}x${finalHeight}`);
+                    }
+                };
+                animate();
+            }
+            else {
+                // 左右吸附：使用滑动动画
+                let startX = currentBounds.x;
+                let startY = currentBounds.y;
+                let targetX = currentBounds.x;
+                let targetY = currentBounds.y;
+                // 根据吸附方向计算起始和目标位置
+                switch (this.dockSide) {
+                    case 'left':
+                        startX = screenX - currentBounds.width + this.config.dockOffset;
+                        targetX = screenX + 10; // 显示时稍微偏移一点
+                        break;
+                    case 'right':
+                        startX = screenX + screenWidth - this.config.dockOffset;
+                        targetX = screenX + screenWidth - currentBounds.width - 10;
+                        break;
+                }
+                // 设置起始位置并显示窗口
+                this.window.setBounds({
+                    x: startX,
+                    y: startY,
                     width: currentBounds.width,
                     height: currentBounds.height
                 });
-                if (progress < 1) {
-                    setImmediate(animate);
-                }
-                else {
-                    // 动画完成，开始监听鼠标离开
-                    this.startMouseLeaveMonitoring();
-                    Logger_1.logger.debug(`Window shown from ${this.dockSide} edge with animation in ${Date.now() - startTime}ms`);
-                }
-            };
-            animate();
+                this.show(); // 显示窗口
+                // 滑动动画
+                const startTime = Date.now();
+                const duration = this.showAnimationDuration;
+                const deltaX = targetX - startX;
+                const deltaY = targetY - startY;
+                const animate = () => {
+                    if (!this.window || this.window.isDestroyed() || this.isHidden)
+                        return;
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    // 使用easeOut缓动
+                    const easeProgress = 1 - Math.pow(1 - progress, 2);
+                    const currentX = startX + deltaX * easeProgress;
+                    const currentY = startY + deltaY * easeProgress;
+                    this.window.setBounds({
+                        x: Math.round(currentX),
+                        y: Math.round(currentY),
+                        width: currentBounds.width,
+                        height: currentBounds.height
+                    });
+                    if (progress < 1) {
+                        setImmediate(animate);
+                    }
+                    else {
+                        // 动画完成，开始监听鼠标离开
+                        this.startMouseLeaveMonitoring();
+                        Logger_1.logger.debug(`Window shown from ${this.dockSide} edge with animation in ${Date.now() - startTime}ms`);
+                    }
+                };
+                animate();
+            }
         }
         catch (error) {
             Logger_1.logger.error('Error in showFromEdgeWithAnimation:', error);
@@ -441,7 +529,8 @@ class WindowManager extends events_1.EventEmitter {
     startFastHideTimer() {
         this.clearHideTimer();
         this.mouseLeaveTimer = setTimeout(() => {
-            if (this.isDocked && !this.isHidden && this.config.autoHide) {
+            // 如果窗口置顶，则不自动隐藏
+            if (this.isDocked && !this.isHidden && this.config.autoHide && !this.config.alwaysOnTop) {
                 this.hideToEdgeWithAnimation();
             }
         }, 30); // 进一步减少到30ms，为动画留出时间
@@ -466,52 +555,95 @@ class WindowManager extends events_1.EventEmitter {
             const display = electron_1.screen.getDisplayMatching(currentBounds);
             const { x: screenX, y: screenY, width: screenWidth, height: screenHeight } = display.workArea;
             let targetX = currentBounds.x;
-            let targetY = currentBounds.y;
-            // 根据吸附方向计算目标位置
-            switch (this.dockSide) {
-                case 'left':
-                    targetX = screenX - currentBounds.width + this.config.dockOffset;
-                    break;
-                case 'right':
-                    targetX = screenX + screenWidth - this.config.dockOffset;
-                    break;
-                case 'top':
-                    targetY = screenY - currentBounds.height + this.config.dockOffset;
-                    break;
-            } // 快速动画：使用可配置的持续时间
-            const startTime = Date.now();
-            const duration = this.hideAnimationDuration; // 使用可配置的隐藏动画持续时间
-            const startX = currentBounds.x;
-            const startY = currentBounds.y;
-            const deltaX = targetX - startX;
-            const deltaY = targetY - startY;
-            const animate = () => {
-                if (!this.window || this.window.isDestroyed())
-                    return;
-                const elapsed = Date.now() - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                // 使用easeOut缓动函数，让动画开始快速，结束时减速
-                const easeProgress = 1 - Math.pow(1 - progress, 3);
-                const currentX = startX + deltaX * easeProgress;
-                const currentY = startY + deltaY * easeProgress;
-                this.window.setBounds({
-                    x: Math.round(currentX),
-                    y: Math.round(currentY),
-                    width: currentBounds.width,
-                    height: currentBounds.height
-                });
-                if (progress < 1) {
-                    // 使用 setImmediate 而不是 setTimeout 来获得更高的帧率
-                    setImmediate(animate);
+            let targetY = currentBounds.y; // 根据吸附方向选择不同的动画策略
+            if (this.dockSide === 'top') {
+                // 顶部吸附：使用高度收缩动画（从下到上）
+                const startTime = Date.now();
+                const duration = this.hideAnimationDuration;
+                const initialHeight = currentBounds.height;
+                const originalBounds = { ...currentBounds }; // 保存原始窗口尺寸
+                const frameInterval = 1000 / 60; // 60fps
+                let lastFrameTime = 0;
+                const animate = () => {
+                    if (!this.window || this.window.isDestroyed())
+                        return;
+                    const now = Date.now();
+                    const elapsed = now - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    // 使用平滑的easeIn缓动（收缩动画）
+                    const easeProgress = progress * progress * (3 - 2 * progress); // smoothstep函数
+                    // 计算当前高度（从原始高度逐渐减小到1像素）
+                    const currentHeight = Math.round(initialHeight * (1 - easeProgress) + 1 * easeProgress);
+                    // 限制更新频率以减少闪烁
+                    if (progress >= 1 || now - lastFrameTime >= frameInterval) {
+                        lastFrameTime = now;
+                        this.window.setBounds({
+                            x: currentBounds.x,
+                            y: currentBounds.y,
+                            width: currentBounds.width,
+                            height: Math.max(1, currentHeight) // 确保最小高度为1像素
+                        });
+                    }
+                    if (progress < 1) {
+                        setTimeout(animate, 16); // ~60fps
+                    }
+                    else {
+                        // 动画完成，先恢复原始窗口尺寸，再隐藏窗口
+                        this.window.setBounds(originalBounds);
+                        this.hide();
+                        Logger_1.logger.debug(`Window collapsed to top with animation in ${Date.now() - startTime}ms`);
+                    }
+                };
+                animate();
+            }
+            else {
+                // 左右吸附：使用滑动动画
+                let targetX = currentBounds.x;
+                let targetY = currentBounds.y;
+                // 根据吸附方向计算目标位置
+                switch (this.dockSide) {
+                    case 'left':
+                        targetX = screenX - currentBounds.width + this.config.dockOffset;
+                        break;
+                    case 'right':
+                        targetX = screenX + screenWidth - this.config.dockOffset;
+                        break;
                 }
-                else {
-                    // 动画完成，隐藏窗口
-                    this.hide();
-                    Logger_1.logger.debug(`Window hidden to ${this.dockSide} edge with animation in ${Date.now() - startTime}ms`);
-                }
-            };
-            // 开始动画
-            animate();
+                // 滑动动画
+                const startTime = Date.now();
+                const duration = this.hideAnimationDuration;
+                const startX = currentBounds.x;
+                const startY = currentBounds.y;
+                const deltaX = targetX - startX;
+                const deltaY = targetY - startY;
+                const animate = () => {
+                    if (!this.window || this.window.isDestroyed())
+                        return;
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    // 使用easeOut缓动函数，让动画开始快速，结束时减速
+                    const easeProgress = 1 - Math.pow(1 - progress, 3);
+                    const currentX = startX + deltaX * easeProgress;
+                    const currentY = startY + deltaY * easeProgress;
+                    this.window.setBounds({
+                        x: Math.round(currentX),
+                        y: Math.round(currentY),
+                        width: currentBounds.width,
+                        height: currentBounds.height
+                    });
+                    if (progress < 1) {
+                        // 使用 setImmediate 而不是 setTimeout 来获得更高的帧率
+                        setImmediate(animate);
+                    }
+                    else {
+                        // 动画完成，隐藏窗口
+                        this.hide();
+                        Logger_1.logger.debug(`Window hidden to ${this.dockSide} edge with animation in ${Date.now() - startTime}ms`);
+                    }
+                };
+                // 开始动画
+                animate();
+            }
         }
         catch (error) {
             Logger_1.logger.error('Error in hideToEdgeWithAnimation:', error);
@@ -576,6 +708,8 @@ class WindowManager extends events_1.EventEmitter {
                 Logger_1.logger.info('Window set to always on top with screen-saver level');
                 // 启动强制置顶检查
                 this.enforceAlwaysOnTop();
+                // 清除所有隐藏计时器，置顶状态下不应该自动隐藏
+                this.clearHideTimer();
             }
             else {
                 this.window.setAlwaysOnTop(false);
@@ -623,7 +757,8 @@ class WindowManager extends events_1.EventEmitter {
         }
     }
     handleMouseLeave() {
-        if (this.isDocked && this.config.autoHide) {
+        // 如果窗口置顶，则不自动隐藏
+        if (this.isDocked && this.config.autoHide && !this.config.alwaysOnTop) {
             this.startHideTimer();
         }
     }

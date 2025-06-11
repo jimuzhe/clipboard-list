@@ -4,7 +4,8 @@ class AppState {
         this.clipboardItems = [];
         this.todoItems = [];
         this.notes = [];
-        this.currentNote = null;        this.settings = {
+        this.currentNote = null;
+        this.settings = {
             theme: 'light',
             glassEffect: true,
             autoStart: true,
@@ -16,7 +17,7 @@ class AppState {
             // 动画速度设置
             animationSpeed: 'normal', // 'fast', 'normal', 'slow'
             showAnimationDuration: 150, // 显示动画持续时间(毫秒)
-            hideAnimationDuration: 40,  // 隐藏动画持续时间(毫秒)
+            hideAnimationDuration: 40, // 隐藏动画持续时间(毫秒)
             online: {
                 currentUrl: 'http://8.130.41.186:3000/',
                 showPresetButtons: true,
@@ -2376,7 +2377,7 @@ class NotesManager {
 
         div.innerHTML = `
             <div class="note-content">
-                <div class="note-title">📄 ${this.escapeHtml(fileName)}</div>
+                <div class="note-title">${this.escapeHtml(fileName)}</div>
                 <div class="note-date">${this.formatDate(file.lastModified)}</div>
                 <div class="note-file-path" title="${file.path}">${file.path}</div>
             </div>
@@ -3159,7 +3160,6 @@ class App {
         this.initializeUI(); // 数据加载完成后，重新渲染所有组件
         await this.renderAllComponents();
     }
-
     setupEventListeners() {
         // 标题栏控制
         document.getElementById('minimize-btn').addEventListener('click', () => {
@@ -3209,9 +3209,7 @@ class App {
                 this.state.saveData();
                 this.themeManager.applyGlassEffect(e.target.checked);
             });
-        }
-
-        // 自启动
+        } // 自启动
         const autoStart = document.getElementById('auto-start');
         if (autoStart) {
             autoStart.addEventListener('change', async (e) => {
@@ -3220,6 +3218,17 @@ class App {
                 if (window.electronAPI && window.electronAPI.setAutoStart) {
                     await window.electronAPI.setAutoStart(e.target.checked);
                 }
+            });
+        } // 窗口置顶
+        const alwaysOnTop = document.getElementById('always-on-top');
+        if (alwaysOnTop) {
+            alwaysOnTop.addEventListener('change', async (e) => {
+                this.state.settings.alwaysOnTop = e.target.checked;
+                this.state.saveData();
+                if (window.electronAPI && window.electronAPI.setAlwaysOnTop) {
+                    await window.electronAPI.setAlwaysOnTop(e.target.checked);
+                }
+                console.log('设置窗口置顶:', e.target.checked);
             });
         }
 
@@ -3311,7 +3320,7 @@ class App {
             managePresetWebsites.addEventListener('click', () => {
                 this.showPresetWebsitesManager();
             });
-        }        // 检查更新按钮
+        } // 检查更新按钮
         const checkUpdatesBtn = document.getElementById('check-updates');
         if (checkUpdatesBtn) {
             checkUpdatesBtn.addEventListener('click', () => {
@@ -3326,7 +3335,7 @@ class App {
             animationSpeed.addEventListener('change', (e) => {
                 const speed = e.target.value;
                 this.state.settings.animationSpeed = speed;
-                
+
                 // 根据速度设置更新持续时间
                 switch (speed) {
                     case 'fast':
@@ -3342,9 +3351,9 @@ class App {
                         this.state.settings.hideAnimationDuration = 100;
                         break;
                 }
-                
+
                 this.state.saveData();
-                
+
                 // 通知主进程更新动画设置
                 if (window.electronAPI && window.electronAPI.updateAnimationSettings) {
                     window.electronAPI.updateAnimationSettings({
@@ -3352,7 +3361,7 @@ class App {
                         hideAnimationDuration: this.state.settings.hideAnimationDuration
                     });
                 }
-                
+
                 console.log('动画速度已更新:', speed, {
                     showDuration: this.state.settings.showAnimationDuration,
                     hideDuration: this.state.settings.hideAnimationDuration
@@ -3495,28 +3504,28 @@ class App {
             if (versionElement) {
                 versionElement.textContent = '未知版本';
             }
-        }        // 应用设置
+        } // 应用设置
         document.getElementById('theme-select').value = this.state.settings.theme;
         document.getElementById('glass-effect').checked = this.state.settings.glassEffect;
         document.getElementById('auto-start').checked = this.state.settings.autoStart;
+        document.getElementById('always-on-top').checked = this.state.settings.alwaysOnTop || false;
         document.getElementById('clipboard-monitor').checked = this.state.settings.clipboardMonitor;
         document.getElementById('clear-clipboard-on-restart').checked = this.state.settings.clearClipboardOnRestart;
         document.getElementById('enable-notifications').checked = this.state.settings.enableNotifications;
         document.getElementById('max-clipboard-items').value = this.state.settings.maxClipboardItems;
-        document.getElementById('animation-speed').value = this.state.settings.animationSpeed || 'normal';// 设置社区URL
+        document.getElementById('animation-speed').value = this.state.settings.animationSpeed || 'normal'; // 设置社区URL
         const communityUrlInput = document.getElementById('community-url');
         if (communityUrlInput && this.state.settings.communityUrl) {
             communityUrlInput.value = this.state.settings.communityUrl;
-        }
-
-        // 初始化预设选择器
-        this.initializePresetSelector();
-
-        // 初始化社区webview URL
-        this.initializeCommunityWebview();
-
-        // 应用主题
+        } // 初始化预设选择器
+        this.initializePresetSelector(); // 初始化社区webview URL
+        this.initializeCommunityWebview(); // 应用主题
         this.themeManager.applyTheme(this.state.settings.theme);
+
+        // 初始化置顶状态同步
+        setTimeout(() => {
+            this.initializeAlwaysOnTopSetting();
+        }, 100);
     }
     async renderAllComponents() {
         console.log('🎨 开始渲染所有组件...');
@@ -4061,10 +4070,27 @@ class App {
                 webview.src = this.state.settings.communityUrl;
                 console.log('webview初始化为:', this.state.settings.communityUrl);
             }
-        }
-
-        // 渲染预设网站按钮
+        } // 渲染预设网站按钮
         this.renderPresetWebsites();
+    } // 初始化置顶状态（仅同步设置页面）
+    async initializeAlwaysOnTopSetting() {
+        try {
+            if (window.electronAPI && window.electronAPI.getAlwaysOnTop) {
+                // 获取实际的窗口置顶状态
+                const isAlwaysOnTop = await window.electronAPI.getAlwaysOnTop();
+
+                // 同步更新设置状态和复选框
+                this.state.settings.alwaysOnTop = isAlwaysOnTop;
+                const alwaysOnTopCheckbox = document.getElementById('always-on-top');
+                if (alwaysOnTopCheckbox) {
+                    alwaysOnTopCheckbox.checked = isAlwaysOnTop;
+                }
+
+                console.log('置顶状态初始化完成:', isAlwaysOnTop);
+            }
+        } catch (error) {
+            console.error('初始化置顶状态失败:', error);
+        }
     }
 
     // 渲染预设网站按钮

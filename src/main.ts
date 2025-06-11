@@ -198,20 +198,32 @@ class ClipboardListApp {
     }
     /**
      * 设置IPC监听器
-     */
-    private setupIPCListeners(): void {        // 窗口控制
+     */    private setupIPCListeners(): void {        // 窗口控制
         this.ipcService.on('window-minimize', () => this.windowManager.hide());
-        this.ipcService.on('window-close', () => this.windowManager.hide());
+        this.ipcService.on('window-close', () => this.quit()); // 修改：关闭按钮直接退出应用
         this.ipcService.on('window-show', () => this.windowManager.show()); this.ipcService.on('window-hide', () => this.windowManager.hide());
 
         // 开发者工具控制
         this.ipcService.on('devtools:open', () => this.windowManager.openDevTools());
         this.ipcService.on('devtools:close', () => this.windowManager.closeDevTools());
-        this.ipcService.on('devtools:toggle', () => this.windowManager.toggleDevTools());
-
-        this.ipcService.on('window-get-bounds', () => {
+        this.ipcService.on('devtools:toggle', () => this.windowManager.toggleDevTools()); this.ipcService.on('window-get-bounds', () => {
             const bounds = this.windowManager.getBounds();
             this.ipcService.emit('window-bounds-response', bounds);
+        });
+
+        // 窗口置顶功能
+        this.ipcService.on('window-set-always-on-top', (enabled: boolean) => {
+            this.windowManager.setAlwaysOnTop(enabled);
+        });
+
+        this.ipcService.on('window-get-always-on-top', () => {
+            const isAlwaysOnTop = this.windowManager.isAlwaysOnTop();
+            this.ipcService.emit('always-on-top-response', isAlwaysOnTop);
+        });
+
+        this.ipcService.on('window-toggle-always-on-top', () => {
+            const newState = this.windowManager.toggleAlwaysOnTop();
+            this.ipcService.emit('always-on-top-toggled', newState);
         });
 
         // 剪切板操作
@@ -374,7 +386,7 @@ class ClipboardListApp {
         this.ipcService.on('window-set-edge-trigger-enabled', (enabled: boolean) => {
             this.windowManager.setEdgeTriggerEnabled(enabled);
             this.ipcService.emit('edge-trigger-enabled-set');
-        });        this.ipcService.on('window-get-edge-trigger-enabled', () => {
+        }); this.ipcService.on('window-get-edge-trigger-enabled', () => {
             const enabled = this.windowManager.isEdgeTriggerEnabled();
             this.ipcService.emit('edge-trigger-enabled-response', enabled);
         });        // 动画设置更新

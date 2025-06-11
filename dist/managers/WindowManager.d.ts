@@ -16,6 +16,7 @@ export declare class WindowManager extends EventEmitter {
     private isDev;
     private showAnimationDuration;
     private hideAnimationDuration;
+    private originalWindowBounds;
     constructor(config: WindowConfig, isDev?: boolean);
     createWindow(): BrowserWindow;
     private setupWindowEvents;

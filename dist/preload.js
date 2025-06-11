@@ -3,9 +3,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
 // 暴露安全的 API 给渲染进程
 electron_1.contextBridge.exposeInMainWorld('electronAPI', {
-    // 窗口控制
     minimizeWindow: () => electron_1.ipcRenderer.invoke('minimize-window'),
-    closeWindow: () => electron_1.ipcRenderer.invoke('close-window'), // 应用信息
+    closeWindow: () => electron_1.ipcRenderer.invoke('close-window'),
+    // 窗口置顶功能
+    setAlwaysOnTop: (enabled) => electron_1.ipcRenderer.invoke('window:set-always-on-top', enabled),
+    getAlwaysOnTop: () => electron_1.ipcRenderer.invoke('window:get-always-on-top'),
+    toggleAlwaysOnTop: () => electron_1.ipcRenderer.invoke('window:toggle-always-on-top'),
+    // 应用信息
     getAppVersion: () => electron_1.ipcRenderer.invoke('get-app-version'),
     getDataPath: () => electron_1.ipcRenderer.invoke('get-data-path'), // 剪切板相关
     writeToClipboard: (text) => electron_1.ipcRenderer.invoke('write-clipboard', text),

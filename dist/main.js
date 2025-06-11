@@ -196,10 +196,9 @@ class ClipboardListApp {
     }
     /**
      * 设置IPC监听器
-     */
-    setupIPCListeners() {
+     */ setupIPCListeners() {
         this.ipcService.on('window-minimize', () => this.windowManager.hide());
-        this.ipcService.on('window-close', () => this.windowManager.hide());
+        this.ipcService.on('window-close', () => this.quit()); // 修改：关闭按钮直接退出应用
         this.ipcService.on('window-show', () => this.windowManager.show());
         this.ipcService.on('window-hide', () => this.windowManager.hide());
         // 开发者工具控制
@@ -209,6 +208,18 @@ class ClipboardListApp {
         this.ipcService.on('window-get-bounds', () => {
             const bounds = this.windowManager.getBounds();
             this.ipcService.emit('window-bounds-response', bounds);
+        });
+        // 窗口置顶功能
+        this.ipcService.on('window-set-always-on-top', (enabled) => {
+            this.windowManager.setAlwaysOnTop(enabled);
+        });
+        this.ipcService.on('window-get-always-on-top', () => {
+            const isAlwaysOnTop = this.windowManager.isAlwaysOnTop();
+            this.ipcService.emit('always-on-top-response', isAlwaysOnTop);
+        });
+        this.ipcService.on('window-toggle-always-on-top', () => {
+            const newState = this.windowManager.toggleAlwaysOnTop();
+            this.ipcService.emit('always-on-top-toggled', newState);
         });
         // 剪切板操作
         this.ipcService.on('clipboard-read', () => {

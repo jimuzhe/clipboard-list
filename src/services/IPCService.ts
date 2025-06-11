@@ -35,13 +35,16 @@ export class IPCService extends EventEmitter {
         this.registerHandler('window:show', this.handleShowWindow.bind(this));
         this.registerHandler('window:hide', this.handleHideWindow.bind(this));
         this.registerHandler('window:set-size', this.handleSetWindowSize.bind(this));
-        this.registerHandler('window:get-bounds', this.handleGetWindowBounds.bind(this));
-
-        // 边缘触发功能
+        this.registerHandler('window:get-bounds', this.handleGetWindowBounds.bind(this));        // 边缘触发功能
         this.registerHandler('window:set-trigger-zone-width', this.handleSetTriggerZoneWidth.bind(this));
         this.registerHandler('window:get-trigger-zone-width', this.handleGetTriggerZoneWidth.bind(this));
         this.registerHandler('window:set-edge-trigger-enabled', this.handleSetEdgeTriggerEnabled.bind(this));
         this.registerHandler('window:get-edge-trigger-enabled', this.handleGetEdgeTriggerEnabled.bind(this));
+
+        // 窗口置顶功能
+        this.registerHandler('window:set-always-on-top', this.handleSetAlwaysOnTop.bind(this));
+        this.registerHandler('window:get-always-on-top', this.handleGetAlwaysOnTop.bind(this));
+        this.registerHandler('window:toggle-always-on-top', this.handleToggleAlwaysOnTop.bind(this));
 
         // 剪切板相关
         this.registerHandler('clipboard:read', this.handleReadClipboard.bind(this));
@@ -86,7 +89,7 @@ export class IPCService extends EventEmitter {
         this.registerHandler('open-devtools', this.handleOpenDevTools.bind(this));
         this.registerHandler('close-devtools', this.handleCloseDevTools.bind(this));
         this.registerHandler('toggle-devtools', this.handleToggleDevTools.bind(this));
-        
+
         // 动画设置
         this.registerHandler('update-animation-settings', this.handleUpdateAnimationSettings.bind(this));
 
@@ -250,12 +253,29 @@ export class IPCService extends EventEmitter {
             this.emit('window-set-edge-trigger-enabled', enabled);
             this.once('edge-trigger-enabled-set', resolve);
         });
-    }
-
-    private async handleGetEdgeTriggerEnabled(): Promise<boolean> {
+    } private async handleGetEdgeTriggerEnabled(): Promise<boolean> {
         return new Promise((resolve) => {
             this.emit('window-get-edge-trigger-enabled');
             this.once('edge-trigger-enabled-response', resolve);
+        });
+    }
+
+    // === 窗口置顶功能相关处理程序 ===
+    private async handleSetAlwaysOnTop(event: IpcMainInvokeEvent, enabled: boolean): Promise<void> {
+        this.emit('window-set-always-on-top', enabled);
+    }
+
+    private async handleGetAlwaysOnTop(): Promise<boolean> {
+        return new Promise((resolve) => {
+            this.emit('window-get-always-on-top');
+            this.once('always-on-top-response', resolve);
+        });
+    }
+
+    private async handleToggleAlwaysOnTop(): Promise<boolean> {
+        return new Promise((resolve) => {
+            this.emit('window-toggle-always-on-top');
+            this.once('always-on-top-toggled', resolve);
         });
     }
 

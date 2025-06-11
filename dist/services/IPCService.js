@@ -63,12 +63,15 @@ class IPCService extends events_1.EventEmitter {
         this.registerHandler('window:show', this.handleShowWindow.bind(this));
         this.registerHandler('window:hide', this.handleHideWindow.bind(this));
         this.registerHandler('window:set-size', this.handleSetWindowSize.bind(this));
-        this.registerHandler('window:get-bounds', this.handleGetWindowBounds.bind(this));
-        // 边缘触发功能
+        this.registerHandler('window:get-bounds', this.handleGetWindowBounds.bind(this)); // 边缘触发功能
         this.registerHandler('window:set-trigger-zone-width', this.handleSetTriggerZoneWidth.bind(this));
         this.registerHandler('window:get-trigger-zone-width', this.handleGetTriggerZoneWidth.bind(this));
         this.registerHandler('window:set-edge-trigger-enabled', this.handleSetEdgeTriggerEnabled.bind(this));
         this.registerHandler('window:get-edge-trigger-enabled', this.handleGetEdgeTriggerEnabled.bind(this));
+        // 窗口置顶功能
+        this.registerHandler('window:set-always-on-top', this.handleSetAlwaysOnTop.bind(this));
+        this.registerHandler('window:get-always-on-top', this.handleGetAlwaysOnTop.bind(this));
+        this.registerHandler('window:toggle-always-on-top', this.handleToggleAlwaysOnTop.bind(this));
         // 剪切板相关
         this.registerHandler('clipboard:read', this.handleReadClipboard.bind(this));
         this.registerHandler('clipboard:write', this.handleWriteClipboard.bind(this));
@@ -255,6 +258,22 @@ class IPCService extends events_1.EventEmitter {
         return new Promise((resolve) => {
             this.emit('window-get-edge-trigger-enabled');
             this.once('edge-trigger-enabled-response', resolve);
+        });
+    }
+    // === 窗口置顶功能相关处理程序 ===
+    async handleSetAlwaysOnTop(event, enabled) {
+        this.emit('window-set-always-on-top', enabled);
+    }
+    async handleGetAlwaysOnTop() {
+        return new Promise((resolve) => {
+            this.emit('window-get-always-on-top');
+            this.once('always-on-top-response', resolve);
+        });
+    }
+    async handleToggleAlwaysOnTop() {
+        return new Promise((resolve) => {
+            this.emit('window-toggle-always-on-top');
+            this.once('always-on-top-toggled', resolve);
         });
     }
     // === 剪切板相关处理程序 ===

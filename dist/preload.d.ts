@@ -1,6 +1,9 @@
 export interface ElectronAPI {
     minimizeWindow: () => Promise<void>;
     closeWindow: () => Promise<void>;
+    setAlwaysOnTop: (enabled: boolean) => Promise<void>;
+    getAlwaysOnTop: () => Promise<boolean>;
+    toggleAlwaysOnTop: () => Promise<boolean>;
     getAppVersion: () => Promise<string>;
     getDataPath: () => Promise<string>;
     writeToClipboard: (text: string) => Promise<void>;
