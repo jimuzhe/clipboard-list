@@ -52,6 +52,9 @@ class WindowManager extends events_1.EventEmitter {
         this.lastCursorPos = { x: 0, y: 0 };
         this.triggerZoneWidth = 5; // 触发区域宽度（像素）
         this.isInTriggerZone = false; // 跟踪鼠标是否在触发区域
+        // 动画持续时间配置
+        this.showAnimationDuration = 150; // 显示动画持续时间(毫秒)
+        this.hideAnimationDuration = 40; // 隐藏动画持续时间(毫秒)
         this.isDev = isDev;
     }
     createWindow() {
@@ -359,10 +362,9 @@ class WindowManager extends events_1.EventEmitter {
                 width: currentBounds.width,
                 height: currentBounds.height
             });
-            this.show(); // 显示窗口
-            // 快速滑入动画
+            this.show(); // 显示窗口            // 快速滑入动画
             const startTime = Date.now();
-            const duration = 150; // 显示动画稍慢一点，150ms
+            const duration = this.showAnimationDuration; // 使用可配置的显示动画持续时间
             const deltaX = targetX - startX;
             const deltaY = targetY - startY;
             const animate = () => {
@@ -476,10 +478,9 @@ class WindowManager extends events_1.EventEmitter {
                 case 'top':
                     targetY = screenY - currentBounds.height + this.config.dockOffset;
                     break;
-            }
-            // 快速动画：使用较少的帧数来达到50ms内完成
+            } // 快速动画：使用可配置的持续时间
             const startTime = Date.now();
-            const duration = 40; // 40ms动画持续时间，留10ms缓冲
+            const duration = this.hideAnimationDuration; // 使用可配置的隐藏动画持续时间
             const startX = currentBounds.x;
             const startY = currentBounds.y;
             const deltaX = targetX - startX;
@@ -719,8 +720,7 @@ class WindowManager extends events_1.EventEmitter {
             this.window.webContents.closeDevTools();
             Logger_1.logger.info('DevTools closed manually (development mode)');
         }
-    }
-    /**
+    } /**
      * 切换开发者工具状态（仅开发模式）
      */
     toggleDevTools() {
@@ -736,6 +736,14 @@ class WindowManager extends events_1.EventEmitter {
                 this.openDevTools();
             }
         }
+    }
+    /**
+     * 更新动画设置
+     */
+    updateAnimationSettings(showDuration, hideDuration) {
+        this.showAnimationDuration = showDuration;
+        this.hideAnimationDuration = hideDuration;
+        Logger_1.logger.debug(`Animation settings updated: show=${showDuration}ms, hide=${hideDuration}ms`);
     }
 }
 exports.WindowManager = WindowManager;

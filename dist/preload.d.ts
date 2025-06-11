@@ -36,6 +36,10 @@ export interface ElectronAPI {
     downloadUpdate: (updateInfo: any) => Promise<any>;
     installUpdate: (filePath: string) => Promise<void>;
     getCurrentVersion: () => Promise<string>;
+    updateAnimationSettings: (settings: {
+        showAnimationDuration: number;
+        hideAnimationDuration: number;
+    }) => Promise<void>;
     onUpdateAvailable: (callback: (updateInfo: any) => void) => void;
     onUpdateNotAvailable: (callback: () => void) => void;
     onUpdateError: (callback: (error: string) => void) => void;

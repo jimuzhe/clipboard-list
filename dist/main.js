@@ -358,6 +358,10 @@ class ClipboardListApp {
         this.ipcService.on('window-get-edge-trigger-enabled', () => {
             const enabled = this.windowManager.isEdgeTriggerEnabled();
             this.ipcService.emit('edge-trigger-enabled-response', enabled);
+        }); // 动画设置更新
+        this.ipcService.on('update-animation-settings', (settings) => {
+            this.windowManager.updateAnimationSettings(settings.showAnimationDuration, settings.hideAnimationDuration);
+            Logger_1.logger.info('Animation settings updated:', settings);
         });
         // 更新服务事件监听
         this.updateService.on('update-available', (updateInfo) => {

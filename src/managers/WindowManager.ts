@@ -15,6 +15,9 @@ export class WindowManager extends EventEmitter {
     private triggerZoneWidth = 5; // 触发区域宽度（像素）
     private isInTriggerZone = false; // 跟踪鼠标是否在触发区域
     private isDev: boolean;
+    // 动画持续时间配置
+    private showAnimationDuration = 150; // 显示动画持续时间(毫秒)
+    private hideAnimationDuration = 40;  // 隐藏动画持续时间(毫秒)
 
     constructor(private config: WindowConfig, isDev = false) {
         super();
@@ -353,11 +356,9 @@ export class WindowManager extends EventEmitter {
                 height: currentBounds.height
             });
 
-            this.show(); // 显示窗口
-
-            // 快速滑入动画
+            this.show(); // 显示窗口            // 快速滑入动画
             const startTime = Date.now();
-            const duration = 150; // 显示动画稍慢一点，150ms
+            const duration = this.showAnimationDuration; // 使用可配置的显示动画持续时间
             const deltaX = targetX - startX;
             const deltaY = targetY - startY;
 
@@ -481,11 +482,9 @@ export class WindowManager extends EventEmitter {
                 case 'top':
                     targetY = screenY - currentBounds.height + this.config.dockOffset;
                     break;
-            }
-
-            // 快速动画：使用较少的帧数来达到50ms内完成
+            }            // 快速动画：使用可配置的持续时间
             const startTime = Date.now();
-            const duration = 40; // 40ms动画持续时间，留10ms缓冲
+            const duration = this.hideAnimationDuration; // 使用可配置的隐藏动画持续时间
             const startX = currentBounds.x;
             const startY = currentBounds.y;
             const deltaX = targetX - startX;
@@ -751,9 +750,7 @@ export class WindowManager extends EventEmitter {
             this.window.webContents.closeDevTools();
             logger.info('DevTools closed manually (development mode)');
         }
-    }
-
-    /**
+    }    /**
      * 切换开发者工具状态（仅开发模式）
      */
     toggleDevTools(): void {
@@ -769,5 +766,14 @@ export class WindowManager extends EventEmitter {
                 this.openDevTools();
             }
         }
+    }
+
+    /**
+     * 更新动画设置
+     */
+    updateAnimationSettings(showDuration: number, hideDuration: number): void {
+        this.showAnimationDuration = showDuration;
+        this.hideAnimationDuration = hideDuration;
+        logger.debug(`Animation settings updated: show=${showDuration}ms, hide=${hideDuration}ms`);
     }
 }

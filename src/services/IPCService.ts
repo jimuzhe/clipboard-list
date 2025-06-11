@@ -82,12 +82,13 @@ export class IPCService extends EventEmitter {
         this.registerHandler('read-file', this.handleReadFile.bind(this));
         this.registerHandler('write-file', this.handleWriteFile.bind(this));
         this.registerHandler('delete-file', this.handleDeleteFile.bind(this));
-        this.registerHandler('open-external', this.handleOpenExternal.bind(this));
-
-        // 开发者工具相关
+        this.registerHandler('open-external', this.handleOpenExternal.bind(this));        // 开发者工具相关
         this.registerHandler('open-devtools', this.handleOpenDevTools.bind(this));
         this.registerHandler('close-devtools', this.handleCloseDevTools.bind(this));
         this.registerHandler('toggle-devtools', this.handleToggleDevTools.bind(this));
+        
+        // 动画设置
+        this.registerHandler('update-animation-settings', this.handleUpdateAnimationSettings.bind(this));
 
         // 兼容性别名
         this.setupCompatibilityAliases();
@@ -543,9 +544,7 @@ export class IPCService extends EventEmitter {
             logger.error('Close DevTools error:', error);
             throw error;
         }
-    }
-
-    /**
+    }    /**
      * 处理切换开发者工具请求
      */
     private async handleToggleDevTools(event: IpcMainInvokeEvent): Promise<void> {
@@ -554,6 +553,19 @@ export class IPCService extends EventEmitter {
             logger.info('DevTools toggle requested from renderer');
         } catch (error) {
             logger.error('Toggle DevTools error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 处理动画设置更新请求
+     */
+    private async handleUpdateAnimationSettings(event: IpcMainInvokeEvent, settings: { showAnimationDuration: number; hideAnimationDuration: number }): Promise<void> {
+        try {
+            this.emit('update-animation-settings', settings);
+            logger.info('Animation settings update requested:', settings);
+        } catch (error) {
+            logger.error('Update animation settings error:', error);
             throw error;
         }
     }

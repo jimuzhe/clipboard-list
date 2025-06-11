@@ -374,11 +374,13 @@ class ClipboardListApp {
         this.ipcService.on('window-set-edge-trigger-enabled', (enabled: boolean) => {
             this.windowManager.setEdgeTriggerEnabled(enabled);
             this.ipcService.emit('edge-trigger-enabled-set');
-        });
-
-        this.ipcService.on('window-get-edge-trigger-enabled', () => {
+        });        this.ipcService.on('window-get-edge-trigger-enabled', () => {
             const enabled = this.windowManager.isEdgeTriggerEnabled();
             this.ipcService.emit('edge-trigger-enabled-response', enabled);
+        });        // 动画设置更新
+        this.ipcService.on('update-animation-settings', (settings: { showAnimationDuration: number; hideAnimationDuration: number }) => {
+            this.windowManager.updateAnimationSettings(settings.showAnimationDuration, settings.hideAnimationDuration);
+            logger.info('Animation settings updated:', settings);
         });
 
         // 更新服务事件监听

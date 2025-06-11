@@ -4,8 +4,7 @@ class AppState {
         this.clipboardItems = [];
         this.todoItems = [];
         this.notes = [];
-        this.currentNote = null;
-        this.settings = {
+        this.currentNote = null;        this.settings = {
             theme: 'light',
             glassEffect: true,
             autoStart: true,
@@ -14,6 +13,10 @@ class AppState {
             enableNotifications: true,
             maxClipboardItems: 100,
             communityUrl: 'http://8.130.41.186:3000/',
+            // 动画速度设置
+            animationSpeed: 'normal', // 'fast', 'normal', 'slow'
+            showAnimationDuration: 150, // 显示动画持续时间(毫秒)
+            hideAnimationDuration: 40,  // 隐藏动画持续时间(毫秒)
             online: {
                 currentUrl: 'http://8.130.41.186:3000/',
                 showPresetButtons: true,
@@ -173,15 +176,15 @@ class AppState {
             const response = await window.electronAPI.loadSettings();
             if (response && response.success && response.data && typeof response.data === 'object') {
                 this.settings = {
-                    ...this.settings,
-                    ...response.data
+                   ...this.settings,
+                   ...response.data
                 };
                 console.log('✅ 设置数据加载完成');
             } else if (response && typeof response === 'object' && !response.success) {
                 // 向后兼容：如果返回的是直接数据而不是包装格式
                 this.settings = {
-                    ...this.settings,
-                    ...response
+                   ...this.settings,
+                   ...response
                 };
                 console.log('✅ 设置数据加载完成（向后兼容模式）');
             }
@@ -195,15 +198,15 @@ class AppState {
             const response = await window.electronAPI.loadPomodoroTimer();
             if (response && response.success && response.data && typeof response.data === 'object') {
                 this.pomodoroTimer = {
-                    ...this.pomodoroTimer,
-                    ...response.data
+                   ...this.pomodoroTimer,
+                   ...response.data
                 };
                 console.log('✅ 番茄时钟数据加载完成');
             } else if (response && typeof response === 'object' && !response.success) {
                 // 向后兼容：如果返回的是直接数据而不是包装格式
                 this.pomodoroTimer = {
-                    ...this.pomodoroTimer,
-                    ...response
+                   ...this.pomodoroTimer,
+                   ...response
                 };
                 console.log('✅ 番茄时钟数据加载完成（向后兼容模式）');
             }
@@ -439,7 +442,7 @@ class ClipboardManager {
         console.log('📄 普通项目:', unpinnedItems.length, '个');
 
         // 先显示置顶项目，然后显示普通项目
-        const sortedItems = [...pinnedItems, ...unpinnedItems];
+        const sortedItems = [...pinnedItems,...unpinnedItems];
 
         sortedItems.forEach((item, index) => {
             console.log(`🔧 创建第 ${index + 1} 个剪切板项目:`, {
@@ -1534,7 +1537,7 @@ class PomodoroManager {
         document.getElementById('pomodoro-reset').addEventListener('click', () => {
             this.reset();
         }); // 模态框关闭
-        const closeBtn = document.querySelector('#pomodoro-modal .modal-close');
+        const closeBtn = document.querySelector('#pomodoro-modal.modal-close');
         if (closeBtn) {
             closeBtn.addEventListener('click', () => {
                 this.closeModal();
@@ -2495,8 +2498,8 @@ class NotesManager {
         console.log('🔍 检查 API 可用性:');
         console.log('  - window.electronAPI:', !!window.electronAPI);
         console.log('  - window.api:', !!window.api);
-        console.log('  - window.api?.fileSystem:', !!window.api ? .fileSystem);
-        console.log('  - window.api?.fileSystem?.exists:', !!window.api ? .fileSystem ? .exists);
+        console.log('  - window.api?.fileSystem:', !!window.api ?.fileSystem);
+        console.log('  - window.api?.fileSystem?.exists:', !!window.api ?.fileSystem ?.exists);
 
         try {
             // 优先在工作区创建文件，如果没有工作区则创建内存笔记
@@ -2504,14 +2507,14 @@ class NotesManager {
                 console.log('✅ 工作区存在，准备在工作区创建文件');
                 console.log('📂 工作区完整路径:', this.workspacePath); // 验证工作区路径是否有效
                 try {
-                    if (window.api ? .fileSystem ? .exists) {
+                    if (window.api ?.fileSystem ?.exists) {
                         console.log('🔍 验证工作区目录是否存在...');
                         const workspaceExists = await window.api.fileSystem.exists(this.workspacePath);
                         console.log('📁 工作区目录是否存在:', workspaceExists);
 
                         if (!workspaceExists) {
                             console.warn('⚠️  工作区目录不存在，尝试创建目录');
-                            if (window.api ? .fileSystem ? .createDirectory) {
+                            if (window.api ?.fileSystem ?.createDirectory) {
                                 const createResult = await window.api.fileSystem.createDirectory(this.workspacePath);
                                 console.log('📁 创建目录结果:', createResult);
                             } else {
@@ -2615,7 +2618,7 @@ class NotesManager {
             console.log('🔧 准备调用 window.electronAPI.writeFile API');
             console.log('🔍 检查 API 可用性:');
             console.log('  - window.electronAPI:', !!window.electronAPI);
-            console.log('  - window.electronAPI.writeFile:', !!window.electronAPI ? .writeFile);
+            console.log('  - window.electronAPI.writeFile:', !!window.electronAPI ?.writeFile);
 
             if (!window.electronAPI || !window.electronAPI.writeFile) {
                 throw new Error('writeFile API 不可用');
@@ -2941,21 +2944,21 @@ class NotesManager {
 
         let html = content
             // 标题
-            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+           .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+           .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+           .replace(/^# (.*$)/gim, '<h1>$1</h1>')
             // 粗体
-            .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+           .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
             // 斜体
-            .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+           .replace(/\*(.*?)\*/gim, '<em>$1</em>')
             // 代码块
-            .replace(/```([\s\S]*?)```/gim, '<pre><code>$1</code></pre>')
+           .replace(/```([\s\S]*?)```/gim, '<pre><code>$1</code></pre>')
             // 行内代码
-            .replace(/`([^`]+)`/gim, '<code>$1</code>')
+           .replace(/`([^`]+)`/gim, '<code>$1</code>')
             // 链接
-            .replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2" target="_blank">$1</a>')
+           .replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2" target="_blank">$1</a>')
             // 图片 - 支持本地文件路径
-            .replace(/!\[([^\]]*)\]\(([^)]+)\)/gim, (match, alt, src) => {
+           .replace(/!\[([^\]]*)\]\(([^)]+)\)/gim, (match, alt, src) => {
                 // 如果是相对路径且当前编辑的是工作区文件，解析相对路径
                 if (this.currentFilePath && !src.startsWith('http') && !src.startsWith('data:') && !src.startsWith('/')) {
                     const noteDir = this.currentFilePath.substring(0, this.currentFilePath.lastIndexOf('\\'));
@@ -2965,13 +2968,13 @@ class NotesManager {
                 return `<img alt="${alt}" src="${src}" style="max-width: 100%; height: auto;" />`;
             })
             // 引用
-            .replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>')
+           .replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>')
             // 无序列表
-            .replace(/^[\*\-] (.*$)/gim, '<ul><li>$1</li></ul>')
+           .replace(/^[\*\-] (.*$)/gim, '<ul><li>$1</li></ul>')
             // 有序列表
-            .replace(/^(\d+)\. (.*$)/gim, '<ol><li>$2</li></ol>')
+           .replace(/^(\d+)\. (.*$)/gim, '<ol><li>$2</li></ol>')
             // 换行
-            .replace(/\n/gim, '<br>');
+           .replace(/\n/gim, '<br>');
 
         return html;
     }
@@ -3308,14 +3311,52 @@ class App {
             managePresetWebsites.addEventListener('click', () => {
                 this.showPresetWebsitesManager();
             });
-        }
-
-        // 检查更新按钮
+        }        // 检查更新按钮
         const checkUpdatesBtn = document.getElementById('check-updates');
         if (checkUpdatesBtn) {
             checkUpdatesBtn.addEventListener('click', () => {
                 console.log('检查更新按钮被点击');
                 this.checkUpdates();
+            });
+        }
+
+        // 动画速度设置
+        const animationSpeed = document.getElementById('animation-speed');
+        if (animationSpeed) {
+            animationSpeed.addEventListener('change', (e) => {
+                const speed = e.target.value;
+                this.state.settings.animationSpeed = speed;
+                
+                // 根据速度设置更新持续时间
+                switch (speed) {
+                    case 'fast':
+                        this.state.settings.showAnimationDuration = 75;
+                        this.state.settings.hideAnimationDuration = 25;
+                        break;
+                    case 'normal':
+                        this.state.settings.showAnimationDuration = 150;
+                        this.state.settings.hideAnimationDuration = 40;
+                        break;
+                    case 'slow':
+                        this.state.settings.showAnimationDuration = 300;
+                        this.state.settings.hideAnimationDuration = 100;
+                        break;
+                }
+                
+                this.state.saveData();
+                
+                // 通知主进程更新动画设置
+                if (window.electronAPI && window.electronAPI.updateAnimationSettings) {
+                    window.electronAPI.updateAnimationSettings({
+                        showAnimationDuration: this.state.settings.showAnimationDuration,
+                        hideAnimationDuration: this.state.settings.hideAnimationDuration
+                    });
+                }
+                
+                console.log('动画速度已更新:', speed, {
+                    showDuration: this.state.settings.showAnimationDuration,
+                    hideDuration: this.state.settings.hideAnimationDuration
+                });
             });
         }
     }
@@ -3454,14 +3495,15 @@ class App {
             if (versionElement) {
                 versionElement.textContent = '未知版本';
             }
-        } // 应用设置
+        }        // 应用设置
         document.getElementById('theme-select').value = this.state.settings.theme;
         document.getElementById('glass-effect').checked = this.state.settings.glassEffect;
         document.getElementById('auto-start').checked = this.state.settings.autoStart;
         document.getElementById('clipboard-monitor').checked = this.state.settings.clipboardMonitor;
         document.getElementById('clear-clipboard-on-restart').checked = this.state.settings.clearClipboardOnRestart;
         document.getElementById('enable-notifications').checked = this.state.settings.enableNotifications;
-        document.getElementById('max-clipboard-items').value = this.state.settings.maxClipboardItems; // 设置社区URL
+        document.getElementById('max-clipboard-items').value = this.state.settings.maxClipboardItems;
+        document.getElementById('animation-speed').value = this.state.settings.animationSpeed || 'normal';// 设置社区URL
         const communityUrlInput = document.getElementById('community-url');
         if (communityUrlInput && this.state.settings.communityUrl) {
             communityUrlInput.value = this.state.settings.communityUrl;
@@ -3996,10 +4038,10 @@ class App {
         customOption.value = 'custom';
         customOption.textContent = '✏️ 自定义...';
         urlPresetSelect.appendChild(customOption); // 设置当前选中的值
-        const currentUrl = this.state.settings.online ? .currentUrl || this.state.settings.communityUrl;
+        const currentUrl = this.state.settings.online ?.currentUrl || this.state.settings.communityUrl;
         if (currentUrl) {
             // 查找匹配的预设
-            const matchingPreset = this.state.settings.online ? .presetWebsites ? .find(
+            const matchingPreset = this.state.settings.online ?.presetWebsites ?.find(
                 website => website.url === currentUrl
             );
             if (matchingPreset) {
@@ -4342,7 +4384,7 @@ class App {
             const description = item.querySelector('.preset-description').value.trim();
             if (name && url) {
                 newPresets.push({
-                    id: this.state.settings.online.presetWebsites[index] ? .id || `custom_${Date.now()}_${index}`,
+                    id: this.state.settings.online.presetWebsites[index] ?.id || `custom_${Date.now()}_${index}`,
                     name,
                     url,
                     icon: icon || '🌐',
@@ -4501,4 +4543,5 @@ window.addEventListener('unhandledrejection', (event) => {
     console.error('未处理的Promise rejection:', event.reason);
 
     // 防止错误传播到控制台（可选）
-    even
+    event.preventDefault();
+});

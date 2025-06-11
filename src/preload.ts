@@ -48,13 +48,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // 开发者工具
     openDevTools: () => ipcRenderer.invoke('open-devtools'),
     closeDevTools: () => ipcRenderer.invoke('close-devtools'),
-    toggleDevTools: () => ipcRenderer.invoke('toggle-devtools'),
-
-    // 更新相关
+    toggleDevTools: () => ipcRenderer.invoke('toggle-devtools'),    // 更新相关
     checkForUpdates: () => ipcRenderer.invoke('update:check'),
     downloadUpdate: (updateInfo: any) => ipcRenderer.invoke('update:download', updateInfo),
     installUpdate: (filePath: string) => ipcRenderer.invoke('update:install', filePath),
     getCurrentVersion: () => ipcRenderer.invoke('update:get-current-version'),
+    
+    // 动画设置
+    updateAnimationSettings: (settings: { showAnimationDuration: number; hideAnimationDuration: number }) => 
+        ipcRenderer.invoke('update-animation-settings', settings),
 
     // 更新事件监听
     onUpdateAvailable: (callback: (updateInfo: any) => void) => {
@@ -117,14 +119,16 @@ export interface ElectronAPI {
     writeFile: (filePath: string, content: string) => Promise<void>;
     deleteFile: (filePath: string) => Promise<void>;
     openDevTools: () => Promise<void>;
-    closeDevTools: () => Promise<void>;
-    toggleDevTools: () => Promise<void>;
+    closeDevTools: () => Promise<void>;    toggleDevTools: () => Promise<void>;
 
     // 更新相关
     checkForUpdates: () => Promise<any>;
     downloadUpdate: (updateInfo: any) => Promise<any>;
     installUpdate: (filePath: string) => Promise<void>;
     getCurrentVersion: () => Promise<string>;
+    
+    // 动画设置
+    updateAnimationSettings: (settings: { showAnimationDuration: number; hideAnimationDuration: number }) => Promise<void>;
 
     // 更新事件监听
     onUpdateAvailable: (callback: (updateInfo: any) => void) => void;

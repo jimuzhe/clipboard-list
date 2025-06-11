@@ -45,12 +45,13 @@ electron_1.contextBridge.exposeInMainWorld('electronAPI', {
     // 开发者工具
     openDevTools: () => electron_1.ipcRenderer.invoke('open-devtools'),
     closeDevTools: () => electron_1.ipcRenderer.invoke('close-devtools'),
-    toggleDevTools: () => electron_1.ipcRenderer.invoke('toggle-devtools'),
-    // 更新相关
+    toggleDevTools: () => electron_1.ipcRenderer.invoke('toggle-devtools'), // 更新相关
     checkForUpdates: () => electron_1.ipcRenderer.invoke('update:check'),
     downloadUpdate: (updateInfo) => electron_1.ipcRenderer.invoke('update:download', updateInfo),
     installUpdate: (filePath) => electron_1.ipcRenderer.invoke('update:install', filePath),
     getCurrentVersion: () => electron_1.ipcRenderer.invoke('update:get-current-version'),
+    // 动画设置
+    updateAnimationSettings: (settings) => electron_1.ipcRenderer.invoke('update-animation-settings', settings),
     // 更新事件监听
     onUpdateAvailable: (callback) => {
         electron_1.ipcRenderer.on('update-available', (_, updateInfo) => callback(updateInfo));

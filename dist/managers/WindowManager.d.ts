@@ -14,6 +14,8 @@ export declare class WindowManager extends EventEmitter {
     private triggerZoneWidth;
     private isInTriggerZone;
     private isDev;
+    private showAnimationDuration;
+    private hideAnimationDuration;
     constructor(config: WindowConfig, isDev?: boolean);
     createWindow(): BrowserWindow;
     private setupWindowEvents;
@@ -101,10 +103,13 @@ export declare class WindowManager extends EventEmitter {
     /**
      * 关闭开发者工具（仅开发模式）
      */
-    closeDevTools(): void;
-    /**
+    closeDevTools(): void; /**
      * 切换开发者工具状态（仅开发模式）
      */
     toggleDevTools(): void;
+    /**
+     * 更新动画设置
+     */
+    updateAnimationSettings(showDuration: number, hideDuration: number): void;
 }
 //# sourceMappingURL=WindowManager.d.ts.map

@@ -80,11 +80,14 @@ export declare class IPCService extends EventEmitter {
     /**
      * 处理关闭开发者工具请求
      */
-    private handleCloseDevTools;
-    /**
+    private handleCloseDevTools; /**
      * 处理切换开发者工具请求
      */
     private handleToggleDevTools;
+    /**
+     * 处理动画设置更新请求
+     */
+    private handleUpdateAnimationSettings;
     /**
      * 移除处理程序
      */
