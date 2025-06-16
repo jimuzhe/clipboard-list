@@ -39,7 +39,9 @@ electron_1.contextBridge.exposeInMainWorld('electronAPI', {
      * 通过IPC调用主进程打开外部链接
      * @param url - 要打开的外部链接地址
      */
-    openExternal: (url) => electron_1.ipcRenderer.invoke('open-external', url), // 文件夹和文件操作
+    openExternal: (url) => electron_1.ipcRenderer.invoke('open-external', url),
+    // 在社区页面中打开链接
+    openUrlInCommunity: (url) => electron_1.ipcRenderer.invoke('open-url-in-community', url), // 文件夹和文件操作
     getDefaultNotesFolder: () => electron_1.ipcRenderer.invoke('get-default-notes-folder'),
     openFolderDialog: (options) => electron_1.ipcRenderer.invoke('open-folder-dialog', options),
     listMarkdownFiles: (folderPath) => electron_1.ipcRenderer.invoke('list-markdown-files', folderPath),
@@ -75,9 +77,12 @@ electron_1.contextBridge.exposeInMainWorld('electronAPI', {
     },
     onUpdateDownloadCompleted: (callback) => {
         electron_1.ipcRenderer.on('update-download-completed', (_, result) => callback(result));
-    },
-    onUpdateDownloadError: (callback) => {
+    }, onUpdateDownloadError: (callback) => {
         electron_1.ipcRenderer.on('update-download-error', (_, error) => callback(error));
+    },
+    // 导航事件监听
+    onNavigateToOnlinePage: (callback) => {
+        electron_1.ipcRenderer.on('navigate-to-online-page', (_, url) => callback(url));
     },
 });
 //# sourceMappingURL=preload.js.map

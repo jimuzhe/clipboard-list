@@ -7,15 +7,23 @@ console.log('🚀 ClipBoard List 应用启动中...');
 
 // 应用启动
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('📄 DOM已加载，开始初始化应用...');
-
-    // 检查所有必需的类是否已加载
+    console.log('📄 DOM已加载，开始初始化应用...'); // 检查所有必需的类是否已加载
     const requiredClasses = ['AppState', 'ClipboardManager', 'TodoManager', 'PomodoroManager', 'NotesManager', 'ThemeManager', 'App'];
     const missingClasses = requiredClasses.filter(className => !window[className]);
 
     if (missingClasses.length > 0) {
         console.error('❌ 缺少必需的类:', missingClasses);
         console.error('请确保所有管理器文件都已正确加载');
+
+        // 详细检查每个类
+        requiredClasses.forEach(className => {
+            if (window[className]) {
+                console.log(`✅ ${className} 已加载`);
+            } else {
+                console.error(`❌ ${className} 未加载`);
+            }
+        });
+
         return;
     }
 
@@ -94,47 +102,50 @@ window.addEventListener('blur', () => {
     // 可以在这里暂停某些不必要的操作
 });
 
-// 开发环境下的调试工具
-if (process && process.env && process.env.NODE_ENV === 'development') {
-    console.log('🛠️ 开发模式已启用');
+// 开发环境下的调试工具 - 在渲染进程中移除process引用
+// if (process && process.env && process.env.NODE_ENV === 'development') {
+//     console.log('🛠️ 开发模式已启用');
+// }
 
-    // 提供全局调试方法
-    window.debug = {
-        app: () => window.app,
-        state: () => window.app ?.state,
-        clipboard: () => window.app ?.clipboardManager,
-        todo: () => window.app ?.todoManager,
-        notes: () => window.app ?.notesManager,
-        theme: () => window.app ?.themeManager,
-        pomodoro: () => window.app ?.pomodoroManager,
+// 提供调试工具（简化版，不依赖process）
+console.log('🛠️ 调试工具已加载');
 
-        // 调试工具方法
-        logState: () => {
-            console.log('📊 应用状态:', window.app ?.state);
-        },
+// 提供全局调试方法
+window.debug = {
+    app: () => window.app,
+    state: () => window.app ?.state,
+    clipboard: () => window.app ?.clipboardManager,
+    todo: () => window.app ?.todoManager,
+    notes: () => window.app ?.notesManager,
+    theme: () => window.app ?.themeManager,
+    pomodoro: () => window.app ?.pomodoroManager,
 
-        exportData: () => {
-            if (window.app ?.state) {
-                const data = {
-                    clipboardItems: window.app.state.clipboardItems,
-                    todoItems: window.app.state.todoItems,
-                    notes: window.app.state.notes,
-                    settings: window.app.state.settings
-                };
-                console.log('📤 导出数据:', JSON.stringify(data, null, 2));
-                return data;
-            }
-        },
+    // 调试工具方法
+    logState: () => {
+        console.log('📊 应用状态:', window.app ?.state);
+    },
 
-        clearAll: () => {
-            if (confirm('确定要清除所有数据吗？')) {
-                window.app ?.state ?.clearAllData ?.();
-                console.log('🗑️ 所有数据已清除');
-            }
+    exportData: () => {
+        if (window.app ?.state) {
+            const data = {
+                clipboardItems: window.app.state.clipboardItems,
+                todoItems: window.app.state.todoItems,
+                notes: window.app.state.notes,
+                settings: window.app.state.settings
+            };
+            console.log('📤 导出数据:', JSON.stringify(data, null, 2));
+            return data;
         }
-    };
+    },
 
-    console.log('🔧 调试工具已加载，使用 window.debug 访问');
-}
+    clearAll: () => {
+        if (confirm('确定要清除所有数据吗？')) {
+            window.app ?.state ?.clearAllData ?.();
+            console.log('🗑️ 所有数据已清除');
+        }
+    }
+};
+
+console.log('🎯 调试工具已准备就绪，使用 window.debug 访问');
 
 console.log('📋 ClipBoard List 入口文件加载完成');

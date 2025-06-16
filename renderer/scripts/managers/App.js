@@ -62,10 +62,20 @@ class App {
         this.setupSettingsListeners();
 
         // 社区面板监听器
-        this.setupCommunityListeners();
-
-        // 设置更新事件监听器
+        this.setupCommunityListeners(); // 设置更新事件监听器
         this.setupUpdateListeners();
+
+        // 监听来自主进程的导航事件
+        this.setupMainProcessListeners();
+    }
+
+    setupMainProcessListeners() {
+        // 监听主进程发送的导航到在线页面事件
+        if (window.electronAPI && window.electronAPI.onNavigateToOnlinePage) {
+            window.electronAPI.onNavigateToOnlinePage((url) => {
+                this.navigateToOnlinePageWithUrl(url);
+            });
+        }
     }
 
     setupSettingsListeners() {
@@ -277,9 +287,12 @@ class App {
 
         console.log('🔧 初始化待办管理器...');
         this.todoManager.init();
-
         console.log('🔧 初始化笔记管理器...');
         await this.notesManager.init();
+
+        // 初始化预设网站选择器
+        console.log('🔧 初始化预设网站选择器...');
+        this.initializePresetSelector();
 
         console.log('✅ 所有组件渲染完成');
     }
@@ -293,14 +306,47 @@ class App {
         // 显示对应面板
         document.querySelectorAll('.panel').forEach(panel => {
             panel.classList.toggle('active', panel.id === `${tabName}-panel`);
-        });
-
-        // 特殊处理社区选项卡
+        }); // 特殊处理社区选项卡
         if (tabName === 'community') {
             this.handleCommunityTab();
         }
     }
 
+    /**
+     * 切换到指定页面
+     */
+    switchToPage(pageName) {
+        // 将页面名称映射到选项卡名称
+        const pageToTabMap = {
+            'online': 'community', // 在线页面对应社区选项卡
+            'clipboard': 'clipboard',
+            'todo': 'todo',
+            'notes': 'notes',
+            'settings': 'settings'
+        };
+
+        const tabName = pageToTabMap[pageName] || pageName;
+        this.switchTab(tabName);
+    }
+
+    /**
+     * 导航到在线页面并打开指定URL
+     */
+    navigateToOnlinePageWithUrl(url) {
+        console.log('🌐 收到导航请求，目标URL:', url);
+
+        // 切换到社区(在线)页面
+        this.switchToPage('online');
+
+        // 等待页面切换完成后，导航到指定URL
+        setTimeout(() => {
+            const webview = document.getElementById('community-webview');
+            if (webview) {
+                webview.src = url;
+                console.log('🌐 已导航到:', url);
+            }
+        }, 100);
+    }
     searchClipboard(query) {
         if (this.clipboardManager) {
             this.clipboardManager.searchItems(query);
@@ -313,6 +359,9 @@ class App {
         const loading = document.getElementById('community-loading');
 
         if (!webview || !loading) return;
+
+        // 渲染预设网站按钮
+        this.renderPresetWebsites();
 
         // 设置社区面板的事件监听器（如果还没设置）
         if (!webview.dataset.buttonListenersAdded) {
@@ -643,109 +692,24 @@ class App {
         }
     }
 
-    renderPresetWebsites() {
-        const container = document.getElementById('preset-websites');
-        if (!container) return;
-
-        container.innerHTML = '';
-
-        this.state.settings.online.presetWebsites.forEach(preset => {
-            const button = document.createElement('button');
-            button.className = 'preset-website-btn';
-            button.innerHTML = `
-                <span class="preset-icon">${preset.icon}</span>
-                <span class="preset-name">${preset.name}</span>
-            `;
-
-            // 检查是否是当前激活的URL
-            const currentUrl = this.state.settings.online.currentUrl || this.state.settings.communityUrl;
-            if (currentUrl === preset.url) {
-                button.classList.add('active');
-            }
-
-            button.addEventListener('click', () => {
-                // 更新设置
-                this.state.settings.communityUrl = preset.url;
-                this.state.settings.online.currentUrl = preset.url;
-                this.state.saveData();
-
-                // 更新webview
-                this.updateCommunityUrl(preset.url);
-
-                // 更新URL输入框
-                const communityUrlInput = document.getElementById('community-url');
-                if (communityUrlInput) {
-                    communityUrlInput.value = preset.url;
-                }
-
-                // 更新预设选择器
-                const urlPreset = document.getElementById('url-preset');
-                if (urlPreset) {
-                    urlPreset.value = preset.url;
-                }
-
-                // 重新渲染按钮状态
-                this.renderPresetWebsites();
-
-                console.log('切换到预设网站:', preset.name, preset.url);
-            });
-
-            container.appendChild(button);
-        });
-    }
-
-    updateCommunityUrl(newUrl) {
-        const webview = document.getElementById('community-webview');
-        if (webview) {
-            webview.src = newUrl;
-        }
-    }
-
-    showUrlUpdateSuccess() {
-        // 显示成功提示
-        const button = document.getElementById('apply-community-url');
-        if (button) {
-            const originalText = button.textContent;
-            button.textContent = '✓ 已更新';
-            button.style.background = '#28a745';
-
-            setTimeout(() => {
-                button.textContent = originalText;
-                button.style.background = '';
-            }, 2000);
-        }
-    }
-
-    isValidUrl(string) {
-        try {
-            new URL(string);
-            return true;
-        } catch (_) {
-            return false;
-        }
-    }
-
-    // 预设管理器
-    showPresetManager() {
+    // 预设网站管理相关方法
+    showPresetWebsitesManager() {
+        // 创建模态对话框
         const modal = document.createElement('div');
-        modal.className = 'modal active';
+        modal.className = 'modal-overlay';
         modal.innerHTML = `
             <div class="modal-content preset-manager-modal">
                 <div class="modal-header">
-                    <h3><i class="fas fa-cog"></i> 管理预设网站</h3>
-                    <button class="modal-close-btn">✕</button>
+                    <h3><i class="fas fa-globe"></i> 管理预设网站</h3>
+                    <button class="modal-close-btn"><i class="fas fa-times"></i></button>
                 </div>
                 <div class="modal-body">
-                    <div class="preset-manager-controls">
-                        <button id="add-preset-btn" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> 添加新预设
-                        </button>
-                        <button id="reset-presets-btn" class="btn btn-secondary">
-                            <i class="fas fa-undo"></i> 重置默认
-                        </button>
+                    <div class="preset-list" id="preset-manager-list">
+                        <!-- 预设网站列表将在这里生成 -->
                     </div>
-                    <div id="preset-manager-list" class="preset-manager-list">
-                        <!-- 预设列表将在这里渲染 -->
+                    <div class="preset-actions">
+                        <button class="btn btn-primary" id="add-preset-btn"><i class="fas fa-plus"></i> 添加网站</button>
+                        <button class="btn btn-secondary" id="reset-presets-btn"><i class="fas fa-sync-alt"></i> 重置默认</button>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -756,59 +720,111 @@ class App {
         `;
 
         document.body.appendChild(modal);
-
-        // 渲染预设列表
         this.renderPresetManagerList();
-
-        // 设置事件监听器
         this.setupPresetManagerEvents(modal);
+    }
+
+    renderPresetWebsites() {
+        const container = document.getElementById('preset-websites');
+        if (!container) return;
+
+        const onlineConfig = this.state.settings.online;
+        if (!onlineConfig || !onlineConfig.showPresetButtons) {
+            container.style.display = 'none';
+            return;
+        }
+
+        container.style.display = 'flex';
+        container.innerHTML = '';
+
+        // 添加预设网站按钮
+        onlineConfig.presetWebsites.forEach(website => {
+            const button = document.createElement('button');
+            button.className = 'preset-website-btn';
+            button.dataset.url = website.url;
+            button.dataset.id = website.id;
+            button.title = website.description || website.name;
+
+            // 检查是否为当前激活的网站
+            const currentUrl = this.state.settings.online.currentUrl || this.state.settings.communityUrl;
+            if (website.url === currentUrl) {
+                button.classList.add('active');
+            }
+            button.innerHTML = `
+                <span class="icon"><i class="${website.icon || 'fas fa-globe'}"></i></span>
+                <span class="name">${website.name}</span>
+            `;
+
+            button.addEventListener('click', () => {
+                this.switchToPresetWebsite(website);
+            });
+            container.appendChild(button);
+        });
+    }
+
+    switchToPresetWebsite(website) {
+        const webview = document.getElementById('community-webview');
+        const loading = document.getElementById('community-loading');
+
+        if (!webview) return;
+
+        // 更新当前URL
+        this.state.settings.online.currentUrl = website.url;
+        this.state.settings.communityUrl = website.url; // 保持兼容性
+
+        // 显示加载状态
+        if (loading) {
+            loading.classList.remove('hidden');
+            loading.innerHTML = `
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <span>正在加载 ${website.name}...</span>
+                </div>
+            `;
+        }
+
+        // 更新webview URL
+        webview.src = website.url;
+
+        // 更新按钮状态
+        document.querySelectorAll('.preset-website-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.id === website.id) {
+                btn.classList.add('active');
+            }
+        });
+
+        // 保存设置
+        this.state.saveData();
     }
 
     renderPresetManagerList() {
         const list = document.getElementById('preset-manager-list');
         if (!list) return;
 
+        const presets = this.state.settings.online.presetWebsites;
         list.innerHTML = '';
 
-        this.state.settings.online.presetWebsites.forEach((preset, index) => {
+        presets.forEach((preset, index) => {
             const item = document.createElement('div');
             item.className = 'preset-item';
             item.innerHTML = `
-                <div class="preset-item-main">
-                    <div class="preset-item-field">
-                        <label>图标:</label>
-                        <input type="text" class="preset-icon" value="${preset.icon}" placeholder="🌐">
-                    </div>
-                    <div class="preset-item-field">
-                        <label>名称:</label>
-                        <input type="text" class="preset-name" value="${preset.name}" placeholder="网站名称">
-                    </div>
-                    <div class="preset-item-field">
-                        <label>URL:</label>
-                        <input type="url" class="preset-url" value="${preset.url}" placeholder="https://example.com">
-                    </div>
-                    <div class="preset-item-field">
-                        <label>描述:</label>
-                        <input type="text" class="preset-description" value="${preset.description || ''}" placeholder="网站描述">
-                    </div>
+                <div class="preset-item-info">
+                    <input type="text" class="preset-icon" value="${preset.icon || '🌐'}" maxlength="2" placeholder="图标">
+                    <input type="text" class="preset-name" value="${preset.name}" placeholder="网站名称">
+                    <input type="url" class="preset-url" value="${preset.url}" placeholder="网站URL">
+                    <input type="text" class="preset-description" value="${preset.description || ''}" placeholder="描述（可选）">
                 </div>
                 <div class="preset-item-actions">
-                    <button class="btn btn-sm move-up" data-index="${index}" ${index === 0 ? 'disabled' : ''}>
-                        <i class="fas fa-arrow-up"></i>
-                    </button>
-                    <button class="btn btn-sm move-down" data-index="${index}" ${index === this.state.settings.online.presetWebsites.length - 1 ? 'disabled' : ''}>
-                        <i class="fas fa-arrow-down"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger delete-preset" data-index="${index}">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                    <button class="btn btn-sm btn-secondary move-up" data-index="${index}" ${index === 0 ? 'disabled' : ''}><i class="fas fa-chevron-up"></i></button>
+                    <button class="btn btn-sm btn-secondary move-down" data-index="${index}" ${index === presets.length - 1 ? 'disabled' : ''}><i class="fas fa-chevron-down"></i></button>
+                    <button class="btn btn-sm btn-danger delete-preset" data-index="${index}"><i class="fas fa-trash"></i></button>
                 </div>
             `;
             list.appendChild(item);
         });
     }
 
-    // 设置预设管理器事件
     setupPresetManagerEvents(modal) {
         // 关闭模态框
         modal.querySelector('.modal-close-btn').addEventListener('click', () => {
@@ -854,7 +870,6 @@ class App {
         });
     }
 
-    // 添加新预设
     addNewPreset() {
         const newPreset = {
             id: 'custom_' + Date.now(),
@@ -868,7 +883,6 @@ class App {
         this.renderPresetManagerList();
     }
 
-    // 移动预设位置
     movePreset(index, direction) {
         const presets = this.state.settings.online.presetWebsites;
         const newIndex = index + direction;
@@ -879,13 +893,11 @@ class App {
         }
     }
 
-    // 删除预设
     deletePreset(index) {
         this.state.settings.online.presetWebsites.splice(index, 1);
         this.renderPresetManagerList();
     }
 
-    // 重置默认预设
     resetDefaultPresets() {
         this.state.settings.online.presetWebsites = [{
                 id: 'default',
@@ -1007,121 +1019,31 @@ class App {
         this.initializePresetSelector();
     }
 
-    // 更新相关方法
-    checkForUpdates() {
-        if (window.electronAPI && window.electronAPI.checkForUpdates) {
-            window.electronAPI.checkForUpdates();
+    initializePresetSelector() {
+        const urlPresetSelect = document.getElementById('url-preset');
+        if (!urlPresetSelect) return;
+
+        // 清空选项
+        urlPresetSelect.innerHTML = '<option value="">选择预设页面</option>';
+
+        // 添加预设网站选项
+        if (this.state.settings.online && this.state.settings.online.presetWebsites) {
+            this.state.settings.online.presetWebsites.forEach(website => {
+                const option = document.createElement('option');
+                option.value = website.url;
+                option.textContent = website.name;
+                urlPresetSelect.appendChild(option);
+            });
         }
+
+        // 添加自定义选项
+        const customOption = document.createElement('option');
+        customOption.value = 'custom';
+        customOption.textContent = '自定义地址';
+        urlPresetSelect.appendChild(customOption);
     }
 
-    // 通用删除确认对话框
-    showDeleteConfirmDialog(options) {
-        const {
-            title = '确认删除',
-                message,
-                itemName,
-                itemType = '项目',
-                onConfirm,
-                confirmText = '🗑️ 删除',
-                cancelText = '取消'
-        } = options;
-
-        const modal = document.createElement('div');
-        modal.className = 'modal active';
-        modal.innerHTML = `
-            <div class="modal-content delete-confirm-modal">
-                <div class="modal-header">
-                    <h3>⚠️ ${title}</h3>
-                    <button class="modal-close">✕</button>
-                </div>
-                <div class="modal-body">
-                    <div class="warning-text">⚠️ 此操作无法撤销！</div>
-                    <div class="delete-info">
-                        ${message || `您确定要删除${itemType} ${itemName ? `<strong>"${this.escapeHtml(itemName)}"</strong>` : ''} 吗？`}
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" id="cancel-delete">${cancelText}</button>
-                    <button class="btn btn-danger" id="confirm-delete">${confirmText}</button>
-                </div>
-            </div>
-        `;
-
-        document.body.appendChild(modal);
-
-        // 添加事件监听
-        const closeModal = () => {
-            if (modal.parentNode) {
-                document.body.removeChild(modal);
-            }
-        };
-
-        modal.querySelector('.modal-close').addEventListener('click', closeModal);
-        modal.querySelector('#cancel-delete').addEventListener('click', closeModal);
-
-        modal.querySelector('#confirm-delete').addEventListener('click', () => {
-            if (onConfirm && typeof onConfirm === 'function') {
-                onConfirm();
-            }
-            closeModal();
-        });
-
-        // 点击模态框外部关闭
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                closeModal();
-            }
-        });
-
-        return modal;
-    }
-
-    // HTML转义工具方法
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    /**
-     * 显示图片预览
-     */
-    showImagePreview(imageData) {
-        const modal = document.createElement('div');
-        modal.className = 'image-preview-modal';
-        modal.innerHTML = `
-            <button class="image-preview-close">&times;</button>
-            <img src="${imageData}" alt="图片预览" class="image-preview-content">
-        `;
-
-        document.body.appendChild(modal);
-
-        // 关闭预览
-        const closePreview = () => {
-            if (modal.parentNode) {
-                document.body.removeChild(modal);
-            }
-        };
-
-        // 点击关闭按钮
-        modal.querySelector('.image-preview-close').addEventListener('click', closePreview);
-
-        // 点击背景关闭
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                closePreview();
-            }
-        });
-
-        // ESC键关闭
-        const handleKeydown = (e) => {
-            if (e.key === 'Escape') {
-                closePreview();
-                document.removeEventListener('keydown', handleKeydown);
-            }
-        };
-        document.addEventListener('keydown', handleKeydown);
-    }
+    // ...existing code...
 }
 
 // 导出到全局

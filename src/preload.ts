@@ -43,7 +43,10 @@ contextBridge.exposeInMainWorld('electronAPI', {    // 窗口控制
      * 通过IPC调用主进程打开外部链接
      * @param url - 要打开的外部链接地址
      */
-    openExternal: (url: string) => ipcRenderer.invoke('open-external', url),    // 文件夹和文件操作
+    openExternal: (url: string) => ipcRenderer.invoke('open-external', url),
+
+    // 在社区页面中打开链接
+    openUrlInCommunity: (url: string) => ipcRenderer.invoke('open-url-in-community', url),// 文件夹和文件操作
     getDefaultNotesFolder: () => ipcRenderer.invoke('get-default-notes-folder'),
     openFolderDialog: (options?: any) => ipcRenderer.invoke('open-folder-dialog', options),
     listMarkdownFiles: (folderPath: string) => ipcRenderer.invoke('list-markdown-files', folderPath),
@@ -83,9 +86,13 @@ contextBridge.exposeInMainWorld('electronAPI', {    // 窗口控制
     },
     onUpdateDownloadCompleted: (callback: (result: any) => void) => {
         ipcRenderer.on('update-download-completed', (_, result) => callback(result));
-    },
-    onUpdateDownloadError: (callback: (error: string) => void) => {
+    }, onUpdateDownloadError: (callback: (error: string) => void) => {
         ipcRenderer.on('update-download-error', (_, error) => callback(error));
+    },
+
+    // 导航事件监听
+    onNavigateToOnlinePage: (callback: (url: string) => void) => {
+        ipcRenderer.on('navigate-to-online-page', (_, url) => callback(url));
     },
 });
 
@@ -123,9 +130,9 @@ export interface ElectronAPI {
     loadPomodoroTimer: () => Promise<any>;
 
     setTheme: (theme: string) => Promise<void>;
-    getTheme: () => Promise<string>;
-    showNotification: (title: string, body: string) => Promise<void>;
+    getTheme: () => Promise<string>; showNotification: (title: string, body: string) => Promise<void>;
     openExternal: (url: string) => Promise<void>;
+    openUrlInCommunity: (url: string) => Promise<void>;
     getDefaultNotesFolder: () => Promise<any>;
     openFolderDialog: (options?: any) => Promise<any>; listMarkdownFiles: (folderPath: string) => Promise<any>;
     readFile: (filePath: string) => Promise<any>;
@@ -147,9 +154,9 @@ export interface ElectronAPI {
     onUpdateNotAvailable: (callback: () => void) => void;
     onUpdateError: (callback: (error: string) => void) => void;
     onUpdateDownloadStarted: (callback: (updateInfo: any) => void) => void;
-    onUpdateDownloadProgress: (callback: (progress: any) => void) => void;
-    onUpdateDownloadCompleted: (callback: (result: any) => void) => void;
+    onUpdateDownloadProgress: (callback: (progress: any) => void) => void; onUpdateDownloadCompleted: (callback: (result: any) => void) => void;
     onUpdateDownloadError: (callback: (error: string) => void) => void;
+    onNavigateToOnlinePage: (callback: (url: string) => void) => void;
 }
 
 declare global {

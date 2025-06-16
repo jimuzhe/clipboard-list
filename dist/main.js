@@ -221,6 +221,10 @@ class ClipboardListApp {
             const newState = this.windowManager.toggleAlwaysOnTop();
             this.ipcService.emit('always-on-top-toggled', newState);
         });
+        // 在线页面导航
+        this.ipcService.on('navigate-to-online', (url) => {
+            this.navigateToOnlinePage(url);
+        });
         // 剪切板操作
         this.ipcService.on('clipboard-read', () => {
             const content = this.clipboardManager.readFromClipboard();
@@ -602,6 +606,23 @@ class ClipboardListApp {
         }
         catch (error) {
             Logger_1.logger.error('Error during cleanup:', error);
+        }
+    }
+    /**
+     * 导航到在线页面并打开指定URL
+     */
+    navigateToOnlinePage(url) {
+        try {
+            // 确保窗口可见
+            this.windowManager.show();
+            // 发送消息给渲染进程，切换到在线页面并导航到指定URL
+            if (this.windowManager.getWindow()) {
+                this.ipcService.sendToRenderer(this.windowManager.getWindow().webContents, 'navigate-to-online-page', url);
+            }
+            Logger_1.logger.info(`Navigate to online page with URL: ${url}`);
+        }
+        catch (error) {
+            Logger_1.logger.error('Navigate to online page error:', error);
         }
     }
     /**

@@ -77,6 +77,10 @@ export declare class IPCService extends EventEmitter {
     private handleDeleteFile;
     private handleOpenExternal;
     /**
+     * 处理在社区页面中打开URL请求
+     */
+    private handleOpenUrlInCommunity;
+    /**
      * 处理打开开发者工具请求
      */
     private handleOpenDevTools;

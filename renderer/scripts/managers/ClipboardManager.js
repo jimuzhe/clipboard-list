@@ -27,6 +27,30 @@ class ClipboardManager {
 
         this.renderClipboardList();
         console.log('✅ 剪切板管理器初始化完成');
+
+        // 测试URL检测功能
+        this.testUrlDetection();
+    }
+
+    // 测试URL检测功能
+    testUrlDetection() {
+        const testUrls = [
+            'https://www.google.com',
+            'http://example.com',
+            'www.baidu.com',
+            'google.com',
+            'https://github.com/user/repo',
+            'ftp://files.example.com',
+            'not a url',
+            '这不是链接'
+        ];
+
+        console.log('🧪 测试URL检测功能:');
+        testUrls.forEach(url => {
+            const isUrl = this.isURL(url);
+            const type = this.detectContentType(url);
+            console.log(`测试: "${url}" -> isURL: ${isUrl}, type: ${type}`);
+        });
     }
 
     handleClipboardChange(clipboardItem) {
@@ -87,28 +111,34 @@ class ClipboardManager {
         // 保存数据
         this.appState.saveData();
     }
-
     detectContentType(content) {
+        console.log('🔍 内容类型检测 - 检查内容:', content);
+
         // 检测代码片段
         if (this.isCode(content)) {
+            console.log('✅ 识别为代码类型');
             return 'code';
         }
 
         // 检测URL
         if (this.isURL(content)) {
+            console.log('✅ 识别为URL类型');
             return 'url';
         }
 
         // 检测邮箱
         if (this.isEmail(content)) {
+            console.log('✅ 识别为邮箱类型');
             return 'email';
         }
 
         // 检测图片路径
         if (this.isImagePath(content)) {
+            console.log('✅ 识别为图片类型');
             return 'image';
         }
 
+        console.log('✅ 识别为文本类型');
         return 'text';
     }
 
@@ -129,14 +159,51 @@ class ClipboardManager {
 
         return codePatterns.some(pattern => pattern.test(content));
     }
-
     isURL(content) {
-        try {
-            new URL(content);
-            return true;
-        } catch {
-            return /^(https?:\/\/|www\.)/i.test(content);
+        console.log('🔍 URL检测 - 检查内容:', content);
+
+        // 清理内容，去除首尾空白
+        const cleanContent = content.trim();
+
+        // 如果内容为空或过短，直接返回false
+        if (!cleanContent || cleanContent.length < 4) {
+            console.log('❌ URL检测 - 内容过短或为空');
+            return false;
         }
+
+        // 首先尝试URL构造函数
+        try {
+            new URL(cleanContent);
+            console.log('✅ URL检测 - 通过URL构造函数验证:', cleanContent);
+            return true;
+        } catch (error) {
+            // URL构造函数失败，尝试其他方法
+        }
+
+        // 检测常见的URL模式
+        const urlPatterns = [
+            /^https?:\/\/[^\s/$.?#].[^\s]*$/i, // http://或https://开头
+            /^www\.[^\s/$.?#].[^\s]*$/i, // www.开头
+            /^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$/i, // 域名格式
+            /^[^\s/$.?#].[^\s]*\.(com|org|net|edu|gov|mil|int|cn|jp|uk|de|fr|it|ru|br|ca|au|in)$/i // 带常见顶级域名
+        ];
+
+        const isUrlPattern = urlPatterns.some(pattern => pattern.test(cleanContent));
+        console.log('🔍 URL检测 - 正则表达式结果:', isUrlPattern, '内容:', cleanContent);
+
+        // 如果匹配URL模式，尝试添加协议再次验证
+        if (isUrlPattern) {
+            try {
+                const urlWithProtocol = cleanContent.startsWith('http') ? cleanContent : `http://${cleanContent}`;
+                new URL(urlWithProtocol);
+                console.log('✅ URL检测 - 添加协议后验证成功:', urlWithProtocol);
+                return true;
+            } catch (error) {
+                console.log('❌ URL检测 - 添加协议后仍验证失败');
+            }
+        }
+
+        return false;
     }
 
     isEmail(content) {
@@ -221,12 +288,25 @@ class ClipboardManager {
         } else {
             // 文本内容显示
             contentHtml = `<div class="clipboard-item-content" data-full-content="${this.escapeHtml(item.content)}">${this.escapeHtml(item.content)}</div>`;
-        }
+        } // 为URL类型添加打开按钮
+        const openButtonHtml = item.type === 'url' ?
+            `<button class="control-btn open-url-btn" title="在移记社区中打开链接">
+                <i class="fas fa-external-link-alt"></i>
+            </button>` : '';
+
+        console.log('🔧 创建剪切板元素:', {
+            id: item.id,
+            type: item.type,
+            content: item.content.substring(0, 50) + '...',
+            hasOpenButton: item.type === 'url',
+            openButtonHtml: openButtonHtml
+        });
 
         div.innerHTML = `
             <div class="clipboard-item-header">
                 <span class="clipboard-item-type">${typeIcon} ${item.type.toUpperCase()}</span>
                 <div class="clipboard-item-actions">
+                    ${openButtonHtml}
                     <button class="control-btn pin-btn ${item.pinned ? 'pinned' : ''}" title="${item.pinned ? '取消置顶' : '置顶'}">
                         <i class="fas ${item.pinned ? 'fa-thumbtack' : 'fa-thumbtack'}"></i>
                     </button>
@@ -262,7 +342,14 @@ class ClipboardManager {
             if (!e.target.classList.contains('control-btn') && !e.target.hasAttribute('data-image-preview')) {
                 this.copyToClipboard(item.content, item);
             }
-        });
+        }); // 打开URL按钮（仅对URL类型显示）
+        const openUrlBtn = element.querySelector('.open-url-btn');
+        if (openUrlBtn) {
+            openUrlBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.openUrlInCommunity(item.content);
+            });
+        }
 
         // 置顶按钮
         element.querySelector('.pin-btn').addEventListener('click', (e) => {
@@ -542,7 +629,6 @@ class ClipboardManager {
         div.textContent = text;
         return div.innerHTML;
     }
-
     showNotification(title, body) {
         // 检查是否启用了桌面通知
         if (!this.appState.settings.enableNotifications) {
@@ -551,6 +637,76 @@ class ClipboardManager {
 
         if (window.electronAPI.showNotification) {
             window.electronAPI.showNotification(title, body);
+        }
+    }
+    openUrlInCommunity(url) {
+        try {
+            // 验证URL格式
+            let validUrl = url;
+            try {
+                new URL(url);
+            } catch {
+                // 如果不是完整URL，尝试添加http://
+                if (!/^https?:\/\//i.test(url)) {
+                    validUrl = 'http://' + url;
+                }
+            }
+
+            // 获取社区页面的URL
+            const communityUrl = this.appState.settings.online.currentUrl || this.appState.settings.communityUrl;
+
+            console.log('🌐 准备在移记社区中打开链接:', validUrl);
+            console.log('🌐 当前社区URL:', communityUrl);
+
+            // 方案1: 如果目标URL就是社区地址，直接跳转
+            if (validUrl.toLowerCase().includes('8.130.41.186:3000')) {
+                if (window.electronAPI.openUrlInCommunity) {
+                    window.electronAPI.openUrlInCommunity(validUrl);
+                } else {
+                    // 直接在应用内导航
+                    if (window.app && window.app.navigateToOnlinePageWithUrl) {
+                        window.app.navigateToOnlinePageWithUrl(validUrl);
+                    }
+                }
+            } else {
+                // 方案2: 构建完整的URL，将目标链接作为参数传递给社区页面
+                const encodedUrl = encodeURIComponent(validUrl);
+                const fullUrl = `${communityUrl}?openUrl=${encodedUrl}`;
+
+                console.log('🌐 构建的完整URL:', fullUrl);
+
+                // 发送事件给主进程，切换到在线页面并打开链接
+                if (window.electronAPI.openUrlInCommunity) {
+                    window.electronAPI.openUrlInCommunity(fullUrl);
+                } else {
+                    // 备用方案：直接在应用内导航
+                    if (window.app && window.app.navigateToOnlinePageWithUrl) {
+                        window.app.navigateToOnlinePageWithUrl(fullUrl);
+                    } else {
+                        // 最后备用方案：外部浏览器打开
+                        window.electronAPI.openExternal(validUrl);
+                    }
+                }
+            }
+
+            // 显示通知
+            this.showNotification('链接已打开', '链接正在移记社区中打开');
+
+            // 切换到在线页面
+            if (window.app && window.app.switchToPage) {
+                window.app.switchToPage('online');
+            }
+
+        } catch (error) {
+            console.error('❌ 打开链接失败:', error);
+            this.showNotification('打开失败', '无法打开链接');
+
+            // 错误时尝试直接在外部浏览器打开
+            try {
+                window.electronAPI.openExternal(url);
+            } catch (fallbackError) {
+                console.error('❌ 备用打开方案也失败:', fallbackError);
+            }
         }
     }
 }

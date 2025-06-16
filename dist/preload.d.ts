@@ -26,6 +26,7 @@ export interface ElectronAPI {
     getTheme: () => Promise<string>;
     showNotification: (title: string, body: string) => Promise<void>;
     openExternal: (url: string) => Promise<void>;
+    openUrlInCommunity: (url: string) => Promise<void>;
     getDefaultNotesFolder: () => Promise<any>;
     openFolderDialog: (options?: any) => Promise<any>;
     listMarkdownFiles: (folderPath: string) => Promise<any>;
@@ -51,6 +52,7 @@ export interface ElectronAPI {
     onUpdateDownloadProgress: (callback: (progress: any) => void) => void;
     onUpdateDownloadCompleted: (callback: (result: any) => void) => void;
     onUpdateDownloadError: (callback: (error: string) => void) => void;
+    onNavigateToOnlinePage: (callback: (url: string) => void) => void;
 }
 declare global {
     interface Window {

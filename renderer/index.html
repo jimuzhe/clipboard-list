@@ -621,16 +621,32 @@
             </div>
         </div>
     </div> <!-- 引入所有管理器模块 -->
-    <script src="scripts/managers/AppState.js"></script>
-    <script src="scripts/managers/ClipboardManager.js"></script>
-    <script src="scripts/managers/TodoManager.js"></script>
-    <script src="scripts/managers/PomodoroManager.js"></script>
-    <script src="scripts/managers/NotesManager.js"></script>
-    <script src="scripts/managers/ThemeManager.js"></script>
-    <script src="scripts/managers/App.js"></script>
+    <script>
+        // 监听脚本加载错误
+        window.addEventListener('error', function (e) {
+            if (e.filename && e.filename.includes('.js')) {
+                console.error('❌ 脚本加载失败:', e.filename, e.message);
+            }
+        });
+        console.log('📄 开始加载JS模块...');
+    </script>
+    <script src="scripts/managers/AppState.js" onload="console.log('✅ AppState.js 加载完成')"
+        onerror="console.error('❌ AppState.js 加载失败')"></script>
+    <script src="scripts/managers/ClipboardManager.js" onload="console.log('✅ ClipboardManager.js 加载完成')"
+        onerror="console.error('❌ ClipboardManager.js 加载失败')"></script>
+    <script src="scripts/managers/TodoManager.js" onload="console.log('✅ TodoManager.js 加载完成')"
+        onerror="console.error('❌ TodoManager.js 加载失败')"></script>
+    <script src="scripts/managers/PomodoroManager.js" onload="console.log('✅ PomodoroManager.js 加载完成')"
+        onerror="console.error('❌ PomodoroManager.js 加载失败')"></script>
+    <script src="scripts/managers/NotesManager.js" onload="console.log('✅ NotesManager.js 加载完成')"
+        onerror="console.error('❌ NotesManager.js 加载失败')"></script>
+    <script src="scripts/managers/ThemeManager.js" onload="console.log('✅ ThemeManager.js 加载完成')"
+        onerror="console.error('❌ ThemeManager.js 加载失败')"></script>
+    <script src="scripts/managers/App.js" onload="console.log('✅ App.js 加载完成')"
+        onerror="console.error('❌ App.js 加载失败')"></script>
 
     <!-- 主入口文件 -->
-    <script src="main.js"></script>
+    <script src="main.js" onload="console.log('✅ main.js 加载完成')" onerror="console.error('❌ main.js 加载失败')"></script>
 </body>
 
 </html>

@@ -237,3 +237,14 @@
   padding: 1px 2px;
   font-weight: 500;
 }
+
+/* 打开URL按钮特殊样式 - 与其他控制按钮保持一致 */
+.clipboard-item-actions .open-url-btn {
+  /* 移除特殊样式，使用默认的 control-btn 样式 */
+  margin-right: 0;
+}
+
+.clipboard-item-actions .open-url-btn i {
+  font-size: 11px;
+  color: inherit;
+}

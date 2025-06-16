@@ -85,7 +85,8 @@ export class IPCService extends EventEmitter {
         this.registerHandler('read-file', this.handleReadFile.bind(this));
         this.registerHandler('write-file', this.handleWriteFile.bind(this));
         this.registerHandler('delete-file', this.handleDeleteFile.bind(this));
-        this.registerHandler('open-external', this.handleOpenExternal.bind(this));        // 开发者工具相关
+        this.registerHandler('open-external', this.handleOpenExternal.bind(this));
+        this.registerHandler('open-url-in-community', this.handleOpenUrlInCommunity.bind(this));        // 开发者工具相关
         this.registerHandler('open-devtools', this.handleOpenDevTools.bind(this));
         this.registerHandler('close-devtools', this.handleCloseDevTools.bind(this));
         this.registerHandler('toggle-devtools', this.handleToggleDevTools.bind(this));
@@ -536,6 +537,20 @@ export class IPCService extends EventEmitter {
             logger.info(`Opened external URL: ${url}`);
         } catch (error) {
             logger.error('Open external URL error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 处理在社区页面中打开URL请求
+     */
+    private async handleOpenUrlInCommunity(event: IpcMainInvokeEvent, url: string): Promise<void> {
+        try {
+            // 通知窗口管理器切换到在线页面并导航到指定URL
+            this.emit('navigate-to-online', url);
+            logger.info(`Navigate to online page with URL: ${url}`);
+        } catch (error) {
+            logger.error('Open URL in community error:', error);
             throw error;
         }
     }
