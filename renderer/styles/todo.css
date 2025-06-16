@@ -1,0 +1,541 @@
+/**
+ * 待办事项样式
+ * 包含：待办列表、待办卡片、优先级、拖拽状态、空状态等
+ */
+
+/* 待办清单面板 */
+.todo-input-area {
+  padding: 16px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  backdrop-filter: blur(10px);
+}
+
+.todo-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.todo-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.todo-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  gap: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 优化的待办事项卡片 */
+.todo-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: grab;
+  position: relative;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.todo-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.todo-item::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
+  opacity: 0;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+/* 深色主题的卡片光效 */
+[data-theme="dark"] .todo-item::after {
+  background: linear-gradient(135deg, var(--purple-glass), transparent);
+}
+
+.todo-item:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  border-color: var(--primary-color);
+}
+
+.todo-item:hover::before {
+  opacity: 1;
+  height: 6px;
+}
+
+.todo-item:hover::after {
+  opacity: 1;
+}
+
+.todo-item:active {
+  cursor: grabbing;
+  transform: rotate(3deg) scale(1.05);
+}
+
+/* 完成状态 */
+.todo-item.completed {
+  opacity: 0.6;
+  background: linear-gradient(135deg, var(--bg-secondary), rgba(40, 167, 69, 0.1));
+  border-color: var(--success-color);
+  transform: scale(0.98);
+}
+
+.todo-item.completed .todo-item-title span {
+  text-decoration: line-through;
+  color: var(--text-secondary);
+}
+
+.todo-item.completed::before {
+  background: linear-gradient(90deg, transparent, var(--success-color), transparent);
+  opacity: 0.8;
+  height: 4px;
+}
+
+.todo-item.completed .todo-checkbox {
+  background: var(--success-color);
+  border-color: var(--success-color);
+  animation: checkBounce 0.4s ease;
+}
+
+@keyframes checkBounce {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* 优先级样式 */
+.todo-item.high-priority {
+  border-left: 5px solid var(--danger-color);
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.08), var(--bg-card));
+  box-shadow: 0 4px 20px rgba(220, 53, 69, 0.1);
+}
+
+/* 深色主题的高优先级 */
+[data-theme="dark"] .todo-item.high-priority {
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.15), var(--bg-secondary));
+  box-shadow: 0 4px 20px rgba(220, 53, 69, 0.2);
+}
+
+.todo-item.high-priority:hover {
+  box-shadow: 0 12px 40px rgba(220, 53, 69, 0.2);
+}
+
+/* 深色主题的高优先级悬停 */
+[data-theme="dark"] .todo-item.high-priority:hover {
+  box-shadow: 0 12px 40px rgba(220, 53, 69, 0.3);
+}
+
+.todo-item.medium-priority {
+  border-left: 5px solid var(--warning-color);
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.08), var(--bg-card));
+  box-shadow: 0 4px 20px rgba(255, 193, 7, 0.1);
+}
+
+/* 深色主题的中优先级 */
+[data-theme="dark"] .todo-item.medium-priority {
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.12), var(--bg-secondary));
+  box-shadow: 0 4px 20px rgba(255, 193, 7, 0.15);
+}
+
+.todo-item.medium-priority:hover {
+  box-shadow: 0 12px 40px rgba(255, 193, 7, 0.2);
+}
+
+/* 深色主题的中优先级悬停 */
+[data-theme="dark"] .todo-item.medium-priority:hover {
+  box-shadow: 0 12px 40px rgba(255, 193, 7, 0.25);
+}
+
+.todo-item.low-priority {
+  border-left: 5px solid var(--success-color);
+  background: linear-gradient(135deg, rgba(40, 167, 69, 0.08), var(--bg-card));
+  box-shadow: 0 4px 20px rgba(40, 167, 69, 0.1);
+}
+
+/* 深色主题的低优先级 */
+[data-theme="dark"] .todo-item.low-priority {
+  background: linear-gradient(135deg, rgba(40, 167, 69, 0.12), var(--bg-secondary));
+  box-shadow: 0 4px 20px rgba(40, 167, 69, 0.15);
+}
+
+.todo-item.low-priority:hover {
+  box-shadow: 0 12px 40px rgba(40, 167, 69, 0.2);
+}
+
+/* 深色主题的低优先级悬停 */
+[data-theme="dark"] .todo-item.low-priority:hover {
+  box-shadow: 0 12px 40px rgba(40, 167, 69, 0.25);
+}
+
+/* 待办事项头部 */
+.todo-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.todo-item-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  flex: 1;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.todo-checkbox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  margin: 2px 0 0 0;
+  flex-shrink: 0;
+  appearance: none;
+}
+
+.todo-checkbox:checked {
+  background: var(--success-color);
+  border-color: var(--success-color);
+  transform: scale(1.1);
+}
+
+.todo-checkbox:checked::before {
+  content: '\f00c'; /* Font Awesome check icon */
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  animation: checkAppear 0.3s ease;
+}
+
+.todo-checkbox:hover {
+  border-color: var(--primary-color);
+  transform: scale(1.15);
+  box-shadow: 0 0 0 3px rgba(0, 122, 204, 0.1);
+}
+
+@keyframes checkAppear {
+  0% { 
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0);
+  }
+  100% { 
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* 操作按钮 */
+.todo-item-actions {
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateX(15px);
+}
+
+.todo-item:hover .todo-item-actions {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.todo-item-actions .control-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.todo-item-actions .control-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.4s ease;
+}
+
+.todo-item-actions .control-btn:hover::before {
+  left: 100%;
+}
+
+.todo-item-actions .control-btn:hover {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(0, 122, 204, 0.3);
+}
+
+.todo-item-actions .pomodoro-btn:hover {
+  background: var(--warning-color);
+  border-color: var(--warning-color);
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+}
+
+.todo-item-actions .edit-btn:hover {
+  background: var(--info-color);
+  border-color: var(--info-color);
+  box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
+}
+
+.todo-item-actions .delete-btn:hover {
+  background: var(--danger-color);
+  border-color: var(--danger-color);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+/* 描述文本 */
+.todo-item-description {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 12px 0 16px 36px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, var(--bg-secondary), rgba(255, 255, 255, 0.5));
+  border-radius: 10px;
+  border-left: 4px solid var(--info-color);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  position: relative;
+}
+
+/* 深色主题的描述文本 */
+[data-theme="dark"] .todo-item-description {
+  background: linear-gradient(135deg, var(--bg-secondary), var(--purple-glass));
+}
+
+.todo-item-description::before {
+  content: '\f075'; /* Font Awesome comment icon */
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-size: 14px;
+  opacity: 0.6;
+}
+
+/* 元信息区域 */
+.todo-item-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* 优先级徽章 */
+.priority-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.priority-badge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: left 0.6s ease;
+}
+
+.priority-badge:hover::before {
+  left: 100%;
+}
+
+.priority-high {
+  background: linear-gradient(135deg, #ff4757, #ff3742);
+  color: white;
+  box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
+}
+
+.priority-high::after {
+  content: '\f06d'; /* Font Awesome fire icon */
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  margin-left: 3px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+.priority-medium {
+  background: linear-gradient(135deg, #ffa502, #ff9500);
+  color: white;
+  box-shadow: 0 4px 15px rgba(255, 165, 2, 0.4);
+}
+
+.priority-medium::after {
+  content: '\f0e7'; /* Font Awesome bolt icon */
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  margin-left: 3px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+.priority-low {
+  background: linear-gradient(135deg, #2ed573, #1dd1a1);
+  color: white;
+  box-shadow: 0 4px 15px rgba(46, 213, 115, 0.4);
+}
+
+.priority-low::after {
+  content: '\f06c'; /* Font Awesome leaf icon */
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  margin-left: 3px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+/* 时间显示 */
+.todo-item-time {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  padding: 4px 8px;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  position: relative;
+}
+
+.todo-item-time::before {
+  content: '\f017'; /* Font Awesome clock icon */
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  margin-right: 4px;
+}
+
+/* 拖拽状态 */
+.todo-item.sortable-ghost {
+  opacity: 0.4;
+  transform: rotate(8deg) scale(1.05);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+}
+
+.todo-item.sortable-chosen {
+  transform: scale(1.08);
+  z-index: 1000;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+}
+
+.todo-item.sortable-drag {
+  opacity: 0.8;
+  transform: rotate(5deg);
+}
+
+/* 空状态 */
+.todo-list:empty::after {
+  content: '还没有待办事项\A点击"添加"按钮创建第一个任务';
+  white-space: pre-line;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.8;
+  height: 240px;
+  background: linear-gradient(135deg, var(--bg-secondary), rgba(255, 255, 255, 0.7));
+  border-radius: 16px;
+  border: 2px dashed var(--border-color);
+  backdrop-filter: blur(10px);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin: 20px 0;
+  transition: all 0.3s ease;
+}
+
+.todo-list:empty:hover::after {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  transform: scale(1.02);
+}
+
+/* 待办事项模态框特定样式 */
+.add-todo-modal .input-feedback {
+  margin-top: 6px;
+  font-size: 12px;
+  min-height: 18px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.add-todo-modal .form-features {
+  margin-top: 24px;
+  padding: 20px;
+  background: var(--bg-glass);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.add-todo-modal .feature-item {
+  margin-bottom: 16px;
+}
+
+.add-todo-modal .feature-item:last-child {
+  margin-bottom: 0;
+}

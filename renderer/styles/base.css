@@ -1,0 +1,108 @@
+/**
+ * 全局变量和基础样式
+ * 包含：CSS变量定义、主题配色、基础重置、全局样式
+ */
+
+/* 全局样式和 CSS 变量 */
+:root {
+  --primary-color: #007acc;
+  --secondary-color: #6c757d;
+  --success-color: #28a745;
+  --danger-color: #dc3545;
+  --warning-color: #ffc107;
+  --info-color: #17a2b8;
+  
+  --bg-primary: rgba(255, 255, 255, 0.95);
+  --bg-secondary: rgba(248, 249, 250, 0.9);
+  --bg-glass: rgba(255, 255, 255, 0.1);
+  --text-primary: #333;
+  --text-secondary: #6c757d;
+  --border-color: rgba(0, 0, 0, 0.1);
+  
+  --font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+  --border-radius: 12px;
+  --border-radius-small: 8px;
+  --border-radius-large: 16px;
+  --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 深色主题 - 黑紫色调优化 */
+[data-theme="dark"] {
+  --bg-primary: rgba(20, 15, 35, 0.95);
+  --bg-secondary: rgba(35, 25, 50, 0.9);
+  --bg-glass: rgba(15, 10, 30, 0.3);
+  --text-primary: #ffffff;
+  --text-secondary: #c8b8e0;
+  --border-color: rgba(180, 150, 220, 0.15);
+  
+  /* 紫色系渐变颜色 */
+  --purple-primary: #6a4c93;
+  --purple-secondary: #9d8df1;
+  --purple-accent: #b19cd9;
+  --purple-light: rgba(157, 141, 241, 0.3);
+  --purple-dark: rgba(106, 76, 147, 0.5);
+  --purple-glass: rgba(157, 141, 241, 0.1);
+}
+
+/* 基础重置 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family);
+  background: transparent;
+  color: var(--text-primary);
+  user-select: none;
+  overflow: hidden;
+  height: 100vh;
+  border-radius: 12px;
+}
+
+/* 应用根容器圆角优化 */
+html, body {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* 应用窗口整体圆角 */
+.app-window {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+/* 全局滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.5);
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 128, 128, 0.7);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--bg-secondary);
+}
+
+/* 毛玻璃效果 */
+.glass-effect {
+  backdrop-filter: blur(20px);
+  background: var(--bg-glass);
+  border: 1px solid var(--border-color);
+}
