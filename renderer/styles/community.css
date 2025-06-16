@@ -3,14 +3,14 @@
 /* 预设网站样式 */
 .preset-websites {
   display: flex;
-  gap: 4px;
+  gap: 8px;
   align-items: center;
   overflow-x: auto;
   overflow-y: hidden;
   flex-wrap: nowrap;
   min-width: 0;
   flex: 1;
-  padding: 2px 0 8px 0; /* 底部留出滚动条空间 */
+  padding: 4px 0 12px 0; /* 底部留出滚动条空间 */
   /* 自定义滚动条样式 */
   scrollbar-width: thin;
   scrollbar-color: var(--border-color) transparent;
@@ -39,36 +39,95 @@
 .preset-website-btn {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
+  justify-content: center;
+  padding: 8px;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 12px;
   color: var(--text-secondary);
   transition: var(--transition);
-  white-space: nowrap;
   text-decoration: none;
   flex-shrink: 0;
-  min-width: auto;
+  width: 36px;
+  height: 36px;
+  position: relative;
+  overflow: hidden;
 }
 
 .preset-website-btn:hover {
   background: var(--primary-color);
   color: white;
   border-color: var(--primary-color);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
 }
 
+/* 预设网站按钮动画效果 */
+.preset-website-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  border-radius: 7px;
+}
+
+.preset-website-btn:hover::before {
+  opacity: 1;
+}
+
+/* 活跃状态的脉冲效果 */
 .preset-website-btn.active {
-  background: var(--primary-color);
-  color: white;
-  border-color: var(--primary-color);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 2px 16px rgba(0, 122, 255, 0.4);
+  }
+  100% {
+    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2);
+  }
 }
 
 .preset-website-btn .icon {
-  font-size: 14px;
+  font-size: 18px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", emoji, sans-serif;
+}
+
+.preset-website-btn .icon img {
+  width: 20px;
+  height: 20px;
+  object-fit: cover;
+  border-radius: 3px;
+  display: block;
+}
+
+.preset-website-btn .icon img {
+  width: 18px;
+  height: 18px;
+  object-fit: cover;
+  border-radius: 2px;
+}
+
+/* 移除名字显示相关样式 */
+.preset-website-btn .name {
+  display: none;
 }
 
 /* 预设网站管理按钮 */
@@ -90,14 +149,61 @@
 
 /* 预设网站管理器样式 */
 .preset-manager-modal {
-  width: 600px;
-  max-height: 70vh;
+  width: 700px;
+  max-width: 90vw;
+  max-height: 75vh;
 }
 
 .preset-list {
-  max-height: 400px;
+  max-height: 450px;
   overflow-y: auto;
   margin-bottom: 16px;
+  padding-right: 8px; /* 为滚动条留出空间 */
+  /* 自定义滚动条样式 */
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+}
+
+/* Webkit 浏览器滚动条样式 */
+.preset-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.preset-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  margin: 4px 0;
+}
+
+.preset-list::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+  min-height: 20px;
+}
+
+.preset-list::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+.preset-list::-webkit-scrollbar-thumb:active {
+  background: var(--primary-color);
+}
+
+/* 深色主题滚动条样式 */
+[data-theme="dark"] .preset-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .preset-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .preset-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+[data-theme="dark"] .preset-list::-webkit-scrollbar-thumb:active {
+  background: var(--primary-color);
 }
 
 .preset-item {
@@ -110,6 +216,8 @@
   border-radius: 8px;
   margin-bottom: 8px;
   transform: translateZ(0); /* 启用硬件加速 */
+  min-width: 0;
+  overflow: visible;
 }
 
 .preset-item-info {
@@ -117,6 +225,7 @@
   gap: 8px;
   flex: 1;
   align-items: center;
+  overflow: hidden;
 }
 
 .preset-item-info input {
@@ -134,12 +243,13 @@
 }
 
 .preset-name {
-  width: 100px;
+  width: 120px;
+  flex-shrink: 0;
 }
 
 .preset-url {
   flex: 1;
-  min-width: 200px;
+  min-width: 150px;
 }
 
 .preset-description {
@@ -149,6 +259,8 @@
 .preset-item-actions {
   display: flex;
   gap: 4px;
+  flex-shrink: 0;
+  align-items: center;
 }
 
 .preset-actions {
@@ -313,5 +425,110 @@
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+/* 预设网站图标容器样式 */
+.preset-icon-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 80px;
+  max-width: 120px;
+  flex-shrink: 0;
+}
+
+.icon-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-primary);
+  font-size: 14px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.icon-preview img {
+  width: 16px;
+  height: 16px;
+  object-fit: cover;
+  border-radius: 2px;
+  display: block;
+}
+
+.auto-favicon-btn {
+  padding: 2px 4px !important;
+  min-width: 22px;
+  width: 22px;
+  height: 18px;
+  font-size: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.auto-favicon-btn:hover {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+/* 预设管理器按钮样式 */
+.preset-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* 响应式样式 - 针对小屏幕优化 */
+@media (max-width: 768px) {
+  .preset-manager-modal {
+    width: 95vw;
+    max-height: 85vh;
+  }
+  
+  .preset-list {
+    max-height: 300px;
+  }
+  
+  .preset-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px;
+  }
+  
+  .preset-item-info {
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .preset-icon-container {
+    max-width: none;
+    justify-content: center;
+  }
+  
+  .preset-name,
+  .preset-url {
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .preset-item-actions {
+    justify-content: center;
+    gap: 8px;
+  }
+}
+
+@media (max-height: 600px) {
+  .preset-list {
+    max-height: 250px;
+  }
+  
+  .preset-manager-modal {
+    max-height: 90vh;
   }
 }

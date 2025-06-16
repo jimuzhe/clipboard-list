@@ -74,6 +74,46 @@
   }
 }
 
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalScaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes modalFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes modalScaleOut {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+}
+
 /* 基础模态框头部 */
 .modal-header {
   padding: 16px 20px;
@@ -265,16 +305,18 @@
 
 /* 预设网站管理器模态框 */
 .preset-manager-modal {
-  max-width: 600px;
-  width: 95%;
+  max-width: 700px;
+  width: 90%;
 }
 
 .preset-manager-modal .modal-content {
-  max-height: 80vh;
+  max-height: 85vh;
 }
 
 .preset-manager-modal .modal-body {
   padding: 24px;
+  overflow-y: auto;
+  max-height: calc(75vh - 120px); /* 减去头部和底部的高度 */
 }
 
 /* 通用表单样式（编辑模态框和待办清单模态框共用） */
@@ -547,104 +589,233 @@
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.edit-modal .btn-secondary {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.edit-modal .btn-secondary:hover {
+  background: var(--border-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.edit-modal .btn-primary {
+  background: var(--primary-color);
+  color: white;
+}
+
+.edit-modal .btn-primary:hover {
+  background: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--primary-shadow);
+}
+
+/* 删除确认对话框样式 */
+.delete-confirm-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  z-index: 10002; /* 确保在所有其他元素之上 */
+  opacity: 0;
+  animation: modalFadeIn 0.3s ease forwards;
+}
+
+.delete-confirm-modal.active {
+  opacity: 1;
+}
+
+.delete-confirm-modal .modal-content {
+  max-width: 480px;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  background: var(--bg-primary);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+  transform: scale(0.9);
+  animation: modalScaleIn 0.3s ease forwards;
+}
+
+.delete-confirm-modal .modal-header {
+  background: linear-gradient(135deg, 
+    rgba(220, 53, 69, 0.1), 
+    rgba(220, 53, 69, 0.05)
+  );
+  border-bottom: 1px solid rgba(220, 53, 69, 0.2);
+  padding: 20px 24px;
+  border-radius: 16px 16px 0 0;
+}
+
+.delete-confirm-modal .modal-title h3 {
+  color: var(--danger-color);
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.delete-confirm-modal .modal-icon {
+  font-size: 20px;
+  margin-right: 12px;
+}
+
+.delete-confirm-modal .modal-body {
+  padding: 24px;
+}
+
+.delete-confirm-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  text-align: left;
+}
+
+.warning-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, 
+    rgba(220, 53, 69, 0.15), 
+    rgba(220, 53, 69, 0.05)
+  );
+  border: 2px solid rgba(220, 53, 69, 0.2);
+  flex-shrink: 0;
+}
+
+.warning-icon i {
+  font-size: 24px;
+  color: var(--danger-color);
+}
+
+.warning-text {
+  flex: 1;
+}
+
+.warning-text p {
+  margin: 0 0 12px 0;
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.item-preview {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 12px 0;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 14px;
+  color: var(--text-primary);
+  word-break: break-all;
+  line-height: 1.4;
+  max-height: 80px;
+  overflow-y: auto;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.warning-note {
+  font-size: 13px !important;
+  color: var(--text-secondary) !important;
+  font-style: italic;
+  margin-top: 16px !important;
+}
+
+.delete-confirm-modal .modal-footer {
+  padding: 20px 24px;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  border-radius: 0 0 16px 16px;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.delete-confirm-modal .btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   min-width: 100px;
   justify-content: center;
 }
 
-.edit-modal .btn-primary {
-  background: linear-gradient(135deg, var(--primary-color), #0056b3);
-  color: white;
-  box-shadow: 0 2px 8px rgba(0, 122, 204, 0.3);
-}
-
-.edit-modal .btn-primary:hover {
-  background: linear-gradient(135deg, #0056b3, var(--primary-color));
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 122, 204, 0.4);
-}
-
-.edit-modal .btn-secondary {
+.delete-confirm-modal .btn-secondary {
   background: var(--bg-primary);
   color: var(--text-primary);
-  border: 2px solid var(--border-color);
+  border: 1px solid var(--border-color);
 }
 
-.edit-modal .btn-secondary:hover {
-  background: var(--bg-glass);
-  border-color: var(--primary-color);
+.delete-confirm-modal .btn-secondary:hover {
+  background: var(--bg-hover);
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* 深色主题下的模态框样式 */
-[data-theme="dark"] .add-todo-modal .form-input,
-[data-theme="dark"] .add-todo-modal .form-textarea,
-[data-theme="dark"] .add-todo-modal .form-select {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
+.delete-confirm-modal .btn-secondary:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
 }
 
-[data-theme="dark"] .add-todo-modal .form-input:focus,
-[data-theme="dark"] .add-todo-modal .form-textarea:focus,
-[data-theme="dark"] .add-todo-modal .form-select:focus {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: var(--primary-color);
+.delete-confirm-modal .btn-danger {
+  background: var(--danger-color);
+  color: white;
+  border: 1px solid var(--danger-color);
 }
 
-[data-theme="dark"] .add-todo-modal .btn-secondary {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+.delete-confirm-modal .btn-danger:hover {
+  background: #c82333;
+  border-color: #bd2130;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
 }
 
-[data-theme="dark"] .add-todo-modal .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: var(--primary-color);
+.delete-confirm-modal .btn-icon {
+  display: flex;
+  align-items: center;
 }
 
-[data-theme="dark"] .add-todo-modal .checkbox-custom {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
+/* 深色主题适配 */
+[data-theme="dark"] .delete-confirm-modal .modal-header {
+  background: linear-gradient(135deg, 
+    rgba(220, 53, 69, 0.15), 
+    rgba(220, 53, 69, 0.08)
+  );
 }
 
-[data-theme="dark"] .add-todo-modal .form-features {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(255, 255, 255, 0.1);
+[data-theme="dark"] .warning-icon {
+  background: linear-gradient(135deg, 
+    rgba(220, 53, 69, 0.2), 
+    rgba(220, 53, 69, 0.1)
+  );
+  border-color: rgba(220, 53, 69, 0.3);
 }
 
-/* 统一的编辑模态框复选框暗色主题样式 */
-[data-theme="dark"] .edit-modal .checkbox-custom,
-[data-theme="dark"] .add-todo-modal .checkbox-custom {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
-[data-theme="dark"] .edit-modal .checkbox-custom:hover,
-[data-theme="dark"] .add-todo-modal .checkbox-custom:hover {
-  border-color: var(--primary-color);
-  background: rgba(255, 255, 255, 0.08);
-}
-
-[data-theme="dark"] .edit-modal .form-checkbox:checked + .checkbox-custom,
-[data-theme="dark"] .add-todo-modal .form-checkbox:checked + .checkbox-custom {
-  background: linear-gradient(135deg, var(--primary-color), #5a7dee);
-  box-shadow: 0 4px 12px rgba(90, 125, 238, 0.4);
-}
-
-[data-theme="dark"] .edit-modal .checkbox-text,
-[data-theme="dark"] .add-todo-modal .checkbox-text {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-[data-theme="dark"] .edit-modal .btn-secondary {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-primary);
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-[data-theme="dark"] .edit-modal .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: var(--primary-color);
+[data-theme="dark"] .item-preview {
+  background: var(--bg-tertiary);
+  border-color: var(--border-dark);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
 }

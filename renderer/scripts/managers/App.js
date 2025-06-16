@@ -242,10 +242,16 @@ class App {
         this.switchTab('clipboard');
 
         // 初始化设置面板的值
-        this.initializeSettingsPanel();
-
-        // 初始化预设选择器
+        this.initializeSettingsPanel(); // 初始化预设选择器
         this.initializePresetSelector();
+
+        // 渲染预设网站按钮
+        this.renderPresetWebsites();
+
+        // 在后台自动更新所有预设网站的favicon（如果需要）
+        setTimeout(() => {
+            this.checkAndUpdateFavicons();
+        }, 2000); // 延迟2秒执行，避免阻塞UI加载
 
         // 初始化社区webview URL
         this.initializeCommunityWebview();
@@ -706,10 +712,10 @@ class App {
                 <div class="modal-body">
                     <div class="preset-list" id="preset-manager-list">
                         <!-- 预设网站列表将在这里生成 -->
-                    </div>
-                    <div class="preset-actions">
+                    </div>                    <div class="preset-actions">
                         <button class="btn btn-primary" id="add-preset-btn"><i class="fas fa-plus"></i> 添加网站</button>
                         <button class="btn btn-secondary" id="reset-presets-btn"><i class="fas fa-sync-alt"></i> 重置默认</button>
+                        <button class="btn btn-info" id="update-all-favicons-btn"><i class="fas fa-magic"></i> 批量更新图标</button>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -743,17 +749,39 @@ class App {
             button.className = 'preset-website-btn';
             button.dataset.url = website.url;
             button.dataset.id = website.id;
-            button.title = website.description || website.name;
-
-            // 检查是否为当前激活的网站
+            button.title = website.name; // 显示网站名称而不是描述// 检查是否为当前激活的网站
             const currentUrl = this.state.settings.online.currentUrl || this.state.settings.communityUrl;
             if (website.url === currentUrl) {
                 button.classList.add('active');
             }
+
+            // 判断图标类型并正确显示
+            let iconHtml = '';
+            if (website.icon) {
+                if (website.icon.startsWith('http')) {
+                    // 如果是URL，显示为图片
+                    iconHtml = `<img src="${website.icon}" style="width: 20px; height: 20px; object-fit: cover;" data-fallback="globe" />`;
+                } else if (website.icon.startsWith('fa')) {
+                    // 如果是FontAwesome类名
+                    iconHtml = `<i class="${website.icon}"></i>`;
+                } else {
+                    // 其他情况（emoji等）
+                    iconHtml = website.icon;
+                }
+            } else {
+                iconHtml = '<i class="fas fa-globe"></i>';
+            }
             button.innerHTML = `
-                <span class="icon"><i class="${website.icon || 'fas fa-globe'}"></i></span>
-                <span class="name">${website.name}</span>
+                <span class="icon">${iconHtml}</span>
             `;
+
+            // 为图片添加错误处理
+            const img = button.querySelector('img[data-fallback]');
+            if (img) {
+                img.addEventListener('error', function () {
+                    this.outerHTML = '<i class="fas fa-globe"></i>';
+                });
+            }
 
             button.addEventListener('click', () => {
                 this.switchToPresetWebsite(website);
@@ -797,7 +825,6 @@ class App {
         // 保存设置
         this.state.saveData();
     }
-
     renderPresetManagerList() {
         const list = document.getElementById('preset-manager-list');
         if (!list) return;
@@ -808,12 +835,23 @@ class App {
         presets.forEach((preset, index) => {
             const item = document.createElement('div');
             item.className = 'preset-item';
+            // 判断图标类型：FontAwesome类名、emoji表情或favicon URL
+            const isEmojiOrUrl = !preset.icon.startsWith('fa');
+            const iconDisplay = isEmojiOrUrl ?
+                (preset.icon.startsWith('http') ?
+                    `<img src="${preset.icon}" style="width: 16px; height: 16px; object-fit: cover;" />` :
+                    preset.icon) :
+                `<i class="${preset.icon}"></i>`;
+
             item.innerHTML = `
                 <div class="preset-item-info">
-                    <input type="text" class="preset-icon" value="${preset.icon || '🌐'}" maxlength="2" placeholder="图标">
-                    <input type="text" class="preset-name" value="${preset.name}" placeholder="网站名称">
-                    <input type="url" class="preset-url" value="${preset.url}" placeholder="网站URL">
-                    <input type="text" class="preset-description" value="${preset.description || ''}" placeholder="描述（可选）">
+                    <div class="preset-icon-container">
+                        <div class="icon-preview" title="当前图标">${iconDisplay}</div>
+                        <button class="btn btn-sm btn-secondary auto-favicon-btn" data-index="${index}" title="自动获取图标">
+                            <i class="fas fa-magic"></i>
+                        </button>
+                    </div>                    <input type="text" class="preset-name" value="${preset.name}" placeholder="网站名称">
+                    <input type="url" class="preset-url" value="${preset.url}" placeholder="网站URL" data-index="${index}">
                 </div>
                 <div class="preset-item-actions">
                     <button class="btn btn-sm btn-secondary move-up" data-index="${index}" ${index === 0 ? 'disabled' : ''}><i class="fas fa-chevron-up"></i></button>
@@ -823,6 +861,52 @@ class App {
             `;
             list.appendChild(item);
         });
+
+        // 添加URL变化监听器，自动获取favicon
+        const self = this; // 保存this引用
+        list.addEventListener('input', async function (e) {
+            if (e.target.classList.contains('preset-url')) {
+                const index = parseInt(e.target.dataset.index);
+                const url = e.target.value.trim();
+
+                if (url && self.isValidUrl(url)) {
+                    const iconPreview = e.target.closest('.preset-item').querySelector('.icon-preview');
+
+                    // 显示加载状态
+                    iconPreview.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+                    try {
+                        console.log('🔍 URL变化，自动获取图标:', url);
+                        const favicon = await self.getFaviconWithRetry(url);
+                        if (favicon && favicon !== 'fas fa-globe') {
+                            // 更新预览
+                            const isUrl = favicon.startsWith('http');
+                            iconPreview.innerHTML = isUrl ?
+                                `<img src="${favicon}" style="width: 16px; height: 16px; object-fit: cover;" />` :
+                                favicon.startsWith('fa') ?
+                                `<i class="${favicon}"></i>` :
+                                favicon;
+
+                            // 更新数据
+                            self.state.settings.online.presetWebsites[index].icon = favicon;
+                            console.log('✅ 自动更新图标成功:', favicon);
+                        } else {
+                            iconPreview.innerHTML = '<i class="fas fa-globe"></i>';
+                        }
+                    } catch (error) {
+                        console.warn('❌ 自动获取favicon失败:', error.message);
+                        iconPreview.innerHTML = '<i class="fas fa-globe"></i>';
+                    }
+                }
+            }
+        });
+
+        // 为所有预设管理器中的图片添加错误处理
+        list.addEventListener('error', function (e) {
+            if (e.target.tagName === 'IMG' && e.target.closest('.icon-preview')) {
+                e.target.outerHTML = '<i class="fas fa-globe"></i>';
+            }
+        }, true);
     }
 
     setupPresetManagerEvents(modal) {
@@ -845,39 +929,147 @@ class App {
         // 添加新预设
         modal.querySelector('#add-preset-btn').addEventListener('click', () => {
             this.addNewPreset();
-        });
-
-        // 重置默认预设
+        }); // 重置默认预设
         modal.querySelector('#reset-presets-btn').addEventListener('click', () => {
             if (confirm('确定要重置为默认预设网站吗？这将清除所有自定义设置。')) {
                 this.resetDefaultPresets();
             }
         });
 
+        // 批量更新所有图标
+        modal.querySelector('#update-all-favicons-btn').addEventListener('click', async () => {
+            const btn = modal.querySelector('#update-all-favicons-btn');
+            const originalText = btn.innerHTML;
+
+            if (confirm('确定要批量更新所有网站的图标吗？这可能需要一些时间。')) {
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 更新中...';
+                btn.disabled = true;
+
+                try {
+                    const updated = await this.updateAllPresetFavicons();
+                    if (updated) {
+                        btn.innerHTML = '<i class="fas fa-check"></i> 更新完成';
+                        setTimeout(() => {
+                            btn.innerHTML = originalText;
+                        }, 2000);
+                    } else {
+                        btn.innerHTML = '<i class="fas fa-info-circle"></i> 无需更新';
+                        setTimeout(() => {
+                            btn.innerHTML = originalText;
+                        }, 2000);
+                    }
+                } catch (error) {
+                    console.error('批量更新图标失败:', error);
+                    alert('批量更新图标失败，请检查网络连接');
+                    btn.innerHTML = originalText;
+                } finally {
+                    btn.disabled = false;
+                }
+            }
+        });
+
         // 设置列表项事件委托
-        modal.querySelector('#preset-manager-list').addEventListener('click', (e) => {
+        const self = this; // 保存this引用
+        modal.querySelector('#preset-manager-list').addEventListener('click', async function (e) {
             const index = parseInt(e.target.dataset.index);
 
             if (e.target.classList.contains('move-up')) {
-                this.movePreset(index, -1);
+                self.movePreset(index, -1);
             } else if (e.target.classList.contains('move-down')) {
-                this.movePreset(index, 1);
+                self.movePreset(index, 1);
             } else if (e.target.classList.contains('delete-preset')) {
-                if (confirm('确定要删除这个预设网站吗？')) {
-                    this.deletePreset(index);
+                // 获取预设网站信息
+                const preset = self.state.settings.online.presetWebsites[index];
+                const presetName = preset ? preset.name : '预设网站';
+
+                // 使用统一删除确认对话框
+                if (window.app && window.app.showDeleteConfirmDialog) {
+                    window.app.showDeleteConfirmDialog({
+                        title: '删除预设网站',
+                        itemName: presetName,
+                        itemType: '预设网站',
+                        onConfirm: () => {
+                            self.deletePreset(index);
+                        }
+                    });
+                } else {
+                    // 备用确认方式
+                    if (confirm('确定要删除这个预设网站吗？')) {
+                        self.deletePreset(index);
+                    }
+                }
+            } else if (e.target.classList.contains('auto-favicon-btn') || e.target.closest('.auto-favicon-btn')) {
+                // 处理自动获取favicon按钮
+                const btn = e.target.classList.contains('auto-favicon-btn') ? e.target : e.target.closest('.auto-favicon-btn');
+                const actualIndex = parseInt(btn.dataset.index);
+                const urlInput = btn.closest('.preset-item').querySelector('.preset-url');
+                const iconPreview = btn.closest('.preset-item').querySelector('.icon-preview');
+                const url = urlInput.value.trim();
+
+                if (!url || !self.isValidUrl(url)) {
+                    alert('请先输入有效的网站URL');
+                    return;
+                }
+
+                // 显示加载状态
+                const originalIcon = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                btn.disabled = true;
+                iconPreview.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+                try {
+                    const favicon = await self.getFaviconForUrl(url);
+                    if (favicon) { // 更新预览
+                        const isUrl = favicon.startsWith('http');
+                        iconPreview.innerHTML = isUrl ?
+                            `<img src="${favicon}" style="width: 16px; height: 16px; object-fit: cover;" />` :
+                            favicon.startsWith('fa') ?
+                            `<i class="${favicon}"></i>` :
+                            favicon;
+
+                        // 更新数据
+                        self.state.settings.online.presetWebsites[actualIndex].icon = favicon;
+
+                        // 显示成功提示
+                        btn.innerHTML = '<i class="fas fa-check"></i>';
+                        setTimeout(() => {
+                            btn.innerHTML = originalIcon;
+                        }, 1000);
+                    } else {
+                        throw new Error('无法获取favicon');
+                    }
+                } catch (error) {
+                    console.warn('获取favicon失败:', error);
+                    iconPreview.innerHTML = '<i class="fas fa-globe"></i>';
+                    alert('获取网站图标失败，请检查网址是否正确');
+                    btn.innerHTML = originalIcon;
+                } finally {
+                    btn.disabled = false;
                 }
             }
         });
     }
-
-    addNewPreset() {
+    async addNewPreset(url = null, name = null) {
         const newPreset = {
             id: 'custom_' + Date.now(),
-            name: '新网站',
-            url: 'https://example.com',
-            icon: 'fas fa-globe',
-            description: ''
+            name: name || '新网站',
+            url: url || 'https://example.com',
+            icon: 'fas fa-globe'
         };
+
+        // 如果提供了URL，尝试自动获取favicon
+        if (url && this.isValidUrl(url)) {
+            try {
+                console.log('🔍 为新预设网站获取图标:', url);
+                const favicon = await this.getFaviconWithRetry(url);
+                if (favicon && favicon !== 'fas fa-globe') {
+                    newPreset.icon = favicon;
+                    console.log('✅ 成功为新网站设置图标:', favicon);
+                }
+            } catch (error) {
+                console.warn('❌ 获取新预设网站的favicon失败:', error.message);
+            }
+        }
 
         this.state.settings.online.presetWebsites.push(newPreset);
         this.renderPresetManagerList();
@@ -903,85 +1095,73 @@ class App {
                 id: 'default',
                 name: '移记社区',
                 url: 'http://8.130.41.186:3000/',
-                icon: '🏠',
-                description: '默认社区页面'
+                icon: '🏠'
             },
             {
                 id: 'github',
                 name: 'GitHub',
                 url: 'https://github.com',
-                icon: '📁',
-                description: '代码托管平台'
+                icon: '📁'
             },
             {
                 id: 'stackoverflow',
                 name: 'Stack Overflow',
                 url: 'https://stackoverflow.com',
-                icon: '❓',
-                description: '编程问答社区'
+                icon: '❓'
             },
             {
                 id: 'chatgpt',
                 name: 'ChatGPT',
                 url: 'https://chat.openai.com',
-                icon: '🤖',
-                description: 'AI 助手'
+                icon: '🤖'
             },
             {
                 id: 'translate',
                 name: '谷歌翻译',
                 url: 'https://translate.google.com',
-                icon: '🌐',
-                description: '在线翻译工具'
+                icon: '🌐'
             },
             {
                 id: 'douban',
                 name: '豆瓣',
                 url: 'https://www.douban.com',
-                icon: '📚',
-                description: '豆瓣读书影音'
+                icon: '📚'
             },
             {
                 id: 'bing',
                 name: '必应搜索',
                 url: 'https://www.bing.com',
-                icon: '🔍',
-                description: '必应搜索引擎'
+                icon: '🔍'
             },
             {
                 id: 'wikipedia',
                 name: '维基百科',
                 url: 'https://zh.wikipedia.org',
-                icon: '📖',
-                description: '维基百科中文'
+                icon: '📖'
             },
             {
                 id: 'codepen',
                 name: 'CodePen',
                 url: 'https://codepen.io',
-                icon: 'fas fa-code',
-                description: '在线代码编辑器'
+                icon: 'fas fa-code'
             },
             {
                 id: 'youtube',
                 name: 'YouTube',
                 url: 'https://www.youtube.com',
-                icon: 'fab fa-youtube',
-                description: '视频平台'
+                icon: 'fab fa-youtube'
             },
             {
                 id: 'bilibili',
                 name: 'Bilibili',
                 url: 'https://www.bilibili.com',
-                icon: 'fas fa-video',
-                description: 'B站视频'
+                icon: 'fas fa-video'
             },
             {
                 id: 'zhihu',
                 name: '知乎',
                 url: 'https://www.zhihu.com',
-                icon: '💭',
-                description: '知识问答社区'
+                icon: '💭'
             }
         ];
         this.renderPresetManagerList();
@@ -994,20 +1174,18 @@ class App {
     savePresetSettings() {
         const items = document.querySelectorAll('.preset-item');
         const newPresets = [];
-
         items.forEach((item, index) => {
-            const icon = item.querySelector('.preset-icon').value.trim();
             const name = item.querySelector('.preset-name').value.trim();
             const url = item.querySelector('.preset-url').value.trim();
-            const description = item.querySelector('.preset-description').value.trim();
 
             if (name && url) {
+                // 保持现有图标，不从输入框读取
+                const currentPreset = this.state.settings.online.presetWebsites[index];
                 newPresets.push({
-                    id: this.state.settings.online.presetWebsites[index] ?.id || `custom_${Date.now()}_${index}`,
-                    name,
-                    url,
-                    icon: icon || 'fas fa-globe',
-                    description
+                    id: currentPreset ?.id || 'custom_' + Date.now(),
+                    name: name,
+                    url: url,
+                    icon: currentPreset ?.icon || 'fas fa-globe'
                 });
             }
         });
@@ -1041,9 +1219,318 @@ class App {
         customOption.value = 'custom';
         customOption.textContent = '自定义地址';
         urlPresetSelect.appendChild(customOption);
+    } // 自动获取网站favicon的方法 - 使用xxapi.cn接口
+    async getFaviconForUrl(url) {
+        try {
+            // 构建API请求URL
+            const apiUrl = `https://v2.xxapi.cn/api/ico?url=${encodeURIComponent(url)}`;
+
+            console.log('🔍 正在获取网站图标:', url);
+
+            // 使用fetch请求API
+            const response = await fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                },
+                timeout: 10000 // 10秒超时
+            });
+
+            if (!response.ok) {
+                throw new Error(`API请求失败: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            // 检查API返回的数据结构
+            if (data && data.code === 200 && data.data) {
+                const iconUrl = data.data;
+                console.log('✅ 成功获取网站图标:', iconUrl);
+                return iconUrl;
+            } else if (data && data.ico) {
+                // 兼容不同的返回格式
+                console.log('✅ 成功获取网站图标:', data.ico);
+                return data.ico;
+            } else {
+                throw new Error('API返回格式不正确');
+            }
+        } catch (error) {
+            console.warn('❌ 获取favicon失败:', error.message);
+
+            // 如果API失败，回退到备用方案
+            try {
+                const urlObj = new URL(url);
+                const domain = urlObj.hostname;
+                const fallbackUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+                console.log('🔄 使用备用方案:', fallbackUrl);
+                return fallbackUrl;
+            } catch (fallbackError) {
+                console.warn('❌ 备用方案也失败了:', fallbackError.message);
+                return 'fas fa-globe'; // 最终默认图标
+            }
+        }
     }
 
-    // ...existing code...
+    // 带重试机制的favicon获取函数
+    async getFaviconWithRetry(url, maxRetries = 2) {
+        for (let i = 0; i <= maxRetries; i++) {
+            try {
+                const result = await this.getFaviconForUrl(url);
+                if (result && result !== 'fas fa-globe') {
+                    return result;
+                }
+            } catch (error) {
+                console.warn(`第${i + 1}次获取favicon失败:`, error.message);
+                if (i === maxRetries) {
+                    throw error;
+                }
+                // 等待一秒后重试
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
+        return 'fas fa-globe';
+    }
+
+    // 验证favicon URL是否有效
+    async validateFaviconUrl(faviconUrl) {
+        try {
+            const response = await fetch(faviconUrl, {
+                method: 'HEAD',
+                timeout: 5000
+            });
+            return response.ok;
+        } catch (error) {
+            return false;
+        }
+    }
+
+    // 检查URL是否有效并尝试获取favicon
+    async validateUrlAndGetFavicon(url) {
+        if (!url || !this.isValidUrl(url)) {
+            return null;
+        }
+
+        try {
+            const favicon = await this.getFaviconForUrl(url);
+            return favicon;
+        } catch (error) {
+            console.warn('验证URL和获取favicon失败:', error);
+            return null;
+        }
+    } // 批量更新所有预设网站的favicon
+    async updateAllPresetFavicons() {
+        const presets = this.state.settings.online.presetWebsites;
+        let updated = false;
+        let successCount = 0;
+        let totalCount = 0;
+
+        console.log('🔄 开始批量更新网站图标...');
+
+        for (let i = 0; i < presets.length; i++) {
+            const preset = presets[i];
+            if (preset.url && this.isValidUrl(preset.url)) {
+                totalCount++;
+                try {
+                    console.log(`📡 正在获取 ${preset.name} 的图标...`);
+                    const favicon = await this.getFaviconWithRetry(preset.url);
+
+                    if (favicon && favicon !== preset.icon && favicon !== 'fas fa-globe') {
+                        preset.icon = favicon;
+                        updated = true;
+                        successCount++;
+                        console.log(`✅ 已更新 ${preset.name} 的图标:`, favicon);
+                    } else {
+                        console.log(`ℹ️ ${preset.name} 的图标无需更新`);
+                    }
+                } catch (error) {
+                    console.warn(`❌ 获取 ${preset.name} 的favicon失败:`, error.message);
+                }
+
+                // 添加延迟，避免请求过于频繁
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+        }
+
+        if (updated) {
+            this.state.saveData();
+            this.renderPresetWebsites();
+            this.renderPresetManagerList();
+        }
+
+        console.log(`🎉 批量更新完成: 成功更新 ${successCount}/${totalCount} 个网站图标`);
+        return updated;
+    }
+
+    // 检查并在后台更新favicon（只更新缺失的或无效的）
+    async checkAndUpdateFavicons() {
+        try {
+            const presets = this.state.settings.online.presetWebsites;
+            let needsUpdate = false;
+
+            for (const preset of presets) {
+                // 检查是否需要更新：没有图标、是默认图标、或者是无效的FontAwesome类名
+                if (!preset.icon ||
+                    preset.icon === 'fas fa-globe' ||
+                    (preset.icon.startsWith('fa') && !this.isValidFontAwesomeIcon(preset.icon))) {
+                    needsUpdate = true;
+                    break;
+                }
+            }
+
+            // 只有在需要时才更新，避免不必要的网络请求
+            if (needsUpdate) {
+                console.log('🔄 检测到需要更新的网站图标，开始后台更新...');
+                await this.updateAllPresetFavicons();
+                console.log('✅ 网站图标后台更新完成');
+            }
+        } catch (error) {
+            console.warn('后台更新favicon失败:', error);
+        }
+    }
+
+    // 检查FontAwesome图标是否有效（简单检查）
+    isValidFontAwesomeIcon(iconClass) {
+        // 检查是否是常见的FontAwesome图标格式
+        const validPrefixes = ['fas', 'far', 'fab', 'fal', 'fad'];
+        const parts = iconClass.split(' ');
+        return parts.length >= 2 && validPrefixes.includes(parts[0]) && parts[1].startsWith('fa-');
+    }
+
+    // 工具函数：验证URL是否有效
+    isValidUrl(string) {
+        try {
+            const url = new URL(string);
+            return url.protocol === 'http:' || url.protocol === 'https:';
+        } catch (_) {
+            return false;
+        }
+    }
+
+    /**
+     * 显示统一的删除确认对话框
+     * @param {Object} options - 配置选项
+     * @param {string} options.title - 对话框标题
+     * @param {string} options.itemName - 要删除的项目名称
+     * @param {string} options.itemType - 项目类型描述
+     * @param {Function} options.onConfirm - 确认删除的回调函数
+     */
+    showDeleteConfirmDialog(options) {
+        const {
+            title,
+            itemName,
+            itemType,
+            onConfirm
+        } = options;
+
+        // 创建模态框
+        const modal = document.createElement('div');
+        modal.className = 'modal delete-confirm-modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">
+                        <span class="modal-icon" style="color: var(--danger-color);"><i class="fas fa-exclamation-triangle"></i></span>
+                        <h3>${title}</h3>
+                    </div>
+                    <button class="modal-close">&times;</button>
+                </div>                <div class="modal-body">
+                    <div class="delete-confirm-content">
+                        
+                        <div class="warning-text">
+                            <p>确定要删除以下${itemType}吗？</p>
+                            <div class="item-preview">${this.escapeHtml(itemName)}</div>
+                            <p class="warning-note">此操作无法撤销，请谨慎操作。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="cancel-delete">
+                        <span class="btn-icon"><i class="fas fa-times"></i></span>
+                        取消
+                    </button>
+                    <button class="btn btn-danger" id="confirm-delete">
+                        删除
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // 添加 active 类以触发动画
+        setTimeout(() => {
+            modal.classList.add('active');
+        }, 10);
+
+        // 添加事件监听器
+        modal.querySelector('.modal-close').addEventListener('click', () => {
+            this.closeDeleteConfirmDialog(modal);
+        });
+
+        modal.querySelector('#cancel-delete').addEventListener('click', () => {
+            this.closeDeleteConfirmDialog(modal);
+        });
+
+        modal.querySelector('#confirm-delete').addEventListener('click', () => {
+            if (onConfirm && typeof onConfirm === 'function') {
+                onConfirm();
+            }
+            this.closeDeleteConfirmDialog(modal);
+        });
+
+        // 点击模态框外部关闭
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                this.closeDeleteConfirmDialog(modal);
+            }
+        });
+
+        // ESC 键关闭
+        const escHandler = (e) => {
+            if (e.key === 'Escape') {
+                this.closeDeleteConfirmDialog(modal);
+                document.removeEventListener('keydown', escHandler);
+            }
+        };
+        document.addEventListener('keydown', escHandler);
+
+        // 保存 escHandler 以便在关闭时清理
+        modal._escHandler = escHandler;
+
+        // 自动聚焦到取消按钮（更安全的默认选择）
+        setTimeout(() => {
+            modal.querySelector('#cancel-delete').focus();
+        }, 100);
+    }
+
+    /**
+     * 关闭删除确认对话框
+     */
+    closeDeleteConfirmDialog(modal) {
+        modal.classList.remove('active');
+
+        // 清理 ESC 事件监听器
+        if (modal._escHandler) {
+            document.removeEventListener('keydown', modal._escHandler);
+        }
+
+        // 等待动画完成后移除元素
+        setTimeout(() => {
+            if (modal && modal.parentNode) {
+                document.body.removeChild(modal);
+            }
+        }, 300);
+    }
+
+    /**
+     * HTML 转义函数，防止 XSS 攻击
+     */
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
 }
 
 // 导出到全局
