@@ -4,8 +4,11 @@
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows-lightgrey.svg)](https://github.com/longdz/quiver-note)
 [![Electron](https://img.shields.io/badge/Electron-36.4.0-47848F.svg)](https://electronjs.org/)
+[![Vibe Coding](https://img.shields.io/badge/🎵-Vibe%20Coding-ff69b4.svg)](https://github.com/longdz/quiver-note)
 
 一个功能丰富的 Windows 桌面应用程序，基于 Electron 开发，提供剪切板管理、待办清单、Markdown 笔记等多种生产力工具。
+
+> 🎵 **Vibe Coding Project** - 这是一个在轻松愉快的氛围中编写的项目，注重开发体验和代码美感，追求简洁优雅的实现方式。
 
 ## 🖼️ 应用预览
 
@@ -87,6 +90,16 @@
   - auto-launch 5.0.6 (开机自启)
   - electron-updater 6.6.2 (自动更新)
 
+### 🎵 开发理念 (Vibe Coding)
+
+这个项目遵循 **Vibe Coding** 的开发理念：
+
+- **🎨 美感优先**: 代码结构清晰，注重可读性和优雅性
+- **🌟 体验驱动**: 专注用户体验，追求流畅的交互效果
+- **⚡ 渐进增强**: 从核心功能开始，逐步完善特性
+- **🎭 趣味开发**: 保持开发过程的乐趣，避免过度工程化
+- **🌈 现代审美**: 使用现代UI设计语言，毛玻璃效果等潮流元素
+
 ## 📦 安装和运行
 
 ### 💾 预编译版本下载
@@ -142,8 +155,6 @@ npm run clean
 - `npm run watch` - 监听文件变化自动编译
 - `npm run dist` - 构建 Windows 安装包
 - `npm run clean` - 清理构建文件
-npm run dist
-```
 
 ## 📁 项目结构
 
@@ -311,15 +322,47 @@ A: 可以在设置中减少"最大历史记录数量"来降低内存占用。
 
 ## 🤝 贡献指南
 
-1. Fork 项目
-2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 打开 Pull Request
+我们欢迎所有形式的贡献！请按照以下步骤：
+
+1. **Fork** 项目到你的账户
+2. **创建** 功能分支 (`git checkout -b feature/AmazingFeature`)
+3. **提交** 更改 (`git commit -m 'Add some AmazingFeature'`)
+4. **推送** 到分支 (`git push origin feature/AmazingFeature`)
+5. **打开** Pull Request
+
+### 🎵 Vibe Coding 贡献原则
+
+在贡献代码时，请遵循我们的 **Vibe Coding** 理念：
+
+- **💫 保持简洁**: 优先选择简单直观的解决方案
+- **🎨 注重美感**: 代码要有良好的格式和结构
+- **😊 快乐编程**: 享受编程过程，写出让人愉悦的代码
+- **🌈 用户至上**: 始终考虑用户体验和使用场景
+- **🔄 持续改进**: 小步快跑，持续优化和迭代
+
+### 贡献类型
+- 🐛 Bug 修复
+- ✨ 新功能开发
+- 📚 文档改进
+- 🎨 UI/UX 改进
+- ⚡ 性能优化
 
 ## 📄 许可证
 
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
+本项目采用 **MIT 许可证** 开源。
+
+### MIT 许可证要点：
+- ✅ **商业使用** - 可以用于商业项目
+- ✅ **修改** - 可以修改源代码
+- ✅ **分发** - 可以分发原始代码或修改后的代码
+- ✅ **私有使用** - 可以私人使用
+- ✅ **许可证包含** - 分发时需要包含许可证和版权声明
+
+### 免责声明：
+- ❌ **责任** - 作者不承担任何责任
+- ❌ **保证** - 软件按"原样"提供，不提供任何保证
+
+查看完整的许可证文本：[LICENSE](LICENSE) 文件
 
 ## 📞 联系方式
 

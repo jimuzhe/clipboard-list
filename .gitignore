@@ -1,3 +1,6 @@
+# 移记 QuiverNote - Git 忽略文件配置
+# MIT License (c) 2025 LongDz
+
 # Dependencies
 node_modules/
 npm-debug.log*
