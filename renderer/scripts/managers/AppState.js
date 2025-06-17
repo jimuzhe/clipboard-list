@@ -8,6 +8,9 @@ class AppState {
         this.settings = {
             theme: 'light',
             glassEffect: true,
+            liquidGlassTheme: false,
+            liquidGlassOpacity: 0.3,
+            liquidGlassColor: '#007acc',
             autoStart: true,
             clipboardMonitor: true,
             clearClipboardOnRestart: true,

@@ -87,9 +87,7 @@ class App {
                 this.state.saveData();
                 this.themeManager.applyTheme(e.target.value);
             });
-        }
-
-        // 毛玻璃效果
+        } // 毛玻璃效果
         const glassEffect = document.getElementById('glass-effect');
         if (glassEffect) {
             glassEffect.addEventListener('change', (e) => {
@@ -98,6 +96,53 @@ class App {
                 this.themeManager.applyGlassEffect(e.target.checked);
             });
         }
+
+        // 液态玻璃主题
+        const liquidGlassTheme = document.getElementById('liquid-glass-theme');
+        if (liquidGlassTheme) {
+            liquidGlassTheme.addEventListener('change', (e) => {
+                this.state.settings.liquidGlassTheme = e.target.checked;
+                this.state.saveData();
+                this.themeManager.applyLiquidGlassTheme(e.target.checked);
+                this.toggleLiquidGlassControls(e.target.checked);
+            });
+        }
+
+        // 玻璃透明度
+        const glassOpacity = document.getElementById('glass-opacity');
+        if (glassOpacity) {
+            glassOpacity.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                this.state.settings.liquidGlassOpacity = value;
+                this.state.saveData();
+                this.themeManager.updateLiquidGlassOpacity(value);
+                this.updateSliderValue(e.target, Math.round(value * 100) + '%');
+            });
+        }
+
+        // 玻璃颜色
+        const glassColor = document.getElementById('glass-color');
+        if (glassColor) {
+            glassColor.addEventListener('change', (e) => {
+                this.state.settings.liquidGlassColor = e.target.value;
+                this.state.saveData();
+                this.themeManager.updateLiquidGlassColor(e.target.value);
+            });
+        }
+
+        // 颜色预设
+        const colorPresets = document.querySelectorAll('.color-preset');
+        colorPresets.forEach(preset => {
+            preset.addEventListener('click', (e) => {
+                const color = e.target.dataset.color;
+                if (color) {
+                    glassColor.value = color;
+                    this.state.settings.liquidGlassColor = color;
+                    this.state.saveData();
+                    this.themeManager.updateLiquidGlassColor(color);
+                }
+            });
+        });
 
         // 自启动
         const autoStart = document.getElementById('auto-start');
@@ -254,10 +299,11 @@ class App {
         }, 2000); // 延迟2秒执行，避免阻塞UI加载
 
         // 初始化社区webview URL
-        this.initializeCommunityWebview();
-
-        // 应用主题
+        this.initializeCommunityWebview(); // 应用主题
         this.themeManager.applyTheme(this.state.settings.theme);
+
+        // 应用液态玻璃主题
+        this.themeManager.applyLiquidGlassTheme(this.state.settings.liquidGlassTheme);
 
         // 初始化置顶状态同步
         setTimeout(() => {
@@ -294,11 +340,13 @@ class App {
         console.log('🔧 初始化待办管理器...');
         this.todoManager.init();
         console.log('🔧 初始化笔记管理器...');
-        await this.notesManager.init();
-
-        // 初始化预设网站选择器
+        await this.notesManager.init(); // 初始化预设网站选择器
         console.log('🔧 初始化预设网站选择器...');
         this.initializePresetSelector();
+
+        // 初始化液态玻璃主题的鼠标追踪效果
+        console.log('🔧 初始化液态玻璃效果...');
+        this.initializeLiquidGlassMouseTracking();
 
         console.log('✅ 所有组件渲染完成');
     }
@@ -591,12 +639,30 @@ class App {
         const themeSelect = document.getElementById('theme-select');
         if (themeSelect) {
             themeSelect.value = this.state.settings.theme;
-        }
-
-        // 设置毛玻璃效果开关
+        } // 设置毛玻璃效果开关
         const glassEffect = document.getElementById('glass-effect');
         if (glassEffect) {
             glassEffect.checked = this.state.settings.glassEffect;
+        }
+
+        // 设置液态玻璃主题开关
+        const liquidGlassTheme = document.getElementById('liquid-glass-theme');
+        if (liquidGlassTheme) {
+            liquidGlassTheme.checked = this.state.settings.liquidGlassTheme;
+            this.toggleLiquidGlassControls(this.state.settings.liquidGlassTheme);
+        }
+
+        // 设置玻璃透明度
+        const glassOpacity = document.getElementById('glass-opacity');
+        if (glassOpacity) {
+            glassOpacity.value = this.state.settings.liquidGlassOpacity;
+            this.updateSliderValue(glassOpacity, Math.round(this.state.settings.liquidGlassOpacity * 100) + '%');
+        }
+
+        // 设置玻璃颜色
+        const glassColor = document.getElementById('glass-color');
+        if (glassColor) {
+            glassColor.value = this.state.settings.liquidGlassColor;
         }
 
         // 设置自启动开关
@@ -1530,6 +1596,54 @@ class App {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    // 切换液态玻璃控制项的显示/隐藏
+    toggleLiquidGlassControls(show) {
+        const controls = document.querySelectorAll('.liquid-glass-controls');
+        controls.forEach(control => {
+            control.style.display = show ? 'flex' : 'none';
+        });
+    }
+
+    // 更新滑块值显示
+    updateSliderValue(slider, value) {
+        const valueSpan = slider.parentElement.querySelector('.slider-value');
+        if (valueSpan) {
+            valueSpan.textContent = value;
+        }
+    }
+
+    // 初始化液态玻璃主题的鼠标追踪效果
+    initializeLiquidGlassMouseTracking() {
+        if (!document.body.classList.contains('liquid-glass-theme')) return;
+
+        const updateMousePosition = (e, element) => {
+            const rect = element.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width * 100);
+            const y = ((e.clientY - rect.top) / rect.height * 100);
+            element.style.setProperty('--mouse-x', x + '%');
+            element.style.setProperty('--mouse-y', y + '%');
+        };
+
+        // 为所有液态玻璃元素添加鼠标追踪
+        const glassElements = document.querySelectorAll('.liquid-glass-theme .clipboard-item, .liquid-glass-theme .todo-item, .liquid-glass-theme .note-item, .liquid-glass-theme .btn');
+
+        glassElements.forEach(element => {
+            element.addEventListener('mousemove', (e) => updateMousePosition(e, element));
+            element.addEventListener('mouseleave', () => {
+                element.style.removeProperty('--mouse-x');
+                element.style.removeProperty('--mouse-y');
+            });
+        });
+    }
+
+    // 应用液态玻璃主题时重新初始化鼠标追踪
+    reinitializeLiquidGlassEffects() {
+        // 移除旧的事件监听器（通过重新克隆元素）
+        setTimeout(() => {
+            this.initializeLiquidGlassMouseTracking();
+        }, 100);
     }
 }
 
