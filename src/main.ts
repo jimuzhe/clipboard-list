@@ -6,6 +6,11 @@ import { autoUpdater } from 'electron-updater';
 import { ClipboardItem } from './types/clipboard';
 import { AutoStartOptions } from './managers/AutoStartManager';
 
+// Windows 桌面通知设置
+if (process.platform === 'win32') {
+    app.setAppUserModelId('com.longdz.quiver-note');
+}
+
 // 单例检查 - 防止多个实例同时运行
 const gotTheLock = app.requestSingleInstanceLock();
 
@@ -370,10 +375,43 @@ class ClipboardListApp {
             this.autoStartManager.disable();
         });        // 通知
         this.ipcService.on('show-notification', ({ title, body, icon }) => {
-            // 检查是否启用了桌面通知
-            const currentConfig = config.getConfig();
-            if (currentConfig.clipboard.enableNotification) {
-                new Notification({ title, body, icon }).show();
+            try {
+                // 检查是否启用了桌面通知
+                const currentConfig = config.getConfig();
+                logger.debug(`Notification request: ${title} - ${body}, enabled: ${currentConfig.clipboard.enableNotification}`);
+
+                if (currentConfig.clipboard.enableNotification) {
+                    // 检查系统是否支持通知
+                    if (!Notification.isSupported()) {
+                        logger.warn('Notifications are not supported on this system');
+                        return;
+                    }
+
+                    // 创建并显示通知
+                    const notification = new Notification({
+                        title,
+                        body,
+                        icon: icon || path.join(__dirname, '../assets/app-icon.png'),
+                        silent: false, // 允许播放声音
+                        timeoutType: 'default' // 使用默认超时
+                    });
+
+                    notification.show();
+                    logger.info(`Notification shown: ${title}`);
+
+                    // 添加点击事件处理
+                    notification.on('click', () => {
+                        // 点击通知时显示并聚焦窗口
+                        if (this.windowManager) {
+                            this.windowManager.show();
+                            this.windowManager.focus();
+                        }
+                    });
+                } else {
+                    logger.debug('Notifications are disabled in settings');
+                }
+            } catch (error) {
+                logger.error('Failed to show notification:', error);
             }
         });
 
@@ -681,6 +719,16 @@ class ClipboardListApp {
      */
     public async onReady(): Promise<void> {
         try {
+            // 请求桌面通知权限（Windows）
+            if (process.platform === 'win32') {
+                const permission = Notification.isSupported();
+                if (permission) {
+                    logger.info('Notification permission granted');
+                } else {
+                    logger.warn('Notification not supported on this system');
+                }
+            }
+
             await this.createWindow();
             this.createTray();
             await this.setupAutoStart();

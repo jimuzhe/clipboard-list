@@ -40,7 +40,7 @@ contextBridge.exposeInMainWorld('electronAPI', {    // 窗口控制
     setTheme: (theme: string) => ipcRenderer.invoke('set-theme', theme),
     getTheme: () => ipcRenderer.invoke('get-theme'),    // 通知
     showNotification: (title: string, body: string) =>
-        ipcRenderer.invoke('show-notification', { title, body }),    // 外部链接
+        ipcRenderer.invoke('show-notification', { title, body }),// 外部链接
     /**
      * 通过IPC调用主进程打开外部链接
      * @param url - 要打开的外部链接地址
@@ -156,6 +156,7 @@ export interface ElectronAPI {
 
     setTheme: (theme: string) => Promise<void>;
     getTheme: () => Promise<string>; showNotification: (title: string, body: string) => Promise<void>;
+    testNotification: (title?: string, body?: string) => Promise<void>;
     openExternal: (url: string) => Promise<void>;
     openUrlInCommunity: (url: string) => Promise<void>;
     getDefaultNotesFolder: () => Promise<any>;

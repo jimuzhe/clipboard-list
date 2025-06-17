@@ -257,70 +257,45 @@ class App {
             });
         }
 
-        // URL预设选择器
-        const urlPreset = document.getElementById('url-preset');
-        if (urlPreset) {
-            urlPreset.addEventListener('change', (e) => {
-                const selectedUrl = e.target.value;
-                const communityUrlInput = document.getElementById('community-url');
+        // 测试通知按钮
+        const testNotificationBtn = document.getElementById('test-notification-btn');
+        if (testNotificationBtn) {
+            testNotificationBtn.addEventListener('click', async () => {
+                try {
+                    testNotificationBtn.disabled = true;
+                    testNotificationBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 4px;"></i>测试中...';
 
-                if (selectedUrl && selectedUrl !== 'custom' && communityUrlInput) {
-                    // 如果选择了预设URL，更新输入框
-                    communityUrlInput.value = selectedUrl;
-                } else if (selectedUrl === 'custom') {
-                    // 如果选择自定义，聚焦到输入框
-                    if (communityUrlInput) {
-                        communityUrlInput.focus();
+                    // 首先测试通过普通通知API
+                    if (window.electronAPI && window.electronAPI.testNotification) {
+                        await window.electronAPI.testNotification('测试通知', '如果您看到这个通知，说明桌面通知功能正常工作！🎉');
                     }
+
+                    // 恢复按钮状态
+                    setTimeout(() => {
+                        testNotificationBtn.disabled = false;
+                        testNotificationBtn.innerHTML = '<i class="fas fa-bell" style="margin-right: 4px;"></i>测试通知';
+                    }, 2000);
+                } catch (error) {
+                    console.error('测试通知失败:', error);
+                    testNotificationBtn.disabled = false;
+                    testNotificationBtn.innerHTML = '<i class="fas fa-bell" style="margin-right: 4px;"></i>测试失败';
+                    setTimeout(() => {
+                        testNotificationBtn.innerHTML = '<i class="fas fa-bell" style="margin-right: 4px;"></i>测试通知';
+                    }, 2000);
                 }
             });
         }
 
-        // 应用社区URL按钮
-        const applyCommunityUrl = document.getElementById('apply-community-url');
-        if (applyCommunityUrl) {
-            applyCommunityUrl.addEventListener('click', () => {
-                const communityUrlInput = document.getElementById('community-url');
-                if (communityUrlInput) {
-                    const newUrl = communityUrlInput.value.trim();
-
-                    if (!newUrl) {
-                        alert('请输入有效的URL地址');
-                        return;
-                    }
-
-                    if (!this.isValidUrl(newUrl)) {
-                        alert('请输入有效的URL地址，需要包含 http:// 或 https://');
-                        return;
-                    }
-
-                    // 更新设置
-                    this.state.settings.communityUrl = newUrl;
-                    this.state.settings.online.currentUrl = newUrl;
-                    this.state.saveData();
-
-                    // 更新webview
-                    this.updateCommunityUrl(newUrl);
-
-                    // 显示成功提示
-                    this.showUrlUpdateSuccess();
-
-                    // 重新渲染预设按钮（更新激活状态）
-                    this.renderPresetWebsites();
-
-                    console.log('社区URL已更新为:', newUrl);
-                }
-            });
-        } // 管理预设网站按钮
-        const managePresetWebsites = document.getElementById('manage-preset-websites');
-        if (managePresetWebsites) {
-            managePresetWebsites.addEventListener('click', () => {
-                this.showPresetManager();
+        // 动画速度设置
+        const animationSpeed = document.getElementById('animation-speed');
+        if (animationSpeed) {
+            animationSpeed.addEventListener('change', (e) => {
+                this.state.settings.animationSpeed = e.target.value;
+                this.state.saveData();
+                this.applyAnimationSpeed(e.target.value);
+                console.log('设置动画速度:', e.target.value);
             });
         }
-
-        // 快捷键设置监听器
-        this.setupShortcutListeners();
     }
 
     setupCommunityListeners() {
@@ -330,7 +305,7 @@ class App {
     setupUpdateListeners() {
         // 更新相关的事件监听器
         // 检查更新按钮
-        const checkUpdateBtn = document.getElementById('check-update');
+        const checkUpdateBtn = document.getElementById('check-updates');
         if (checkUpdateBtn) {
             checkUpdateBtn.addEventListener('click', () => {
                 this.checkForUpdates();
@@ -361,14 +336,15 @@ class App {
         // 在后台自动更新所有预设网站的favicon（如果需要）
         setTimeout(() => {
             this.checkAndUpdateFavicons();
-        }, 2000); // 延迟2秒执行，避免阻塞UI加载
-
-        // 初始化社区webview URL
+        }, 2000); // 延迟2秒执行，避免阻塞UI加载        // 初始化社区webview URL
         this.initializeCommunityWebview(); // 应用主题
         this.themeManager.applyTheme(this.state.settings.theme);
 
         // 应用液态玻璃主题
         this.themeManager.applyLiquidGlassTheme(this.state.settings.liquidGlassTheme);
+
+        // 应用动画速度设置
+        this.applyAnimationSpeed(this.state.settings.animationSpeed || 'normal');
 
         // 初始化置顶状态同步
         setTimeout(() => {
@@ -449,8 +425,268 @@ class App {
         // 初始化液态玻璃主题的鼠标追踪效果
         console.log('🔧 初始化液态玻璃效果...');
         this.initializeLiquidGlassMouseTracking();
-
         console.log('✅ 所有组件渲染完成');
+    }
+
+    /**
+     * 检查应用更新
+     */
+    async checkForUpdates() {
+        try {
+            console.log('🔍 开始检查更新...');
+            // 显示检查中状态
+            const checkBtn = document.getElementById('check-updates');
+            if (checkBtn) {
+                const originalText = checkBtn.textContent;
+                checkBtn.textContent = '检查中...';
+                checkBtn.disabled = true;
+
+                // 恢复按钮状态的函数
+                const restoreButton = () => {
+                    checkBtn.textContent = originalText;
+                    checkBtn.disabled = false;
+                };
+
+                // 调用主进程检查更新
+                const result = await window.electronAPI.checkForUpdates();
+                console.log('✅ 更新检查结果:', result);
+
+                // 恢复按钮状态
+                restoreButton();
+
+                if (result.hasUpdate) {
+                    // 显示更新可用对话框
+                    this.showUpdateAvailableDialog(result.updateInfo);
+                } else if (result.error) {
+                    // 显示错误信息
+                    this.showUpdateErrorDialog(result.error);
+                } else {
+                    // 显示已是最新版本
+                    this.showNoUpdateDialog();
+                }
+            }
+        } catch (error) {
+            console.error('❌ 检查更新失败:', error);
+            this.showUpdateErrorDialog(error.message || '检查更新失败');
+        }
+    }
+
+    /**
+     * 显示更新可用对话框
+     */
+    showUpdateAvailableDialog(updateInfo) {
+        // 创建更新对话框
+        const dialog = document.createElement('div');
+        dialog.className = 'update-dialog-overlay';
+        dialog.innerHTML = `
+            <div class="update-dialog">
+                <div class="update-dialog-header">
+                    <h3>🎉 发现新版本</h3>
+                    <button class="update-dialog-close" onclick="this.closest('.update-dialog-overlay').remove()">×</button>
+                </div>
+                <div class="update-dialog-content">
+                    <p><strong>新版本:</strong> ${updateInfo.version}</p>
+                    <p><strong>发布日期:</strong> ${updateInfo.releaseDate}</p>
+                    <p><strong>更新说明:</strong></p>
+                    <div class="update-changelog">
+                        <ul>
+                            ${updateInfo.changelog ? updateInfo.changelog.map(item => `<li>${item}</li>`).join('') : '<li>修复已知问题，提升性能</li>'}
+                        </ul>
+                    </div>
+                </div>
+                <div class="update-dialog-actions">
+                    <button class="btn btn-secondary" onclick="this.closest('.update-dialog-overlay').remove()">稍后提醒</button>
+                    <button class="btn btn-primary" onclick="window.app.downloadUpdate('${encodeURIComponent(JSON.stringify(updateInfo))}')">立即下载</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(dialog);
+    }
+
+    /**
+     * 显示无更新对话框
+     */
+    showNoUpdateDialog() {
+        const dialog = document.createElement('div');
+        dialog.className = 'update-dialog-overlay';
+        dialog.innerHTML = `
+            <div class="update-dialog">
+                <div class="update-dialog-header">
+                    <h3>✅ 已是最新版本</h3>
+                    <button class="update-dialog-close" onclick="this.closest('.update-dialog-overlay').remove()">×</button>
+                </div>
+                <div class="update-dialog-content">
+                    <p>您当前使用的已经是最新版本，无需更新。</p>
+                </div>
+                <div class="update-dialog-actions">
+                    <button class="btn btn-primary" onclick="this.closest('.update-dialog-overlay').remove()">确定</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(dialog);
+    }
+
+    /**
+     * 显示更新错误对话框
+     */
+    showUpdateErrorDialog(error) {
+        const dialog = document.createElement('div');
+        dialog.className = 'update-dialog-overlay';
+        dialog.innerHTML = `
+            <div class="update-dialog">
+                <div class="update-dialog-header">
+                    <h3>❌ 检查更新失败</h3>
+                    <button class="update-dialog-close" onclick="this.closest('.update-dialog-overlay').remove()">×</button>
+                </div>
+                <div class="update-dialog-content">
+                    <p>检查更新时出现错误：</p>
+                    <p class="error-message">${error}</p>
+                    <p>请检查网络连接后重试。</p>
+                </div>
+                <div class="update-dialog-actions">
+                    <button class="btn btn-primary" onclick="this.closest('.update-dialog-overlay').remove()">确定</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(dialog);
+    }
+
+    /**
+     * 下载更新
+     */
+    async downloadUpdate(updateInfoStr) {
+        try {
+            const updateInfo = JSON.parse(decodeURIComponent(updateInfoStr));
+            console.log('📥 开始下载更新:', updateInfo);
+
+            // 关闭对话框
+            const dialog = document.querySelector('.update-dialog-overlay');
+            if (dialog) {
+                dialog.remove();
+            }
+
+            // 显示下载进度对话框
+            this.showDownloadProgressDialog();
+
+            // 调用主进程下载更新
+            const result = await window.electronAPI.downloadUpdate(updateInfo);
+
+            if (result.success) {
+                this.showDownloadCompleteDialog(result.filePath);
+            } else {
+                this.showDownloadErrorDialog(result.error);
+            }
+        } catch (error) {
+            console.error('❌ 下载更新失败:', error);
+            this.showDownloadErrorDialog(error.message || '下载更新失败');
+        }
+    }
+
+    /**
+     * 显示下载进度对话框
+     */
+    showDownloadProgressDialog() {
+        // 先移除现有对话框
+        const existingDialog = document.querySelector('.update-dialog-overlay');
+        if (existingDialog) {
+            existingDialog.remove();
+        }
+
+        const dialog = document.createElement('div');
+        dialog.className = 'update-dialog-overlay';
+        dialog.innerHTML = `
+            <div class="update-dialog">
+                <div class="update-dialog-header">
+                    <h3>📥 正在下载更新</h3>
+                </div>
+                <div class="update-dialog-content">
+                    <div class="download-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 0%"></div>
+                        </div>
+                        <p class="progress-text">准备下载...</p>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(dialog);
+    }
+
+    /**
+     * 显示下载完成对话框
+     */
+    showDownloadCompleteDialog(filePath) {
+        const dialog = document.querySelector('.update-dialog-overlay');
+        if (dialog) {
+            dialog.innerHTML = `
+                <div class="update-dialog">
+                    <div class="update-dialog-header">
+                        <h3>✅ 下载完成</h3>
+                        <button class="update-dialog-close" onclick="this.closest('.update-dialog-overlay').remove()">×</button>
+                    </div>
+                    <div class="update-dialog-content">
+                        <p>更新文件已下载完成！</p>
+                        <p>您可以选择立即安装或稍后手动安装。</p>
+                    </div>
+                    <div class="update-dialog-actions">
+                        <button class="btn btn-secondary" onclick="window.app.showDownloadFolder('${filePath}')">查看文件</button>
+                        <button class="btn btn-primary" onclick="window.app.installUpdate('${filePath}')">立即安装</button>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    /**
+     * 显示下载错误对话框
+     */
+    showDownloadErrorDialog(error) {
+        const dialog = document.querySelector('.update-dialog-overlay');
+        if (dialog) {
+            dialog.innerHTML = `
+                <div class="update-dialog">
+                    <div class="update-dialog-header">
+                        <h3>❌ 下载失败</h3>
+                        <button class="update-dialog-close" onclick="this.closest('.update-dialog-overlay').remove()">×</button>
+                    </div>
+                    <div class="update-dialog-content">
+                        <p>下载更新时出现错误：</p>
+                        <p class="error-message">${error}</p>
+                    </div>
+                    <div class="update-dialog-actions">
+                        <button class="btn btn-primary" onclick="this.closest('.update-dialog-overlay').remove()">确定</button>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    /**
+     * 安装更新
+     */
+    async installUpdate(filePath) {
+        try {
+            console.log('🔧 开始安装更新:', filePath);
+            await window.electronAPI.installUpdate(filePath);
+        } catch (error) {
+            console.error('❌ 安装更新失败:', error);
+            this.showUpdateErrorDialog(error.message || '安装更新失败');
+        }
+    }
+
+    /**
+     * 在文件夹中显示下载的文件
+     */
+    async showDownloadFolder(filePath) {
+        try {
+            await window.electronAPI.showItemInFolder(filePath);
+        } catch (error) {
+            console.error('❌ 打开文件夹失败:', error);
+        }
     }
 
     switchTab(tabName) {
@@ -874,15 +1110,17 @@ class App {
         const clearClipboardOnRestart = document.getElementById('clear-clipboard-on-restart');
         if (clearClipboardOnRestart) {
             clearClipboardOnRestart.checked = this.state.settings.clearClipboardOnRestart;
-        }
-
-        // 设置通知开关
+        } // 设置通知开关
         const enableNotifications = document.getElementById('enable-notifications');
         if (enableNotifications) {
             enableNotifications.checked = this.state.settings.enableNotifications;
         }
 
-        // 设置社区URL输入框
+        // 设置动画速度
+        const animationSpeed = document.getElementById('animation-speed');
+        if (animationSpeed) {
+            animationSpeed.value = this.state.settings.animationSpeed || 'normal';
+        } // 设置社区URL输入框
         const communityUrlInput = document.getElementById('community-url');
         if (communityUrlInput) {
             communityUrlInput.value = this.state.settings.communityUrl || 'http://8.130.41.186:3000/';
@@ -1775,7 +2013,6 @@ class App {
             }
         }, 300);
     }
-
     /**
      * HTML 转义函数，防止 XSS 攻击
      */
@@ -1784,16 +2021,63 @@ class App {
         div.textContent = text;
         return div.innerHTML;
     }
+    /**
+     * 应用动画速度设置
+     * @param {string} speed - 动画速度 ('fast', 'normal', 'slow')
+     */
+    async applyAnimationSpeed(speed) {
+        // 定义不同速度级别的设置
+        const speedSettings = {
+            'fast': {
+                css: '0.1s',
+                showAnimation: 100, // 显示动画持续时间(毫秒)
+                hideAnimation: 30 // 隐藏动画持续时间(毫秒)
+            },
+            'normal': {
+                css: '0.15s',
+                showAnimation: 150,
+                hideAnimation: 40
+            },
+            'slow': {
+                css: '0.3s',
+                showAnimation: 300,
+                hideAnimation: 80
+            }
+        };
+
+        const settings = speedSettings[speed] || speedSettings['normal'];
+
+        // 更新 CSS 变量
+        document.documentElement.style.setProperty('--transition-duration', settings.css);
+
+        // 应用到所有使用 var(--transition) 的元素
+        const transitionRule = `all ${settings.css} cubic-bezier(0.4, 0, 0.2, 1)`;
+        document.documentElement.style.setProperty('--transition', transitionRule);
+
+        // 更新窗口动画设置
+        if (window.electronAPI && window.electronAPI.updateAnimationSettings) {
+            try {
+                await window.electronAPI.updateAnimationSettings({
+                    showAnimationDuration: settings.showAnimation,
+                    hideAnimationDuration: settings.hideAnimation
+                });
+                console.log('已更新窗口动画速度:', speed, '显示:', settings.showAnimation + 'ms', '隐藏:', settings.hideAnimation + 'ms');
+            } catch (error) {
+                console.error('更新窗口动画设置失败:', error);
+            }
+        }
+
+        console.log('应用动画速度:', speed, 'CSS持续时间:', settings.css);
+    }
 
     // 切换液态玻璃控制项的显示/隐藏
     toggleLiquidGlassControls(show) {
         const controls = document.querySelectorAll('.liquid-glass-controls');
         controls.forEach(control => {
-            control.style.display = show ? 'flex' : 'none';
+            control.style.display = show ? 'block' : 'none';
         });
     }
 
-    // 更新滑块值显示
     updateSliderValue(slider, value) {
         const valueSpan = slider.parentElement.querySelector('.slider-value');
         if (valueSpan) {
@@ -2009,7 +2293,7 @@ class App {
                 // 计算鼠标位置相对于图片的位置
                 const rect = img.getBoundingClientRect();
                 const mouseX = e.clientX - rect.left - rect.width / 2;
-                const mouseY = e.clientY - rect.top - rect.height / 2;
+
 
                 // 调整平移以保持鼠标位置不变
                 translateX -= mouseX * (newScale - scale) / scale;

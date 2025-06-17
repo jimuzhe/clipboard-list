@@ -26,8 +26,7 @@ export class IPCService extends EventEmitter {
         // 应用相关
         this.registerHandler('app:get-version', this.handleGetAppVersion.bind(this));
         this.registerHandler('app:get-config', this.handleGetConfig.bind(this));
-        this.registerHandler('app:set-config', this.handleSetConfig.bind(this));
-        this.registerHandler('app:show-notification', this.handleShowNotification.bind(this));
+        this.registerHandler('app:set-config', this.handleSetConfig.bind(this)); this.registerHandler('app:show-notification', this.handleShowNotification.bind(this));
 
         // 窗口控制
         this.registerHandler('window:minimize', this.handleMinimizeWindow.bind(this));
@@ -207,9 +206,7 @@ export class IPCService extends EventEmitter {
 
     private async handleSetConfig(event: IpcMainInvokeEvent, config: Partial<AppConfig>): Promise<void> {
         this.emit('set-config', config);
-    }
-
-    private async handleShowNotification(event: IpcMainInvokeEvent, { title, body, icon }: { title: string; body: string; icon?: string }): Promise<void> {
+    } private async handleShowNotification(event: IpcMainInvokeEvent, { title, body, icon }: { title: string; body: string; icon?: string }): Promise<void> {
         this.emit('show-notification', { title, body, icon });
     }
 

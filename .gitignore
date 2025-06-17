@@ -10,11 +10,26 @@ yarn.lock
 dist/
 dist-installer/
 build/
+out/
 
 # Development files
 *.log
 *.tmp
 *.temp
+
+# Electron packaged apps
+*.app
+*.dmg
+*.exe
+*.deb
+*.rpm
+*.snap
+*.appx
+*.blockmap
+
+# Auto-generated TypeScript files
+*.js.map
+*.d.ts.map
 
 # IDE and Editor files
 .vscode/
@@ -76,4 +91,4 @@ userData/
 *.yml.bak
 
 # Application specific
-elevate.exe
+elevate.exe// 忽略 elevate.exe 可执行文件
