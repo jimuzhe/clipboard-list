@@ -10,10 +10,12 @@ class App {
         this.isFirstCommunityVisit = true;
         this.init();
     }
-
     async init() {
         // 加载数据
-        await this.state.loadData(); // 初始化管理器（不立即渲染）        this.clipboardManager = new ClipboardManager(this.state);
+        await this.state.loadData();
+
+        // 初始化管理器（不立即渲染）
+        this.clipboardManager = new ClipboardManager(this.state);
         this.todoManager = new TodoManager(this.state);
         this.pomodoroManager = new PomodoroManager(this.state);
         this.notesManager = new NotesManager(this.state);
@@ -521,24 +523,38 @@ class App {
         const tabName = pageToTabMap[pageName] || pageName;
         this.switchTab(tabName);
     }
-
     /**
      * 导航到在线页面并打开指定URL
      */
     navigateToOnlinePageWithUrl(url) {
         console.log('🌐 收到导航请求，目标URL:', url);
 
-        // 切换到社区(在线)页面
-        this.switchToPage('online');
+        try {
+            // 切换到社区(在线)页面
+            this.switchToPage('online');
 
-        // 等待页面切换完成后，导航到指定URL
-        setTimeout(() => {
-            const webview = document.getElementById('community-webview');
-            if (webview) {
-                webview.src = url;
-                console.log('🌐 已导航到:', url);
+            // 等待页面切换完成后，导航到指定URL
+            setTimeout(() => {
+                const webview = document.getElementById('community-webview');
+                if (webview) {
+                    console.log('🌐 找到webview元素，设置URL:', url);
+                    webview.src = url;
+                    console.log('🌐 已设置webview.src为:', url);
+                } else {
+                    console.error('🌐 未找到community-webview元素，尝试外部打开');
+                    // 如果找不到webview，直接在外部浏览器打开
+                    if (window.electronAPI && window.electronAPI.openExternal) {
+                        window.electronAPI.openExternal(url);
+                    }
+                }
+            }, 500); // 增加等待时间确保页面切换完成
+        } catch (error) {
+            console.error('🌐 导航到在线页面失败:', error);
+            // 出错时尝试外部浏览器
+            if (window.electronAPI && window.electronAPI.openExternal) {
+                window.electronAPI.openExternal(url);
             }
-        }, 100);
+        }
     }
     searchClipboard(query) {
         if (this.clipboardManager) {
@@ -2045,14 +2061,37 @@ class App {
                 isDragging = false;
                 img.style.cursor = scale > 1 ? 'grab' : 'default';
             }
+        }; // 关闭预览函数
+        const closePreview = () => {
+            console.log('🚪 关闭图片预览');
+
+            // 清理事件监听器
+            document.removeEventListener('keydown', handleKeydown);
+            container.removeEventListener('wheel', handleWheel);
+            img.removeEventListener('mousedown', handleMouseDown);
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+
+            // 清理动画帧
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+
+            // 从DOM中移除模态框
+            if (modal && modal.parentNode) {
+                document.body.removeChild(modal);
+            }
         };
 
         // 点击关闭按钮
         const closeBtn = modal.querySelector('.image-preview-close');
-        closeBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            closePreview();
-        }); // 点击背景关闭 - 修复拖拽时意外关闭的问题
+        if (closeBtn) {
+            closeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                closePreview();
+            });
+        } // 点击背景关闭 - 修复拖拽时意外关闭的问题
         modal.addEventListener('click', (e) => {
             // 只有在没有拖拽状态下，且没有发生过拖拽，且点击的是背景区域时才关闭
             if (!isDragging && !hasBeenDragged && (e.target === modal || e.target === container)) {
@@ -2061,7 +2100,8 @@ class App {
         });
 
         // 控制按钮事件
-        modal.querySelectorAll('.zoom-btn').forEach(btn => {
+        const zoomBtns = modal.querySelectorAll('.zoom-btn');
+        zoomBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const action = btn.dataset.action;

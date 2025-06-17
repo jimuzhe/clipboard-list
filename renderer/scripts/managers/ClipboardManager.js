@@ -641,6 +641,8 @@ class ClipboardManager {
     }
     openUrlInCommunity(url) {
         try {
+            console.log('🌐 准备打开链接:', url);
+
             // 验证URL格式
             let validUrl = url;
             try {
@@ -652,61 +654,61 @@ class ClipboardManager {
                 }
             }
 
-            // 获取社区页面的URL
-            const communityUrl = this.appState.settings.online.currentUrl || this.appState.settings.communityUrl;
+            console.log('🌐 验证后的URL:', validUrl);
 
-            console.log('🌐 准备在移记社区中打开链接:', validUrl);
-            console.log('🌐 当前社区URL:', communityUrl);
+            // 直接尝试在应用内打开
+            if (window.app) {
+                // 先切换到在线页面
+                window.app.switchTab('community');
 
-            // 方案1: 如果目标URL就是社区地址，直接跳转
-            if (validUrl.toLowerCase().includes('8.130.41.186:3000')) {
-                if (window.electronAPI.openUrlInCommunity) {
-                    window.electronAPI.openUrlInCommunity(validUrl);
-                } else {
-                    // 直接在应用内导航
-                    if (window.app && window.app.navigateToOnlinePageWithUrl) {
-                        window.app.navigateToOnlinePageWithUrl(validUrl);
-                    }
-                }
-            } else {
-                // 方案2: 构建完整的URL，将目标链接作为参数传递给社区页面
-                const encodedUrl = encodeURIComponent(validUrl);
-                const fullUrl = `${communityUrl}?openUrl=${encodedUrl}`;
-
-                console.log('🌐 构建的完整URL:', fullUrl);
-
-                // 发送事件给主进程，切换到在线页面并打开链接
-                if (window.electronAPI.openUrlInCommunity) {
-                    window.electronAPI.openUrlInCommunity(fullUrl);
-                } else {
-                    // 备用方案：直接在应用内导航
-                    if (window.app && window.app.navigateToOnlinePageWithUrl) {
-                        window.app.navigateToOnlinePageWithUrl(fullUrl);
+                // 等待页面切换完成后设置URL
+                setTimeout(() => {
+                    const webview = document.getElementById('community-webview');
+                    if (webview) {
+                        console.log('🌐 在webview中打开URL:', validUrl);
+                        webview.src = validUrl;
+                        this.showNotification('链接已打开', '正在应用内打开链接');
                     } else {
-                        // 最后备用方案：外部浏览器打开
-                        window.electronAPI.openExternal(validUrl);
+                        console.error('🌐 未找到webview元素，使用外部浏览器');
+                        this.openInExternalBrowser(validUrl);
                     }
-                }
+                }, 300); // 增加等待时间确保页面切换完成
+
+                return;
             }
 
-            // 显示通知
-            this.showNotification('链接已打开', '链接正在移记社区中打开');
-
-            // 切换到在线页面
-            if (window.app && window.app.switchToPage) {
-                window.app.switchToPage('online');
+            // 如果应用实例不可用，尝试通过主进程
+            if (window.electronAPI && window.electronAPI.openUrlInCommunity) {
+                console.log('🌐 通过主进程打开链接');
+                window.electronAPI.openUrlInCommunity(validUrl);
+                this.showNotification('链接已打开', '正在打开链接');
+                return;
             }
+
+            // 最后备用方案：外部浏览器
+            this.openInExternalBrowser(validUrl);
 
         } catch (error) {
             console.error('❌ 打开链接失败:', error);
             this.showNotification('打开失败', '无法打开链接');
+            this.openInExternalBrowser(url);
+        }
+    }
 
-            // 错误时尝试直接在外部浏览器打开
-            try {
+    // 新增辅助方法：在外部浏览器中打开
+    openInExternalBrowser(url) {
+        try {
+            if (window.electronAPI && window.electronAPI.openExternal) {
+                console.log('🌐 使用外部浏览器打开:', url);
                 window.electronAPI.openExternal(url);
-            } catch (fallbackError) {
-                console.error('❌ 备用打开方案也失败:', fallbackError);
+                this.showNotification('链接已打开', '已在外部浏览器中打开');
+            } else {
+                console.error('🌐 外部浏览器打开功能不可用');
+                this.showNotification('打开失败', '无法打开外部浏览器');
             }
+        } catch (error) {
+            console.error('🌐 外部浏览器打开失败:', error);
+            this.showNotification('打开失败', '外部浏览器打开失败');
         }
     }
 }

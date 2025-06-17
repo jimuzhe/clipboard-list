@@ -1328,3 +1328,43 @@
     max-height: 70vh;
   }
 }
+
+/* ============================================
+   删除确认模态框
+   ============================================ */
+
+/* 删除确认模态框 - 确保显示在其他模态框之上 */
+.modal.delete-confirm-modal {
+  z-index: 10002; /* 比管理预设模态框 (10000) 和图片预览 (10001) 更高 */
+}
+
+/* 删除确认模态框内容样式 */
+.delete-confirm-content {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.delete-confirm-content .warning-text {
+  color: var(--text-color);
+  line-height: 1.6;
+}
+
+.delete-confirm-content .item-preview {
+  background: rgba(var(--danger-color-rgb), 0.1);
+  border: 1px solid var(--danger-color);
+  border-radius: var(--border-radius);
+  padding: 12px 16px;
+  margin: 16px 0;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 14px;
+  word-break: break-all;
+  max-height: 100px;
+  overflow-y: auto;
+}
+
+.delete-confirm-content .warning-note {
+  color: var(--danger-color);
+  font-size: 13px;
+  margin-top: 16px;
+  font-weight: 500;
+}
