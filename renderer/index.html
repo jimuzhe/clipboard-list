@@ -32,6 +32,7 @@
             <span>移记</span>
         </div>
         <div class="title-bar-controls">
+            <button id="settings-btn" class="control-btn" title="设置"><i class="fas fa-cog"></i></button>
             <button id="minimize-btn" class="control-btn" title="最小化"><i class="fas fa-minus"></i></button>
             <button id="close-btn" class="control-btn" title="隐藏"><i class="fas fa-times"></i></button>
         </div>
@@ -45,7 +46,6 @@
             <button class="tab-btn" data-tab="todo"><i class="fas fa-check-square"></i> 待办</button>
             <button class="tab-btn" data-tab="notes"><i class="fas fa-edit"></i> 笔记</button>
             <button class="tab-btn" data-tab="community"><i class="fas fa-globe"></i> 在线</button>
-            <button class="tab-btn" data-tab="settings"><i class="fas fa-cog"></i> 设置</button>
         </div>
 
         <!-- 剪切板面板 -->
@@ -63,7 +63,7 @@
         </div> <!-- 待办清单面板 -->
         <div id="todo-panel" class="panel">
             <div class="panel-header">
-                <h3>待办清单</h3>
+                <h3>待办</h3>
                 <div class="header-controls">
                     <select id="todo-filter" class="filter-select">
                         <option value="all">全部</option>
@@ -156,6 +156,43 @@
                 <h3>应用设置</h3>
             </div>
             <div class="settings-content">
+                <!-- 页面显示设置 -->
+                <div class="setting-group">
+                    <h4><span class="group-icon"><i class="fas fa-eye"></i></span> 页面显示</h4>
+                    <div class="setting-item">
+                        <label class="setting-label checkbox-setting">
+                            <span class="setting-icon"><i class="fas fa-clipboard"></i></span>
+                            <span class="setting-text">显示剪切板页面</span>
+                            <input type="checkbox" id="show-clipboard-tab" checked class="setting-checkbox">
+                            <span class="checkbox-slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <label class="setting-label checkbox-setting">
+                            <span class="setting-icon"><i class="fas fa-check-square"></i></span>
+                            <span class="setting-text">显示待办页面</span>
+                            <input type="checkbox" id="show-todo-tab" checked class="setting-checkbox">
+                            <span class="checkbox-slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <label class="setting-label checkbox-setting">
+                            <span class="setting-icon"><i class="fas fa-edit"></i></span>
+                            <span class="setting-text">显示笔记页面</span>
+                            <input type="checkbox" id="show-notes-tab" checked class="setting-checkbox">
+                            <span class="checkbox-slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <label class="setting-label checkbox-setting">
+                            <span class="setting-icon"><i class="fas fa-globe"></i></span>
+                            <span class="setting-text">显示在线页面</span>
+                            <input type="checkbox" id="show-community-tab" checked class="setting-checkbox">
+                            <span class="checkbox-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
                 <div class="setting-group">
                     <h4><span class="group-icon"><i class="fas fa-palette"></i></span> 外观设置</h4>
                     <div class="setting-item">
@@ -255,8 +292,7 @@
                             显示/隐藏窗口
                             <small style="color: var(--text-secondary); font-size: 12px;">设置用于显示和隐藏应用窗口的全局快捷键</small>
                         </label>
-                        <div class="shortcut-input-group">
-                            <input type="text" id="toggle-window-shortcut" value="Ctrl + Shift + V" readonly
+                        <div class="shortcut-input-group"> <input type="text" id="toggle-window-shortcut" readonly
                                 class="setting-input shortcut-input" placeholder="点击录制快捷键">
                             <button type="button" id="record-shortcut-btn"
                                 class="btn btn-secondary shortcut-record-btn">
@@ -394,16 +430,6 @@
                                 修改后点击"应用"按钮生效，支持 http:// 和 https:// 协议
                             </div>
                         </div>
-                    </div>
-                </div>
-                <div class="setting-group">
-                    <h4><span class="group-icon"><i class="fas fa-keyboard"></i></span> 快捷键</h4>
-                    <div class="setting-item">
-                        <label class="setting-label">
-                            <span class="setting-icon"><i class="fas fa-eye"></i></span>
-                            显示/隐藏窗口
-                        </label>
-                        <span class="shortcut-display">Ctrl + Shift + V</span>
                     </div>
                 </div>
 
@@ -751,6 +777,8 @@
         onerror="console.error('❌ NotesManager.js 加载失败')"></script>
     <script src="scripts/managers/ThemeManager.js" onload="console.log('✅ ThemeManager.js 加载完成')"
         onerror="console.error('❌ ThemeManager.js 加载失败')"></script>
+    <script src="scripts/managers/ShortcutManager.js" onload="console.log('✅ ShortcutManager.js 加载完成')"
+        onerror="console.error('❌ ShortcutManager.js 加载失败')"></script>
     <script src="scripts/managers/ShortcutUIManager.js" onload="console.log('✅ ShortcutUIManager.js 加载完成')"
         onerror="console.error('❌ ShortcutUIManager.js 加载失败')"></script>
     <script src="scripts/managers/App.js" onload="console.log('✅ App.js 加载完成')"

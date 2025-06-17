@@ -94,7 +94,6 @@ export class TrayManager extends EventEmitter {
             {
                 label: '退出',
                 type: 'normal',
-                accelerator: 'CmdOrCtrl+Q',
                 click: () => {
                     this.emit('quit-app');
                     logger.info('Tray: Quit app clicked');

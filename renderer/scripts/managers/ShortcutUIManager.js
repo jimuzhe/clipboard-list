@@ -3,12 +3,14 @@
  * 负责快捷键设置界面的交互和逻辑
  */
 class ShortcutUIManager {
-    constructor() {
+    constructor(shortcutManager = null) {
+        this.shortcutManager = shortcutManager || window.app ?.shortcutManager;
         this.shortcuts = new Map();
         this.isRecording = false;
         this.currentRecordingInput = null;
         this.suggestions = [];
         this.originalShortcuts = new Map();
+        this.isRegistering = false; // 防止重复注册的标志
 
         // 确保DOM已准备就绪后再初始化
         if (document.readyState === 'loading') {
@@ -33,6 +35,8 @@ class ShortcutUIManager {
      * 初始化DOM元素引用
      */
     initializeElements() {
+        console.log('🔍 Initializing DOM elements...');
+
         this.elements = {
             toggleWindowInput: document.getElementById('toggle-window-shortcut'),
             recordBtn: document.getElementById('record-shortcut-btn'),
@@ -40,23 +44,56 @@ class ShortcutUIManager {
             suggestionsContainer: document.getElementById('shortcut-suggestions'),
             suggestionsList: document.getElementById('suggestions-list')
         };
+
+        console.log('🔍 Found elements:', {
+            toggleWindowInput: !!this.elements.toggleWindowInput,
+            recordBtn: !!this.elements.recordBtn,
+            resetBtn: !!this.elements.resetBtn,
+            suggestionsContainer: !!this.elements.suggestionsContainer,
+            suggestionsList: !!this.elements.suggestionsList
+        });
+        // 检查每个元素
+        Object.entries(this.elements).forEach(([key, element]) => {
+            if (element) {
+                console.log(`✅ ${key} found:`, element);
+            } else {
+                console.error(`❌ ${key} not found`);
+            }
+        });
+
+        // 添加测试点击事件
+        if (this.elements.toggleWindowInput) {
+            console.log('🧪 添加测试点击事件到快捷键输入框');
+            setTimeout(() => {
+                console.log('🧪 执行测试点击');
+                const testEvent = new MouseEvent('click', {
+                    bubbles: true,
+                    cancelable: true
+                });
+                this.elements.toggleWindowInput.dispatchEvent(testEvent);
+            }, 2000);
+        }
     }
     /**
      * 设置事件监听器
      */
     setupEventListeners() {
         console.log('Setting up ShortcutUIManager event listeners...');
-        console.log('Elements found:', this.elements);
-
-        // 快捷键输入框点击事件
+        console.log('Elements found:', this.elements); // 快捷键输入框点击事件
         if (this.elements.toggleWindowInput) {
-            console.log('Adding click listener to toggle window input');
-            this.elements.toggleWindowInput.addEventListener('click', () => {
-                console.log('Toggle window input clicked');
+            console.log('✅ Adding click listener to toggle window input');
+            this.elements.toggleWindowInput.addEventListener('click', (e) => {
+                console.log('🖱️ Toggle window input clicked', e);
+                this.startRecording(this.elements.toggleWindowInput, 'toggleWindow');
+            });
+
+            // 也添加焦点事件
+            this.elements.toggleWindowInput.addEventListener('focus', (e) => {
+                console.log('🎯 Toggle window input focused', e);
                 this.startRecording(this.elements.toggleWindowInput, 'toggleWindow');
             });
         } else {
-            console.error('Toggle window input element not found');
+            console.error('❌ Toggle window input element not found');
         }
 
         // 录制按钮点击事件
@@ -187,10 +224,36 @@ class ShortcutUIManager {
      */
     async loadShortcuts() {
         try {
+            console.log('🔄 开始加载快捷键设置...');
+            console.log('shortcutManager 实例:', this.shortcutManager);
+
+            // 如果有快捷键管理器，使用它来加载快捷键
+            if (this.shortcutManager) {
+                console.log('📥 使用 ShortcutManager 加载快捷键');
+                const shortcuts = this.shortcutManager.getShortcuts();
+                console.log('🔑 获取到的快捷键:', shortcuts);
+
+                this.shortcuts.clear();
+                Object.entries(shortcuts).forEach(([action, shortcut]) => {
+                    this.shortcuts.set(action, shortcut);
+                    console.log(`🔑 设置快捷键: ${action} = ${shortcut}`);
+                });
+                console.log('📊 快捷键Map状态:', this.shortcuts);
+                this.updateUI();
+
+                // 只在初始加载时注册全局快捷键
+                this.registerGlobalShortcuts();
+
+                console.log('✅ 从本地存储加载快捷键设置完成');
+                return;
+            }
+
+            console.log('⚠️ 没有 shortcutManager，使用原来的电子API方法');
+            // 兜底：使用原来的电子API方法
             await window.electronAPI.getAllShortcuts();
             await window.electronAPI.getShortcutSuggestions();
         } catch (error) {
-            console.error('Failed to load shortcuts:', error);
+            console.error('❌ 加载快捷键失败:', error);
         }
     }
 
@@ -198,7 +261,14 @@ class ShortcutUIManager {
      * 开始录制快捷键
      */
     startRecording(inputElement, action) {
+        console.log('🎯 startRecording called with:', {
+            inputElement,
+            action
+        });
+        console.log('🎯 Current isRecording state:', this.isRecording);
+
         if (this.isRecording) {
+            console.log('🛑 Already recording, stopping current recording');
             this.stopRecording();
         }
 
@@ -216,7 +286,7 @@ class ShortcutUIManager {
             this.elements.recordBtn.classList.add('recording');
         }
 
-        console.log(`开始录制快捷键: ${action}`);
+        console.log(`✅ 开始录制快捷键: ${action}`);
     }
 
     /**
@@ -333,17 +403,32 @@ class ShortcutUIManager {
         // 验证快捷键
         this.validateAndApplyShortcut(shortcut);
     }
-
     /**
      * 验证并应用快捷键
      */
     async validateAndApplyShortcut(shortcut) {
         try {
-            // 验证快捷键是否可用
-            await window.electronAPI.validateShortcut(shortcut);
+            console.log('🔍 开始验证快捷键:', shortcut);
+
+            if (!this.shortcutManager) {
+                console.error('❌ ShortcutManager 未初始化');
+                this.showError('快捷键管理器未就绪');
+                return;
+            }
+
+            // 使用本地验证而不是调用electronAPI
+            const isValid = this.shortcutManager.validateShortcut(shortcut);
+            console.log('🔍 快捷键验证结果:', isValid);
+
+            if (isValid) {
+                this.handleValidationResult(shortcut, true);
+            } else {
+                this.showError('无效的快捷键格式');
+                this.handleValidationResult(shortcut, false);
+            }
         } catch (error) {
-            console.error('Failed to validate shortcut:', error);
-            this.showError('快捷键验证失败');
+            console.error('❌ 快捷键验证失败:', error);
+            this.showError('快捷键验证失败: ' + error.message);
         }
     }
 
@@ -375,16 +460,40 @@ class ShortcutUIManager {
             }, 3000);
         }
     }
-
     /**
      * 应用新的快捷键
      */
     async applyShortcut(action, shortcut) {
         try {
+            console.log(`🔄 应用快捷键: ${action} -> ${shortcut}`);
+
+            // 如果有快捷键管理器，使用它来保存快捷键
+            if (this.shortcutManager) {
+                const result = await this.shortcutManager.updateShortcut(action, shortcut);
+                if (result.success) {
+                    this.shortcuts.set(action, shortcut);
+                    this.updateUI();
+                    this.showMessage(`快捷键更新成功: ${this.formatShortcutDisplay(shortcut)}`, 'success');
+                    console.log(`✅ 快捷键已保存到本地: ${action} = ${shortcut}`);
+
+                    // 延迟注册全局快捷键，避免循环
+                    setTimeout(() => {
+                        if (action === 'toggleWindow') {
+                            this.registerGlobalShortcuts();
+                        }
+                    }, 500);
+                } else {
+                    this.showError(`快捷键更新失败: ${result.error}`);
+                    console.error(`❌ 快捷键更新失败: ${result.error}`);
+                }
+                return;
+            }
+
+            // 兜底：使用原来的电子API方法
             await window.electronAPI.updateShortcut(action, shortcut);
         } catch (error) {
-            console.error('Failed to update shortcut:', error);
-            this.showError('快捷键更新失败');
+            console.error('❌ 快捷键更新异常:', error);
+            this.showError('快捷键更新失败: ' + error.message);
         }
     }
 
@@ -393,6 +502,23 @@ class ShortcutUIManager {
      */
     async resetToDefault() {
         try {
+            console.log('🔄 重置快捷键为默认值');
+
+            if (this.shortcutManager) {
+                await this.shortcutManager.resetToDefaults();
+                // 重新加载快捷键
+                const shortcuts = this.shortcutManager.getShortcuts();
+                this.shortcuts.clear();
+                Object.entries(shortcuts).forEach(([action, shortcut]) => {
+                    this.shortcuts.set(action, shortcut);
+                });
+                this.updateUI();
+                this.showMessage('快捷键已重置为默认值', 'success');
+                console.log('✅ 快捷键已重置为默认值');
+                return;
+            }
+
+            // 兜底：使用原来的电子API方法
             const defaultShortcut = 'CommandOrControl+Shift+V';
             await window.electronAPI.updateShortcut('toggleWindow', defaultShortcut);
         } catch (error) {
@@ -405,11 +531,37 @@ class ShortcutUIManager {
      * 更新UI显示
      */
     updateUI() {
+        console.log('🎨 更新UI，当前快捷键Map:', this.shortcuts);
+        console.log('🎨 UI元素:', this.elements);
+
         // 更新切换窗口快捷键显示
         const toggleShortcut = this.shortcuts.get('toggleWindow');
+        console.log('🔑 toggleWindow快捷键:', toggleShortcut);
+
         if (toggleShortcut && this.elements.toggleWindowInput) {
-            this.elements.toggleWindowInput.value = this.formatShortcutDisplay(toggleShortcut);
+            const formattedShortcut = this.formatShortcutDisplay(toggleShortcut);
+            console.log('🎨 格式化后的快捷键:', formattedShortcut);
+
+            // 强制更新输入框值
+            this.elements.toggleWindowInput.value = formattedShortcut;
+
+            // 确保值确实被设置了
+            setTimeout(() => {
+                if (this.elements.toggleWindowInput.value !== formattedShortcut) {
+                    console.log('⚠️ 输入框值被重置，重新设置');
+                    this.elements.toggleWindowInput.value = formattedShortcut;
+                }
+                console.log('✅ 最终输入框值:', this.elements.toggleWindowInput.value);
+            }, 100);
+
+            console.log('✅ 已更新输入框值');
+        } else {
+            console.log('⚠️ 没有找到toggleWindow快捷键或输入框元素');
+            console.log('- toggleShortcut:', toggleShortcut);
+            console.log('- toggleWindowInput元素:', this.elements.toggleWindowInput);
         }
+
+        console.log('✅ UI更新完成');
     }
 
     /**
@@ -537,6 +689,37 @@ class ShortcutUIManager {
         // 移除事件监听器
         document.removeEventListener('keydown', this.handleKeyDown);
         document.removeEventListener('click', this.stopRecording);
+    }
+    /**
+     * 向主进程注册全局快捷键
+     */
+    registerGlobalShortcuts() {
+        // 防止重复注册
+        if (this.isRegistering) {
+            console.log('⚠️ 正在注册中，跳过重复注册');
+            return;
+        }
+
+        this.isRegistering = true;
+        console.log('🌐 开始注册全局快捷键...');
+
+        try {
+            // 注册切换窗口快捷键
+            const toggleShortcut = this.shortcuts.get('toggleWindow');
+            if (toggleShortcut && window.electronAPI && window.electronAPI.updateShortcut) {
+                console.log('🌐 注册切换窗口快捷键:', toggleShortcut);
+                window.electronAPI.updateShortcut('toggleWindow', toggleShortcut);
+            } else {
+                console.log('⚠️ 无法注册全局快捷键，缺少toggleShortcut或electronAPI');
+            }
+        } catch (error) {
+            console.error('❌ 注册全局快捷键失败:', error);
+        } finally {
+            // 延迟重置标志，防止短时间内重复调用
+            setTimeout(() => {
+                this.isRegistering = false;
+            }, 1000);
+        }
     }
 }
 

@@ -13,29 +13,26 @@ class App {
 
     async init() {
         // 加载数据
-        await this.state.loadData(); // 初始化管理器（不立即渲染）
-        this.clipboardManager = new ClipboardManager(this.state);
+        await this.state.loadData(); // 初始化管理器（不立即渲染）        this.clipboardManager = new ClipboardManager(this.state);
         this.todoManager = new TodoManager(this.state);
         this.pomodoroManager = new PomodoroManager(this.state);
         this.notesManager = new NotesManager(this.state);
         this.themeManager = new ThemeManager(this.state);
+        this.shortcutManager = new ShortcutManager(this.state);
 
         // 设置事件监听器
         this.setupEventListeners();
 
         // 初始化UI
-        this.initializeUI();
-
-        // 在DOM完全准备后初始化快捷键管理器
+        this.initializeUI(); // 在DOM完全准备后初始化快捷键管理器
         setTimeout(() => {
             console.log('Initializing ShortcutUIManager...');
-            this.shortcutUIManager = new ShortcutUIManager();
+            this.shortcutUIManager = new ShortcutUIManager(this.shortcutManager);
         }, 100);
 
         // 数据加载完成后，重新渲染所有组件
         await this.renderAllComponents();
     }
-
     setupEventListeners() {
         // 标题栏控制
         document.getElementById('minimize-btn').addEventListener('click', () => {
@@ -43,6 +40,11 @@ class App {
         });
         document.getElementById('close-btn').addEventListener('click', () => {
             window.electronAPI.closeWindow();
+        });
+
+        // 设置按钮
+        document.getElementById('settings-btn').addEventListener('click', () => {
+            this.switchTab('settings');
         });
 
         // 选项卡切换
@@ -81,8 +83,44 @@ class App {
             });
         }
     }
-
     setupSettingsListeners() {
+        // 页面显示控制
+        const showClipboardTab = document.getElementById('show-clipboard-tab');
+        if (showClipboardTab) {
+            showClipboardTab.addEventListener('change', (e) => {
+                this.state.settings.showClipboardTab = e.target.checked;
+                this.state.saveData();
+                this.updateTabVisibility();
+            });
+        }
+
+        const showTodoTab = document.getElementById('show-todo-tab');
+        if (showTodoTab) {
+            showTodoTab.addEventListener('change', (e) => {
+                this.state.settings.showTodoTab = e.target.checked;
+                this.state.saveData();
+                this.updateTabVisibility();
+            });
+        }
+
+        const showNotesTab = document.getElementById('show-notes-tab');
+        if (showNotesTab) {
+            showNotesTab.addEventListener('change', (e) => {
+                this.state.settings.showNotesTab = e.target.checked;
+                this.state.saveData();
+                this.updateTabVisibility();
+            });
+        }
+
+        const showCommunityTab = document.getElementById('show-community-tab');
+        if (showCommunityTab) {
+            showCommunityTab.addEventListener('change', (e) => {
+                this.state.settings.showCommunityTab = e.target.checked;
+                this.state.saveData();
+                this.updateTabVisibility();
+            });
+        }
+
         // 主题选择
         const themeSelect = document.getElementById('theme-select');
         if (themeSelect) {
@@ -429,6 +467,45 @@ class App {
     }
 
     /**
+     * 更新标签页可见性
+     */
+    updateTabVisibility() {
+        const tabs = [{
+                id: 'clipboard-tab',
+                setting: 'showClipboardTab'
+            },
+            {
+                id: 'todo-tab',
+                setting: 'showTodoTab'
+            },
+            {
+                id: 'notes-tab',
+                setting: 'showNotesTab'
+            },
+            {
+                id: 'community-tab',
+                setting: 'showCommunityTab'
+            }
+        ];
+
+        tabs.forEach(tab => {
+            const tabElement = document.querySelector(`[data-tab="${tab.id.replace('-tab', '')}"]`);
+            if (tabElement) {
+                const isVisible = this.state.settings[tab.setting];
+                tabElement.style.display = isVisible ? '' : 'none';
+
+                // 如果当前活跃的标签页被隐藏了，切换到第一个可见的标签页
+                if (!isVisible && tabElement.classList.contains('active')) {
+                    const firstVisibleTab = document.querySelector('.tab-btn:not([style*="display: none"])');
+                    if (firstVisibleTab) {
+                        this.switchTab(firstVisibleTab.dataset.tab);
+                    }
+                }
+            }
+        });
+    }
+
+    /**
      * 切换到指定页面
      */
     switchToPage(pageName) {
@@ -697,6 +774,30 @@ class App {
 
     // 设置面板初始化
     initializeSettingsPanel() {
+        // 初始化页面显示控制设置
+        const showClipboardTab = document.getElementById('show-clipboard-tab');
+        if (showClipboardTab) {
+            showClipboardTab.checked = this.state.settings.showClipboardTab;
+        }
+
+        const showTodoTab = document.getElementById('show-todo-tab');
+        if (showTodoTab) {
+            showTodoTab.checked = this.state.settings.showTodoTab;
+        }
+
+        const showNotesTab = document.getElementById('show-notes-tab');
+        if (showNotesTab) {
+            showNotesTab.checked = this.state.settings.showNotesTab;
+        }
+
+        const showCommunityTab = document.getElementById('show-community-tab');
+        if (showCommunityTab) {
+            showCommunityTab.checked = this.state.settings.showCommunityTab;
+        }
+
+        // 更新标签页可见性
+        this.updateTabVisibility();
+
         // 设置主题选择器的值
         const themeSelect = document.getElementById('theme-select');
         if (themeSelect) {
@@ -1943,40 +2044,7 @@ class App {
             if (isDragging) {
                 isDragging = false;
                 img.style.cursor = scale > 1 ? 'grab' : 'default';
-                // 恢复过渡动画
-                img.style.transition = 'transform 0.3s ease, cursor 0.2s ease';
-
-                // 延迟重置拖拽标记，避免立即触发点击事件
-                setTimeout(() => {
-                    hasBeenDragged = false;
-                }, 100);
             }
-        }; // 关闭预览函数 - 添加性能优化清理
-        const closePreview = () => {
-            // 取消待处理的动画帧
-            if (animationId) {
-                cancelAnimationFrame(animationId);
-                animationId = null;
-            }
-
-            // 清理硬件加速优化
-            if (img) {
-                img.style.willChange = 'auto';
-                img.style.transition = '';
-            }
-
-            if (modal.parentNode) {
-                modal.style.opacity = '0';
-                setTimeout(() => {
-                    if (modal.parentNode) {
-                        document.body.removeChild(modal);
-                    }
-                }, 300);
-            }
-            document.removeEventListener('keydown', handleKeydown);
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
-            console.log('🔒 图片预览已关闭');
         };
 
         // 点击关闭按钮

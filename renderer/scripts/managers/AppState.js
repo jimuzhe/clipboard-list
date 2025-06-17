@@ -17,11 +17,26 @@ class AppState {
             clearClipboardOnRestart: true,
             enableNotifications: true,
             maxClipboardItems: 100,
-            communityUrl: 'http://8.130.41.186:3000/',
+            communityUrl: 'http://8.130.41.186:3000/', // 页面显示设置
+            showClipboardTab: true,
+            showTodoTab: true,
+            showNotesTab: true,
+            showCommunityTab: true,
             // 动画速度设置
             animationSpeed: 'normal', // 'fast', 'normal', 'slow'
             showAnimationDuration: 150, // 显示动画持续时间(毫秒)
             hideAnimationDuration: 40, // 隐藏动画持续时间(毫秒)
+            // 快捷键设置
+            shortcuts: {
+                toggleWindow: 'Ctrl+Shift+Space', // 显示/隐藏窗口
+                newClipboard: 'Ctrl+Alt+C', // 新建剪切板项
+                newTodo: 'Ctrl+Alt+T', // 新建待办事项
+                newNote: 'Ctrl+Alt+N', // 新建笔记
+                switchToClipboard: 'Ctrl+1', // 切换到剪切板
+                switchToTodo: 'Ctrl+2', // 切换到待办
+                switchToNotes: 'Ctrl+3', // 切换到笔记
+                switchToCommunity: 'Ctrl+4' // 切换到社区
+            },
             online: {
                 currentUrl: 'http://8.130.41.186:3000/',
                 showPresetButtons: true,
