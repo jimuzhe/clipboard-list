@@ -12,6 +12,15 @@ dist-installer/
 build/
 out/
 
+# Electron specific
+*.exe
+*.app
+*.dmg
+*.deb
+*.rpm
+*.snap
+*.appx
+
 # Development files
 *.log
 *.tmp
