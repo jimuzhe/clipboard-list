@@ -13,6 +13,9 @@ export interface OnlineConfig {
     presetWebsites: PresetWebsite[];
     showPresetButtons: boolean;
 }
+export interface ShortcutConfig {
+    toggleWindow: string;
+}
 export interface AppConfig {
     theme: 'light' | 'dark' | 'blue' | 'green';
     autoStart: boolean;
@@ -21,6 +24,7 @@ export interface AppConfig {
     clipboard: ClipboardConfig;
     pomodoro: PomodoroConfig;
     online: OnlineConfig;
+    shortcuts: ShortcutConfig;
 }
 export interface WindowConfig {
     alwaysOnTop: boolean;

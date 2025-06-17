@@ -107,10 +107,17 @@ export declare class WindowManager extends EventEmitter {
     closeDevTools(): void; /**
      * 切换开发者工具状态（仅开发模式）
      */
-    toggleDevTools(): void;
-    /**
+    toggleDevTools(): void; /**
      * 更新动画设置
      */
     updateAnimationSettings(showDuration: number, hideDuration: number): void;
+    /**
+     * 设置窗口透明度
+     */
+    setOpacity(opacity: number): void;
+    /**
+     * 获取当前窗口透明度
+     */
+    getOpacity(): number;
 }
 //# sourceMappingURL=WindowManager.d.ts.map

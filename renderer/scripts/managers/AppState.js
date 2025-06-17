@@ -11,6 +11,7 @@ class AppState {
             liquidGlassTheme: false,
             liquidGlassOpacity: 0.3,
             liquidGlassColor: '#007acc',
+            windowOpacity: 1.0, // 新增：窗口透明度设置 (0.1-1.0)
             autoStart: true,
             clipboardMonitor: true,
             clearClipboardOnRestart: true,

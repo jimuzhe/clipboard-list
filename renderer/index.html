@@ -5,9 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>移记 - 捕捉好点子</title>
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.11.2/css/all.css">
-    <!-- 按依赖顺序引入拆分后的样式文件 -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.11.2/css/all.css"> <!-- 按依赖顺序引入拆分后的样式文件 -->
     <link rel="stylesheet" href="styles/base.css">
+    <link rel="stylesheet" href="styles/window-effects.css">
     <link rel="stylesheet" href="styles/layout.css">
     <link rel="stylesheet" href="styles/components.css">
     <link rel="stylesheet" href="styles/clipboard.css">
@@ -178,6 +178,18 @@
                         </label>
                     </div>
                     <div class="setting-item">
+                        <label for="window-opacity" class="setting-label">
+                            <span class="setting-icon"><i class="fas fa-adjust"></i></span>
+                            背景透明度
+                            <small style="color: var(--text-secondary); font-size: 12px;">调整界面背景的透明度，文字保持清晰</small>
+                        </label>
+                        <div class="slider-container">
+                            <input type="range" id="window-opacity" min="0.1" max="1.0" step="0.1" value="1.0"
+                                class="setting-slider" title="调整背景透明度">
+                            <span class="slider-value">100%</span>
+                        </div>
+                    </div>
+                    <div class="setting-item">
                         <label class="setting-label checkbox-setting">
                             <span class="setting-icon"><i class="fas fa-magic"></i></span>
                             <span class="setting-text">启用液态玻璃主题</span>
@@ -192,7 +204,7 @@
                             <small style="color: var(--text-secondary); font-size: 12px;">调整整个应用程序的透明度</small>
                         </label>
                         <div class="slider-container">
-                            <input type="range" id="glass-opacity" min="0.1" max="0.8" step="0.1" value="0.3"
+                            <input type="range" id="glass-opacity" min="0.1" max="1.0" step="0.1" value="0.3"
                                 class="setting-slider" title="调整整个应用程序的透明度">
                             <span class="slider-value">30%</span>
                         </div>
@@ -220,7 +232,58 @@
                             </div>
                         </div>
                     </div>
+                    <div class="setting-item">
+                        <label for="markdown-sidebar-opacity" class="setting-label">
+                            <span class="setting-icon"><i class="fas fa-sidebar"></i></span>
+                            Markdown左侧栏透明度
+                            <small style="color: var(--text-secondary); font-size: 12px;">单独调节笔记左侧栏的透明度</small>
+                        </label>
+                        <div class="slider-container">
+                            <input type="range" id="markdown-sidebar-opacity" min="0.1" max="1.0" step="0.1" value="1.0"
+                                class="setting-slider" title="调整Markdown左侧栏透明度">
+                            <span class="slider-value">100%</span>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- 快捷键设置 -->
+                <div class="setting-group">
+                    <h4><span class="group-icon"><i class="fas fa-keyboard"></i></span> 快捷键设置</h4>
+                    <div class="setting-item">
+                        <label for="toggle-window-shortcut" class="setting-label">
+                            <span class="setting-icon"><i class="fas fa-eye"></i></span>
+                            显示/隐藏窗口
+                            <small style="color: var(--text-secondary); font-size: 12px;">设置用于显示和隐藏应用窗口的全局快捷键</small>
+                        </label>
+                        <div class="shortcut-input-group">
+                            <input type="text" id="toggle-window-shortcut" value="Ctrl + Shift + V" readonly
+                                class="setting-input shortcut-input" placeholder="点击录制快捷键">
+                            <button type="button" id="record-shortcut-btn"
+                                class="btn btn-secondary shortcut-record-btn">
+                                <i class="fas fa-microphone"></i> 录制
+                            </button>
+                            <button type="button" id="reset-shortcut-btn"
+                                class="btn btn-outline-secondary shortcut-reset-btn">
+                                <i class="fas fa-undo"></i> 重置
+                            </button>
+                        </div>
+                        <div class="shortcut-suggestions" id="shortcut-suggestions" style="display: none;">
+                            <div class="suggestions-header">
+                                <small>常用快捷键建议：</small>
+                            </div>
+                            <div class="suggestions-list" id="suggestions-list">
+                                <!-- 动态生成建议列表 -->
+                            </div>
+                        </div>
+                        <div class="shortcut-help">
+                            <small style="color: var(--text-secondary); font-size: 11px;">
+                                <i class="fas fa-info-circle"></i>
+                                提示：快捷键组合必须包含至少一个修饰键（Ctrl、Alt、Shift）
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="setting-group">
                     <h4><span class="group-icon"><i class="fas fa-cog"></i></span> 功能设置</h4>
                     <div class="setting-item">
@@ -688,6 +751,8 @@
         onerror="console.error('❌ NotesManager.js 加载失败')"></script>
     <script src="scripts/managers/ThemeManager.js" onload="console.log('✅ ThemeManager.js 加载完成')"
         onerror="console.error('❌ ThemeManager.js 加载失败')"></script>
+    <script src="scripts/managers/ShortcutUIManager.js" onload="console.log('✅ ShortcutUIManager.js 加载完成')"
+        onerror="console.error('❌ ShortcutUIManager.js 加载失败')"></script>
     <script src="scripts/managers/App.js" onload="console.log('✅ App.js 加载完成')"
         onerror="console.error('❌ App.js 加载失败')"></script>
 

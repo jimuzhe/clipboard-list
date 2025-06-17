@@ -4,11 +4,13 @@ const electron_1 = require("electron");
 // 暴露安全的 API 给渲染进程
 electron_1.contextBridge.exposeInMainWorld('electronAPI', {
     minimizeWindow: () => electron_1.ipcRenderer.invoke('minimize-window'),
-    closeWindow: () => electron_1.ipcRenderer.invoke('close-window'),
-    // 窗口置顶功能
+    closeWindow: () => electron_1.ipcRenderer.invoke('close-window'), // 窗口置顶功能
     setAlwaysOnTop: (enabled) => electron_1.ipcRenderer.invoke('window:set-always-on-top', enabled),
     getAlwaysOnTop: () => electron_1.ipcRenderer.invoke('window:get-always-on-top'),
     toggleAlwaysOnTop: () => electron_1.ipcRenderer.invoke('window:toggle-always-on-top'),
+    // 窗口透明度功能
+    setWindowOpacity: (opacity) => electron_1.ipcRenderer.invoke('window:set-opacity', opacity),
+    getWindowOpacity: () => electron_1.ipcRenderer.invoke('window:get-opacity'),
     // 应用信息
     getAppVersion: () => electron_1.ipcRenderer.invoke('get-app-version'),
     getDataPath: () => electron_1.ipcRenderer.invoke('get-data-path'), // 剪切板相关
@@ -79,10 +81,31 @@ electron_1.contextBridge.exposeInMainWorld('electronAPI', {
         electron_1.ipcRenderer.on('update-download-completed', (_, result) => callback(result));
     }, onUpdateDownloadError: (callback) => {
         electron_1.ipcRenderer.on('update-download-error', (_, error) => callback(error));
-    },
-    // 导航事件监听
+    }, // 导航事件监听
     onNavigateToOnlinePage: (callback) => {
         electron_1.ipcRenderer.on('navigate-to-online-page', (_, url) => callback(url));
+    },
+    // 快捷键管理
+    getAllShortcuts: () => electron_1.ipcRenderer.invoke('shortcut-get-all'),
+    updateShortcut: (action, shortcut) => electron_1.ipcRenderer.invoke('shortcut-update', { action, shortcut }),
+    getShortcutSuggestions: () => electron_1.ipcRenderer.invoke('shortcut-get-suggestions'),
+    validateShortcut: (shortcut) => electron_1.ipcRenderer.invoke('shortcut-validate', shortcut),
+    formatShortcut: (shortcut) => electron_1.ipcRenderer.invoke('shortcut-format', shortcut),
+    // 快捷键事件监听
+    onShortcutUpdated: (callback) => {
+        electron_1.ipcRenderer.on('shortcut-updated', (_, data) => callback(data));
+    },
+    onShortcutsResponse: (callback) => {
+        electron_1.ipcRenderer.on('shortcuts-response', (_, shortcuts) => callback(shortcuts));
+    },
+    onShortcutSuggestionsResponse: (callback) => {
+        electron_1.ipcRenderer.on('shortcut-suggestions-response', (_, suggestions) => callback(suggestions));
+    },
+    onShortcutValidationResponse: (callback) => {
+        electron_1.ipcRenderer.on('shortcut-validation-response', (_, data) => callback(data));
+    },
+    onShortcutFormattedResponse: (callback) => {
+        electron_1.ipcRenderer.on('shortcut-formatted-response', (_, data) => callback(data));
     },
 });
 //# sourceMappingURL=preload.js.map

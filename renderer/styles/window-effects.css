@@ -1,0 +1,46 @@
+/**
+ * 窗口特效样式
+ * 处理圆角、透明度和边缘效果
+ */
+
+/* 确保HTML和Body的完全透明圆角 */
+html, body {
+  border-radius: 12px;
+  overflow: hidden;
+  background: transparent !important;
+  /* 使用clip-path确保圆角边缘透明 */
+  clip-path: inset(0 round 12px);
+}
+
+/* 主要容器的圆角处理 */
+.title-bar {
+  border-radius: 12px 12px 0 0;
+  background-clip: padding-box;
+  overflow: hidden;
+  /* 确保边缘不会有白色泄漏 */
+  position: relative;
+}
+
+.main-container {
+  border-radius: 0 0 12px 12px;
+  background-clip: padding-box;
+  overflow: hidden;
+  /* 确保边缘不会有白色泄漏 */
+  position: relative;
+}
+
+/* 添加一个全局遮罩来确保圆角透明 */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  /* 创建圆角遮罩 */
+  border-radius: 12px;
+  box-shadow: 0 0 0 1000px rgba(0, 0, 0, 1);
+  clip-path: inset(0 round 12px);
+}

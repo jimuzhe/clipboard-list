@@ -67,11 +67,13 @@ class IPCService extends events_1.EventEmitter {
         this.registerHandler('window:set-trigger-zone-width', this.handleSetTriggerZoneWidth.bind(this));
         this.registerHandler('window:get-trigger-zone-width', this.handleGetTriggerZoneWidth.bind(this));
         this.registerHandler('window:set-edge-trigger-enabled', this.handleSetEdgeTriggerEnabled.bind(this));
-        this.registerHandler('window:get-edge-trigger-enabled', this.handleGetEdgeTriggerEnabled.bind(this));
-        // 窗口置顶功能
+        this.registerHandler('window:get-edge-trigger-enabled', this.handleGetEdgeTriggerEnabled.bind(this)); // 窗口置顶功能
         this.registerHandler('window:set-always-on-top', this.handleSetAlwaysOnTop.bind(this));
         this.registerHandler('window:get-always-on-top', this.handleGetAlwaysOnTop.bind(this));
         this.registerHandler('window:toggle-always-on-top', this.handleToggleAlwaysOnTop.bind(this));
+        // 窗口透明度功能
+        this.registerHandler('window:set-opacity', this.handleSetWindowOpacity.bind(this));
+        this.registerHandler('window:get-opacity', this.handleGetWindowOpacity.bind(this));
         // 剪切板相关
         this.registerHandler('clipboard:read', this.handleReadClipboard.bind(this));
         this.registerHandler('clipboard:write', this.handleWriteClipboard.bind(this));
@@ -97,12 +99,17 @@ class IPCService extends events_1.EventEmitter {
         this.registerHandler('load-pomodoro-timer', this.handleLoadPomodoroTimer.bind(this));
         // 主题相关
         this.registerHandler('theme:get', this.handleGetTheme.bind(this));
-        this.registerHandler('theme:set', this.handleSetTheme.bind(this));
-        // 自启动相关
+        this.registerHandler('theme:set', this.handleSetTheme.bind(this)); // 自启动相关
         this.registerHandler('auto-start:get-status', this.handleGetAutoStartStatus.bind(this));
         this.registerHandler('auto-start:toggle', this.handleToggleAutoStart.bind(this));
         this.registerHandler('auto-start:enable', this.handleEnableAutoStart.bind(this));
-        this.registerHandler('auto-start:disable', this.handleDisableAutoStart.bind(this)); // 文件和文件夹操作
+        this.registerHandler('auto-start:disable', this.handleDisableAutoStart.bind(this));
+        // 快捷键相关
+        this.registerHandler('shortcut-get-all', this.handleGetAllShortcuts.bind(this));
+        this.registerHandler('shortcut-update', this.handleUpdateShortcut.bind(this));
+        this.registerHandler('shortcut-get-suggestions', this.handleGetShortcutSuggestions.bind(this));
+        this.registerHandler('shortcut-validate', this.handleValidateShortcut.bind(this));
+        this.registerHandler('shortcut-format', this.handleFormatShortcut.bind(this)); // 文件和文件夹操作
         this.registerHandler('get-default-notes-folder', this.handleGetDefaultNotesFolder.bind(this));
         this.registerHandler('open-folder-dialog', this.handleOpenFolderDialog.bind(this));
         this.registerHandler('list-markdown-files', this.handleListMarkdownFiles.bind(this));
@@ -275,6 +282,18 @@ class IPCService extends events_1.EventEmitter {
         return new Promise((resolve) => {
             this.emit('window-toggle-always-on-top');
             this.once('always-on-top-toggled', resolve);
+        });
+    }
+    // === 窗口透明度功能相关处理程序 ===
+    async handleSetWindowOpacity(event, opacity) {
+        // 确保透明度值在有效范围内
+        const clampedOpacity = Math.max(0.1, Math.min(1.0, opacity));
+        this.emit('window-set-opacity', clampedOpacity);
+    }
+    async handleGetWindowOpacity() {
+        return new Promise((resolve) => {
+            this.emit('window-get-opacity');
+            this.once('window-opacity-response', resolve);
         });
     }
     // === 剪切板相关处理程序 ===
@@ -558,8 +577,7 @@ class IPCService extends events_1.EventEmitter {
             Logger_1.logger.error('Toggle DevTools error:', error);
             throw error;
         }
-    }
-    /**
+    } /**
      * 处理动画设置更新请求
      */
     async handleUpdateAnimationSettings(event, settings) {
@@ -569,6 +587,71 @@ class IPCService extends events_1.EventEmitter {
         }
         catch (error) {
             Logger_1.logger.error('Update animation settings error:', error);
+            throw error;
+        }
+    }
+    /**
+     * 处理获取所有快捷键请求
+     */
+    async handleGetAllShortcuts(event) {
+        try {
+            this.emit('shortcut-get-all');
+            Logger_1.logger.debug('Get all shortcuts requested from renderer');
+        }
+        catch (error) {
+            Logger_1.logger.error('Get all shortcuts error:', error);
+            throw error;
+        }
+    }
+    /**
+     * 处理更新快捷键请求
+     */
+    async handleUpdateShortcut(event, data) {
+        try {
+            this.emit('shortcut-update', data);
+            Logger_1.logger.info('Shortcut update requested:', data);
+        }
+        catch (error) {
+            Logger_1.logger.error('Update shortcut error:', error);
+            throw error;
+        }
+    }
+    /**
+     * 处理获取快捷键建议请求
+     */
+    async handleGetShortcutSuggestions(event) {
+        try {
+            this.emit('shortcut-get-suggestions');
+            Logger_1.logger.debug('Get shortcut suggestions requested from renderer');
+        }
+        catch (error) {
+            Logger_1.logger.error('Get shortcut suggestions error:', error);
+            throw error;
+        }
+    }
+    /**
+     * 处理验证快捷键请求
+     */
+    async handleValidateShortcut(event, shortcut) {
+        try {
+            this.emit('shortcut-validate', shortcut);
+            Logger_1.logger.debug('Validate shortcut requested:', shortcut);
+        }
+        catch (error) {
+            Logger_1.logger.error('Validate shortcut error:', error);
+            throw error;
+        }
+    }
+    /**
+     * 处理格式化快捷键请求
+     */
+    async handleFormatShortcut(event, shortcut) {
+        try {
+            this.emit('shortcut-format', shortcut);
+            Logger_1.logger.debug('Format shortcut requested:', shortcut);
+        }
+        catch (error) {
+            Logger_1.logger.error('Format shortcut error:', error);
             throw error;
         }
     }

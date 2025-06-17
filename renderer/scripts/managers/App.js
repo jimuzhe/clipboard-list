@@ -13,9 +13,7 @@ class App {
 
     async init() {
         // 加载数据
-        await this.state.loadData();
-
-        // 初始化管理器（不立即渲染）
+        await this.state.loadData(); // 初始化管理器（不立即渲染）
         this.clipboardManager = new ClipboardManager(this.state);
         this.todoManager = new TodoManager(this.state);
         this.pomodoroManager = new PomodoroManager(this.state);
@@ -27,6 +25,12 @@ class App {
 
         // 初始化UI
         this.initializeUI();
+
+        // 在DOM完全准备后初始化快捷键管理器
+        setTimeout(() => {
+            console.log('Initializing ShortcutUIManager...');
+            this.shortcutUIManager = new ShortcutUIManager();
+        }, 100);
 
         // 数据加载完成后，重新渲染所有组件
         await this.renderAllComponents();
@@ -94,6 +98,20 @@ class App {
                 this.state.settings.glassEffect = e.target.checked;
                 this.state.saveData();
                 this.themeManager.applyGlassEffect(e.target.checked);
+            });
+        } // 窗口透明度（改为背景透明度）
+        const windowOpacity = document.getElementById('window-opacity');
+        if (windowOpacity) {
+            windowOpacity.addEventListener('input', async (e) => {
+                const value = parseFloat(e.target.value);
+                this.state.settings.windowOpacity = value;
+                this.state.saveData();
+
+                // 不再调用主进程设置窗口透明度，而是通过CSS控制背景透明度
+                this.applyBackgroundOpacity(value);
+
+                this.updateSliderValue(e.target, Math.round(value * 100) + '%');
+                console.log('设置背景透明度:', value);
             });
         }
 
@@ -253,22 +271,22 @@ class App {
                     console.log('社区URL已更新为:', newUrl);
                 }
             });
-        }
-
-        // 管理预设网站按钮
+        } // 管理预设网站按钮
         const managePresetWebsites = document.getElementById('manage-preset-websites');
         if (managePresetWebsites) {
             managePresetWebsites.addEventListener('click', () => {
                 this.showPresetManager();
             });
         }
+
+        // 快捷键设置监听器
+        this.setupShortcutListeners();
     }
 
     setupCommunityListeners() {
         // 社区面板相关的事件监听器
         this.setupCommunityPanelListeners();
     }
-
     setupUpdateListeners() {
         // 更新相关的事件监听器
         // 检查更新按钮
@@ -280,7 +298,16 @@ class App {
         }
     }
 
+    setupShortcutListeners() {
+        // 快捷键设置相关的事件监听器
+        if (this.shortcutUIManager) {
+            this.shortcutUIManager.setupEventListeners();
+        }
+    }
     initializeUI() {
+        // 获取并设置应用版本信息
+        this.initializeAppVersion();
+
         // 设置默认选项卡
         this.switchTab('clipboard');
 
@@ -307,6 +334,43 @@ class App {
         setTimeout(() => {
             this.initializeAlwaysOnTopSetting();
         }, 100);
+    }
+
+    /**
+     * 初始化应用版本信息
+     */
+    async initializeAppVersion() {
+        try {
+            console.log('📱 开始获取应用版本信息...');
+            const versionResponse = await window.electronAPI.getAppVersion();
+            console.log('✅ 获取到版本响应:', versionResponse, '类型:', typeof versionResponse);
+
+            // 处理不同类型的版本响应
+            let version;
+            if (typeof versionResponse === 'string') {
+                version = versionResponse;
+            } else if (typeof versionResponse === 'object' && versionResponse !== null) {
+                // 如果是对象，尝试提取版本信息
+                version = versionResponse.version || versionResponse.data || JSON.stringify(versionResponse);
+                console.log('🔄 从对象中提取版本:', version);
+            } else {
+                version = String(versionResponse);
+            }
+
+            const versionElement = document.getElementById('app-version');
+            if (versionElement) {
+                versionElement.textContent = version || '未知';
+                console.log('✅ 版本信息已更新到UI:', version);
+            } else {
+                console.warn('⚠️ 未找到版本显示元素 #app-version');
+            }
+        } catch (error) {
+            console.error('❌ 获取应用版本失败:', error);
+            const versionElement = document.getElementById('app-version');
+            if (versionElement) {
+                versionElement.textContent = '未知';
+            }
+        }
     }
 
     async renderAllComponents() {
@@ -641,6 +705,14 @@ class App {
         const glassEffect = document.getElementById('glass-effect');
         if (glassEffect) {
             glassEffect.checked = this.state.settings.glassEffect;
+        } // 设置窗口透明度（改为背景透明度）
+        const windowOpacity = document.getElementById('window-opacity');
+        if (windowOpacity) {
+            windowOpacity.value = this.state.settings.windowOpacity || 1.0;
+            this.updateSliderValue(windowOpacity, Math.round((this.state.settings.windowOpacity || 1.0) * 100) + '%');
+
+            // 应用保存的背景透明度
+            this.applyBackgroundOpacity(this.state.settings.windowOpacity || 1.0);
         }
 
         // 设置液态玻璃主题开关
@@ -1655,6 +1727,322 @@ class App {
                 this.reinitializeLiquidGlassEffects();
             }, 50);
         }
+    }
+    /**
+     * 根据设置值应用背景透明度
+     * @param {number} opacity - 背景透明度值 (0.1-1.0)
+     */
+    applyBackgroundOpacity(opacity) {
+        // 设置CSS变量来控制背景透明度
+        document.documentElement.style.setProperty('--window-background-opacity', opacity);
+
+        console.log('✅ 应用背景透明度:', opacity);
+
+        // 不再需要文字保护，因为只有背景透明
+        // 移除之前的文字保护类
+        document.body.classList.remove('transparent-window-protection');
+    }
+
+    /**
+     * 根据窗口透明度应用文字保护样式
+     * @param {number} opacity - 窗口透明度值 (0.1-1.0)
+     */
+    applyTextProtection(opacity) {
+        const body = document.body;
+
+        // 当透明度低于0.95时启用文字保护（更宽松的阈值）
+        if (opacity < 0.95) {
+            body.classList.add('transparent-window-protection');
+            console.log('✅ 启用文字保护，透明度:', opacity);
+            console.log('🎯 当前body类名:', body.className);
+        } else {
+            body.classList.remove('transparent-window-protection');
+            console.log('❌ 禁用文字保护，透明度:', opacity);
+            console.log('🎯 当前body类名:', body.className);
+        }
+
+        // 强制重新应用样式
+        body.style.opacity = '1';
+
+        // 给所有文字元素强制设置opacity
+        const textElements = body.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, label, div, button, input, textarea, i, .setting-text, .setting-label');
+        textElements.forEach(element => {
+            element.style.opacity = '1';
+            element.style.setProperty('opacity', '1', 'important');
+        });
+
+        console.log(`🔧 已处理 ${textElements.length} 个文字元素的透明度`);
+    }
+    /**
+     * 显示图片预览模态框
+     * @param {string} imageData - 图片的base64数据或URL
+     * @param {boolean} autoReset - 是否自动重置到原始大小和位置
+     */
+    showImagePreview(imageData, autoReset = false) {
+        console.log('🖼️ 显示图片预览:', imageData ? '有图片数据' : '无图片数据', autoReset ? '(重置模式)' : '');
+
+        if (!imageData) {
+            console.error('❌ 无效的图片数据');
+            return;
+        }
+
+        // 创建模态框元素
+        const modal = document.createElement('div');
+        modal.className = 'image-preview-modal';
+        modal.innerHTML = `
+            <button class="image-preview-close" title="关闭预览">&times;</button>
+            <div class="image-preview-container">
+                <img src="${imageData}" alt="图片预览" class="image-preview-content">
+            </div>            <div class="image-preview-controls">
+                <span class="zoom-info">100%</span>
+                <button class="zoom-btn" data-action="reset" title="重置到原始大小 (1:1)">
+                    <i class="fas fa-undo"></i> 重置
+                </button>
+                <button class="zoom-btn" data-action="fit" title="适应窗口大小">
+                    <i class="fas fa-expand-arrows-alt"></i> 适应
+                </button>
+            </div>
+        `; // 添加到页面
+        document.body.appendChild(modal);
+
+        // 图片缩放和拖拽状态
+        let scale = 1;
+        let translateX = 0;
+        let translateY = 0;
+        let isDragging = false;
+        let lastMouseX = 0;
+        let lastMouseY = 0;
+        let hasBeenDragged = false; // 添加标记来跟踪是否发生了拖拽
+        let animationId = null; // 用于requestAnimationFrame
+        let needsUpdate = false; // 标记是否需要更新
+
+        const img = modal.querySelector('.image-preview-content');
+        const container = modal.querySelector('.image-preview-container');
+        const zoomInfo = modal.querySelector('.zoom-info');
+
+        // 安全检查：确保元素存在
+        if (!img || !container || !zoomInfo) {
+            console.error('❌ 图片预览元素未找到');
+            document.body.removeChild(modal);
+            return;
+        }
+
+        // 启用硬件加速
+        img.style.willChange = 'transform';
+        img.style.transform = 'translate3d(0, 0, 0) scale(1)'; // 初始化3D变换
+
+        // 性能优化的更新函数
+        const scheduleUpdate = () => {
+            if (!needsUpdate) {
+                needsUpdate = true;
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                }
+                animationId = requestAnimationFrame(performUpdate);
+            }
+        };
+
+        const performUpdate = () => {
+            if (needsUpdate) {
+                // 使用3D变换启用硬件加速
+                img.style.transform = `translate3d(${translateX}px, ${translateY}px, 0) scale(${scale})`;
+                zoomInfo.textContent = `${Math.round(scale * 100)}%`;
+                needsUpdate = false;
+                animationId = null;
+            }
+        };
+
+        // 更新图片变换 - 使用性能优化版本
+        const updateImageTransform = () => {
+            scheduleUpdate();
+        }; // 重置图片位置和大小到原始状态
+        const resetImage = () => {
+            console.log('🔄 重置图片到原始状态');
+            scale = 1; // 1:1 原始大小
+            translateX = 0; // 居中
+            translateY = 0; // 居中
+            updateImageTransform();
+
+            // 更新鼠标样式（原始大小时通常不需要拖拽）
+            img.style.cursor = 'default';
+        };
+
+        // 适应窗口大小
+        const fitToWindow = () => {
+            const containerRect = container.getBoundingClientRect();
+            const imgRect = img.getBoundingClientRect();
+
+            const scaleX = (containerRect.width * 0.9) / img.naturalWidth;
+            const scaleY = (containerRect.height * 0.9) / img.naturalHeight;
+
+            scale = Math.min(scaleX, scaleY, 1);
+            translateX = 0;
+            translateY = 0;
+            updateImageTransform();
+        };
+
+        // 滚轮缩放
+        const handleWheel = (e) => {
+            e.preventDefault();
+
+            const delta = e.deltaY > 0 ? -0.1 : 0.1;
+            const newScale = Math.max(0.1, Math.min(5, scale + delta));
+
+            if (newScale !== scale) {
+                // 计算鼠标位置相对于图片的位置
+                const rect = img.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left - rect.width / 2;
+                const mouseY = e.clientY - rect.top - rect.height / 2;
+
+                // 调整平移以保持鼠标位置不变
+                translateX -= mouseX * (newScale - scale) / scale;
+                translateY -= mouseY * (newScale - scale) / scale;
+
+                scale = newScale;
+                updateImageTransform();
+            }
+        }; // 鼠标拖拽 - 性能优化版本
+        const handleMouseDown = (e) => {
+            if (e.target === img) {
+                isDragging = true;
+                hasBeenDragged = false; // 重置拖拽标记
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+                img.style.cursor = 'grabbing';
+                // 在拖拽开始时禁用过渡动画
+                img.style.transition = 'none';
+                e.preventDefault();
+                e.stopPropagation(); // 阻止事件冒泡
+            }
+        };
+        const handleMouseMove = (e) => {
+            if (isDragging) {
+                // 使用更高效的差值计算
+                const deltaX = e.clientX - lastMouseX;
+                const deltaY = e.clientY - lastMouseY;
+
+                // 只有在移动距离足够大时才更新（减少不必要的更新）
+                if (Math.abs(deltaX) > 0.5 || Math.abs(deltaY) > 0.5) {
+                    // 如果移动距离超过阈值，标记为已拖拽
+                    if (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2) {
+                        hasBeenDragged = true;
+                    }
+
+                    translateX += deltaX;
+                    translateY += deltaY;
+
+                    lastMouseX = e.clientX;
+                    lastMouseY = e.clientY;
+
+                    updateImageTransform();
+                }
+                e.preventDefault();
+            }
+        };
+        const handleMouseUp = () => {
+            if (isDragging) {
+                isDragging = false;
+                img.style.cursor = scale > 1 ? 'grab' : 'default';
+                // 恢复过渡动画
+                img.style.transition = 'transform 0.3s ease, cursor 0.2s ease';
+
+                // 延迟重置拖拽标记，避免立即触发点击事件
+                setTimeout(() => {
+                    hasBeenDragged = false;
+                }, 100);
+            }
+        }; // 关闭预览函数 - 添加性能优化清理
+        const closePreview = () => {
+            // 取消待处理的动画帧
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+
+            // 清理硬件加速优化
+            if (img) {
+                img.style.willChange = 'auto';
+                img.style.transition = '';
+            }
+
+            if (modal.parentNode) {
+                modal.style.opacity = '0';
+                setTimeout(() => {
+                    if (modal.parentNode) {
+                        document.body.removeChild(modal);
+                    }
+                }, 300);
+            }
+            document.removeEventListener('keydown', handleKeydown);
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+            console.log('🔒 图片预览已关闭');
+        };
+
+        // 点击关闭按钮
+        const closeBtn = modal.querySelector('.image-preview-close');
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closePreview();
+        }); // 点击背景关闭 - 修复拖拽时意外关闭的问题
+        modal.addEventListener('click', (e) => {
+            // 只有在没有拖拽状态下，且没有发生过拖拽，且点击的是背景区域时才关闭
+            if (!isDragging && !hasBeenDragged && (e.target === modal || e.target === container)) {
+                closePreview();
+            }
+        });
+
+        // 控制按钮事件
+        modal.querySelectorAll('.zoom-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const action = btn.dataset.action;
+                if (action === 'reset') {
+                    resetImage();
+                } else if (action === 'fit') {
+                    fitToWindow();
+                }
+            });
+        });
+
+        // ESC键关闭
+        const handleKeydown = (e) => {
+            if (e.key === 'Escape') {
+                closePreview();
+            }
+        }; // 添加事件监听
+        document.addEventListener('keydown', handleKeydown);
+        container.addEventListener('wheel', handleWheel);
+        img.addEventListener('mousedown', handleMouseDown);
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+
+        // 阻止图片的点击事件冒泡，防止意外关闭
+        img.addEventListener('click', (e) => {
+            e.stopPropagation();
+        }); // 为图片添加加载完成事件
+        img.addEventListener('load', () => {
+            console.log('✅ 预览图片加载完成');
+            // 设置初始鼠标样式
+            img.style.cursor = 'grab';
+
+            // 根据模式选择初始显示方式
+            if (autoReset) {
+                // 重置模式：显示图片原始大小（1:1），居中显示
+                console.log('🔄 应用重置模式 - 显示原始大小');
+                resetImage();
+            } else {
+                // 默认模式：适应窗口大小
+                setTimeout(fitToWindow, 100);
+            }
+        });
+
+        img.addEventListener('error', () => {
+            console.error('❌ 预览图片加载失败');
+            closePreview();
+        });
+
+        console.log('✅ 图片预览模态框已创建');
     }
 }
 

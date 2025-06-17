@@ -3,12 +3,14 @@ import { contextBridge, ipcRenderer } from 'electron';
 // 暴露安全的 API 给渲染进程
 contextBridge.exposeInMainWorld('electronAPI', {    // 窗口控制
     minimizeWindow: () => ipcRenderer.invoke('minimize-window'),
-    closeWindow: () => ipcRenderer.invoke('close-window'),
-
-    // 窗口置顶功能
+    closeWindow: () => ipcRenderer.invoke('close-window'),    // 窗口置顶功能
     setAlwaysOnTop: (enabled: boolean) => ipcRenderer.invoke('window:set-always-on-top', enabled),
     getAlwaysOnTop: () => ipcRenderer.invoke('window:get-always-on-top'),
     toggleAlwaysOnTop: () => ipcRenderer.invoke('window:toggle-always-on-top'),
+
+    // 窗口透明度功能
+    setWindowOpacity: (opacity: number) => ipcRenderer.invoke('window:set-opacity', opacity),
+    getWindowOpacity: () => ipcRenderer.invoke('window:get-opacity'),
 
     // 应用信息
     getAppVersion: () => ipcRenderer.invoke('get-app-version'),
@@ -88,11 +90,34 @@ contextBridge.exposeInMainWorld('electronAPI', {    // 窗口控制
         ipcRenderer.on('update-download-completed', (_, result) => callback(result));
     }, onUpdateDownloadError: (callback: (error: string) => void) => {
         ipcRenderer.on('update-download-error', (_, error) => callback(error));
-    },
-
-    // 导航事件监听
+    },    // 导航事件监听
     onNavigateToOnlinePage: (callback: (url: string) => void) => {
         ipcRenderer.on('navigate-to-online-page', (_, url) => callback(url));
+    },
+
+    // 快捷键管理
+    getAllShortcuts: () => ipcRenderer.invoke('shortcut-get-all'),
+    updateShortcut: (action: string, shortcut: string) =>
+        ipcRenderer.invoke('shortcut-update', { action, shortcut }),
+    getShortcutSuggestions: () => ipcRenderer.invoke('shortcut-get-suggestions'),
+    validateShortcut: (shortcut: string) => ipcRenderer.invoke('shortcut-validate', shortcut),
+    formatShortcut: (shortcut: string) => ipcRenderer.invoke('shortcut-format', shortcut),
+
+    // 快捷键事件监听
+    onShortcutUpdated: (callback: (data: any) => void) => {
+        ipcRenderer.on('shortcut-updated', (_, data) => callback(data));
+    },
+    onShortcutsResponse: (callback: (shortcuts: any) => void) => {
+        ipcRenderer.on('shortcuts-response', (_, shortcuts) => callback(shortcuts));
+    },
+    onShortcutSuggestionsResponse: (callback: (suggestions: string[]) => void) => {
+        ipcRenderer.on('shortcut-suggestions-response', (_, suggestions) => callback(suggestions));
+    },
+    onShortcutValidationResponse: (callback: (data: any) => void) => {
+        ipcRenderer.on('shortcut-validation-response', (_, data) => callback(data));
+    },
+    onShortcutFormattedResponse: (callback: (data: any) => void) => {
+        ipcRenderer.on('shortcut-formatted-response', (_, data) => callback(data));
     },
 });
 
@@ -157,6 +182,20 @@ export interface ElectronAPI {
     onUpdateDownloadProgress: (callback: (progress: any) => void) => void; onUpdateDownloadCompleted: (callback: (result: any) => void) => void;
     onUpdateDownloadError: (callback: (error: string) => void) => void;
     onNavigateToOnlinePage: (callback: (url: string) => void) => void;
+
+    // 快捷键管理
+    getAllShortcuts: () => Promise<any>;
+    updateShortcut: (action: string, shortcut: string) => Promise<any>;
+    getShortcutSuggestions: () => Promise<string[]>;
+    validateShortcut: (shortcut: string) => Promise<any>;
+    formatShortcut: (shortcut: string) => Promise<any>;
+
+    // 快捷键事件监听
+    onShortcutUpdated: (callback: (data: any) => void) => void;
+    onShortcutsResponse: (callback: (shortcuts: any) => void) => void;
+    onShortcutSuggestionsResponse: (callback: (suggestions: string[]) => void) => void;
+    onShortcutValidationResponse: (callback: (data: any) => void) => void;
+    onShortcutFormattedResponse: (callback: (data: any) => void) => void;
 }
 
 declare global {

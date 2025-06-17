@@ -204,204 +204,62 @@
   max-width: 300px;
 }
 
-.manage-btn {
-  padding: 6px 12px;
-  font-size: 12px;
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  min-width: 80px;
+/* 预设选择器液态玻璃主题支持 */
+.liquid-glass-theme .preset-select {
+  background: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.05));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.2));
+  color: rgb(var(--liquid-glass-rgb, 0, 122, 204));
+  box-shadow: 
+    0 2px 8px rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.1)),
+    inset 0 1px 0 rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.1));
 }
 
-.manage-btn .btn-icon {
-  font-size: 12px;
+.liquid-glass-theme .preset-select:focus {
+  background: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.1));
+  border-color: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.5));
+  box-shadow: 
+    0 0 0 3px rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.1)),
+    0 4px 12px rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.2)),
+    inset 0 1px 0 rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.2));
 }
 
-.url-input-container {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.liquid-glass-theme .preset-select:hover {
+  background: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.08));
+  border-color: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.3));
+  box-shadow: 
+    0 3px 10px rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.15)),
+    inset 0 1px 0 rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.15));
 }
 
-.url-label {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-primary);
+/* 设置页面下拉框液态玻璃主题支持 */
+.liquid-glass-theme .setting-select {
+  background: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.05));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.2));
+  color: rgb(var(--liquid-glass-rgb, 0, 122, 204));
+  box-shadow: 
+    0 2px 8px rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.1)),
+    inset 0 1px 0 rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.1));
 }
 
-.url-input-group {
-  display: flex;
-  gap: 10px;
-  align-items: center;
+.liquid-glass-theme .setting-select:focus {
+  background: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.1));
+  border-color: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.5));
+  box-shadow: 
+    0 0 0 3px rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.1)),
+    0 4px 12px rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.2)),
+    inset 0 1px 0 rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.2));
 }
 
-.apply-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-  min-width: 80px;
-}
-
-.btn-icon {
-  font-size: 12px;
-}
-
-.setting-hint {
-  font-size: 12px;
-  color: var(--text-secondary);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  background: rgba(0, 122, 204, 0.05);
-  border-radius: 6px;
-  border-left: 3px solid var(--primary-color);
-  line-height: 1.4;
-}
-
-.hint-icon {
-  font-size: 14px;
-}
-
-/* 版本显示美化 */
-.version-display {
-  padding: 4px 12px;
-  background: var(--primary-color);
-  color: white;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  font-family: 'Consolas', 'Monaco', monospace;
-}
-
-.setting-select {
-  padding: 8px 12px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-size: 13px;
-  min-width: 150px;
-  transition: var(--transition);
-}
-
-.setting-select:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.2);
-}
-
-.shortcut-display {
-  padding: 6px 12px;
-  background: var(--bg-glass);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  font-family: 'Consolas', 'Monaco', monospace;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--primary-color);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-/* 液态玻璃主题控制样式 */
-.liquid-glass-controls {
-  margin-top: 10px;
-  padding-left: 28px;
-  opacity: 0.8;
-}
-
-.slider-container {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
-}
-
-.setting-slider {
-  flex: 1;
-  height: 6px;
-  border-radius: 3px;
-  background: var(--border-color);
-  outline: none;
-  -webkit-appearance: none;
-  cursor: pointer;
-}
-
-.setting-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--primary-color);
-  cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  transition: all 0.2s ease;
-}
-
-.setting-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.1);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-
-.slider-value {
-  min-width: 40px;
-  text-align: center;
-  font-weight: 600;
-  color: var(--primary-color);
-  font-size: 12px;
-}
-
-.color-picker-container {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
-}
-
-.setting-color-picker {
-  width: 40px;
-  height: 32px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  outline: none;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.setting-color-picker:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.color-presets {
-  display: flex;
-  gap: 6px;
-  flex: 1;
-}
-
-.color-preset {
-  width: 24px;
-  height: 24px;
-  border: 2px solid var(--border-color);
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  outline: none;
-  position: relative;
-}
-
-.color-preset:hover {
-  transform: scale(1.1);
-  border-color: var(--primary-color);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-}
-
-.color-preset:active {
-  transform: scale(0.95);
+.liquid-glass-theme .setting-select:hover {
+  background: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.08));
+  border-color: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.3));
+  box-shadow: 
+    0 3px 10px rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.15)),
+    inset 0 1px 0 rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.15));
 }
 
 /* 设置面板按钮样式 */
@@ -419,4 +277,200 @@
 #settings-preview:hover, #refresh-community:hover, #open-external-community:hover {
   background: var(--bg-glass);
   transform: translateY(-1px);
+}
+
+/* 快捷键设置样式 */
+.shortcut-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 320px;
+}
+
+.shortcut-input {
+  flex: 1;
+  min-width: 180px;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+  text-align: center;
+  font-weight: 600;
+  background: var(--bg-glass);
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.shortcut-input:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 122, 204, 0.1);
+}
+
+.shortcut-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 122, 204, 0.2);
+  background: rgba(0, 122, 204, 0.05);
+}
+
+.shortcut-input.recording {
+  border-color: #ff4757;
+  background: rgba(255, 71, 87, 0.1);
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 3px rgba(255, 71, 87, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(255, 71, 87, 0.1);
+  }
+}
+
+.shortcut-record-btn {
+  padding: 8px 12px;
+  font-size: 12px;
+  min-width: 70px;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.shortcut-record-btn.recording {
+  background: #ff4757;
+  border-color: #ff4757;
+  color: white;
+  animation: recording-pulse 1s infinite;
+}
+
+@keyframes recording-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.shortcut-reset-btn {
+  padding: 8px 12px;
+  font-size: 12px;
+  min-width: 60px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.shortcut-suggestions {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.suggestions-header {
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.suggestions-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.suggestion-item {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-family: 'Courier New', monospace;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.suggestion-item:hover {
+  background: var(--primary-color);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 122, 204, 0.3);
+}
+
+.shortcut-help {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.shortcut-help i {
+  color: var(--accent-color);
+}
+
+/* 快捷键输入状态样式 */
+.shortcut-input.invalid {
+  border-color: #ff4757;
+  background: rgba(255, 71, 87, 0.1);
+  color: #ff4757;
+}
+
+.shortcut-input.valid {
+  border-color: #2ed573;
+  background: rgba(46, 213, 115, 0.1);
+}
+
+/* 响应式设计 */
+@media (max-width: 480px) {
+  .shortcut-input-group {
+    flex-direction: column;
+    align-items: stretch;
+    min-width: auto;
+  }
+  
+  .shortcut-input {
+    min-width: auto;
+    margin-bottom: 8px;
+  }
+  
+  .shortcut-record-btn,
+  .shortcut-reset-btn {
+    min-width: auto;
+    width: 100%;
+  }
+}
+
+/* 深色主题适配 */
+[data-theme="dark"] .shortcut-input {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .shortcut-suggestions {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .suggestion-item {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
 }

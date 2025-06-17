@@ -19,6 +19,11 @@ export interface OnlineConfig {
     showPresetButtons: boolean;
 }
 
+// 快捷键配置接口
+export interface ShortcutConfig {
+    toggleWindow: string; // 显示/隐藏窗口的快捷键
+}
+
 // 应用配置接口
 export interface AppConfig {
     theme: 'light' | 'dark' | 'blue' | 'green';
@@ -28,6 +33,7 @@ export interface AppConfig {
     clipboard: ClipboardConfig;
     pomodoro: PomodoroConfig;
     online: OnlineConfig;
+    shortcuts: ShortcutConfig;
 }
 
 // 窗口配置接口

@@ -325,13 +325,13 @@ class ClipboardManager {
         return div;
     }
 
-    addClipboardItemEventListeners(element, item) {
-        // 图片预览点击事件
+    addClipboardItemEventListeners(element, item) { // 图片预览点击事件
         const imagePreview = element.querySelector('[data-image-preview="true"]');
         if (imagePreview && item.imageData) {
             imagePreview.addEventListener('click', (e) => {
                 e.stopPropagation();
-                window.app.showImagePreview(item.imageData);
+                // 显示重置后的图片预览
+                window.app.showImagePreview(item.imageData, true);
             });
             // 添加鼠标悬停样式
             imagePreview.style.cursor = 'pointer';

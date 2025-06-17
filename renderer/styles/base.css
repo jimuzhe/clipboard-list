@@ -15,9 +15,17 @@
   --bg-primary: rgba(255, 255, 255, 0.95);
   --bg-secondary: rgba(248, 249, 250, 0.9);
   --bg-glass: rgba(255, 255, 255, 0.1);
+  --bg-card: rgba(255, 255, 255, 0.98);
   --text-primary: #333;
   --text-secondary: #6c757d;
   --border-color: rgba(0, 0, 0, 0.1);
+  
+  /* RGB值定义，用于透明度计算 */
+  --bg-primary-rgb: 255, 255, 255;
+  --bg-secondary-rgb: 248, 249, 250;
+  --bg-glass-rgb: 255, 255, 255;
+  --bg-card-rgb: 255, 255, 255;
+  --info-color-rgb: 23, 162, 184;
   
   --font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
   --border-radius: 12px;
@@ -25,6 +33,9 @@
   --border-radius-large: 16px;
   --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* 背景透明度控制变量 */
+  --window-background-opacity: 1.0;
 }
 
 /* 深色主题 - 黑紫色调优化 */
@@ -32,9 +43,16 @@
   --bg-primary: rgba(20, 15, 35, 0.95);
   --bg-secondary: rgba(35, 25, 50, 0.9);
   --bg-glass: rgba(15, 10, 30, 0.3);
+  --bg-card: rgba(25, 20, 40, 0.98);
   --text-primary: #ffffff;
   --text-secondary: #c8b8e0;
   --border-color: rgba(180, 150, 220, 0.15);
+  
+  /* 深色主题RGB值 */
+  --bg-primary-rgb: 20, 15, 35;
+  --bg-secondary-rgb: 35, 25, 50;
+  --bg-glass-rgb: 15, 10, 30;
+  --bg-card-rgb: 25, 20, 40;
   
   /* 紫色系渐变颜色 */
   --purple-primary: #6a4c93;
@@ -60,19 +78,39 @@ body {
   overflow: hidden;
   height: 100vh;
   border-radius: 12px;
+  /* 确保body容器完全透明，圆角生效 */
+  -webkit-app-region: no-drag;
+  position: relative;
 }
 
 /* 应用根容器圆角优化 */
 html, body {
   border-radius: 12px;
   overflow: hidden;
+  background: transparent;
+  /* 移除任何可能导致白色背景的样式 */
+  background-color: transparent;
 }
 
-/* 应用窗口整体圆角 */
-.app-window {
+/* 应用窗口整体圆角 - 为所有主要容器添加圆角遮罩 */
+.app-window,
+.title-bar,
+.main-container {
+  position: relative;
+}
+
+/* 为body添加圆角遮罩 */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+  z-index: -1;
+  background: transparent;
 }
 
 /* 全局滚动条样式 */
@@ -105,4 +143,198 @@ html, body {
   backdrop-filter: blur(20px);
   background: var(--bg-glass);
   border: 1px solid var(--border-color);
+}
+
+/* 窗口透明度时的文字保护样式 - 使用更高优先级 */
+body.transparent-window-protection * {
+  opacity: 1 !important;
+}
+
+body.transparent-window-protection h1,
+body.transparent-window-protection h2,
+body.transparent-window-protection h3,
+body.transparent-window-protection h4,
+body.transparent-window-protection h5,
+body.transparent-window-protection h6,
+body.transparent-window-protection p,
+body.transparent-window-protection span,
+body.transparent-window-protection label,
+body.transparent-window-protection div,
+body.transparent-window-protection .setting-text,
+body.transparent-window-protection .setting-label,
+body.transparent-window-protection .clipboard-item-content,
+body.transparent-window-protection .todo-text,
+body.transparent-window-protection .note-title,
+body.transparent-window-protection .tab-btn,
+body.transparent-window-protection .title-bar-text {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.5) !important;
+  opacity: 1 !important;
+}
+
+/* 深色主题下的文字保护 */
+[data-theme="dark"] body.transparent-window-protection h1,
+[data-theme="dark"] body.transparent-window-protection h2,
+[data-theme="dark"] body.transparent-window-protection h3,
+[data-theme="dark"] body.transparent-window-protection h4,
+[data-theme="dark"] body.transparent-window-protection h5,
+[data-theme="dark"] body.transparent-window-protection h6,
+[data-theme="dark"] body.transparent-window-protection p,
+[data-theme="dark"] body.transparent-window-protection span,
+[data-theme="dark"] body.transparent-window-protection label,
+[data-theme="dark"] body.transparent-window-protection div,
+[data-theme="dark"] body.transparent-window-protection .setting-text,
+[data-theme="dark"] body.transparent-window-protection .setting-label {
+  color: rgba(255, 255, 255, 0.95) !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 15px rgba(0, 0, 0, 0.7) !important;
+  opacity: 1 !important;
+}
+
+/* 浅色主题下的文字保护 */
+[data-theme="light"] body.transparent-window-protection h1,
+[data-theme="light"] body.transparent-window-protection h2,
+[data-theme="light"] body.transparent-window-protection h3,
+[data-theme="light"] body.transparent-window-protection h4,
+[data-theme="light"] body.transparent-window-protection h5,
+[data-theme="light"] body.transparent-window-protection h6,
+[data-theme="light"] body.transparent-window-protection p,
+[data-theme="light"] body.transparent-window-protection span,
+[data-theme="light"] body.transparent-window-protection label,
+[data-theme="light"] body.transparent-window-protection div,
+[data-theme="light"] body.transparent-window-protection .setting-text,
+[data-theme="light"] body.transparent-window-protection .setting-label {
+  color: rgba(0, 0, 0, 0.9) !important;
+  text-shadow: 0 1px 3px rgba(255, 255, 255, 0.8), 0 0 10px rgba(255, 255, 255, 0.6) !important;
+  opacity: 1 !important;
+}
+
+/* 图标保护 */
+body.transparent-window-protection i,
+body.transparent-window-protection .fas,
+body.transparent-window-protection .far,
+body.transparent-window-protection .fab,
+body.transparent-window-protection .setting-icon,
+body.transparent-window-protection .group-icon {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.5) !important;
+  opacity: 1 !important;
+}
+
+/* 按钮文字保护 */
+body.transparent-window-protection .btn,
+body.transparent-window-protection .tab-btn,
+body.transparent-window-protection .control-btn {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.5) !important;
+  opacity: 1 !important;
+}
+
+/* 输入框背景加强 */
+body.transparent-window-protection input[type="text"],
+body.transparent-window-protection input[type="number"],
+body.transparent-window-protection textarea,
+body.transparent-window-protection .search-input {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  opacity: 1 !important;
+}
+
+[data-theme="dark"] body.transparent-window-protection input[type="text"],
+[data-theme="dark"] body.transparent-window-protection input[type="number"],
+[data-theme="dark"] body.transparent-window-protection textarea,
+[data-theme="dark"] body.transparent-window-protection .search-input {
+  background: rgba(0, 0, 0, 0.85) !important;
+  color: rgba(255, 255, 255, 0.95) !important;
+  opacity: 1 !important;
+}
+
+/* 全局文字透明度保护 - 确保文字始终清晰 */
+* {
+  opacity: 1 !important;
+}
+
+/* 文字元素强制不透明 */
+h1, h2, h3, h4, h5, h6, p, span, label, button, input, textarea, select, option,
+.setting-text, .setting-label, .tab-btn, .btn, .control-btn, .title-bar-text,
+.clipboard-item-content, .todo-text, .note-title, .slider-value,
+i, .fas, .far, .fab, .setting-icon, .group-icon,
+small, .setting-description, .text-secondary, .timestamp {
+  opacity: 1 !important;
+}
+
+/* 背景透明度控制 - 只影响背景，不影响文字 */
+body {
+  background: rgba(255, 255, 255, calc(var(--window-background-opacity) * 0.95)) !important;
+}
+
+[data-theme="dark"] body {
+  background: rgba(20, 15, 35, calc(var(--window-background-opacity) * 0.95)) !important;
+}
+
+/* 主容器背景透明度控制 */
+.main-container {
+  background: rgba(255, 255, 255, calc(var(--window-background-opacity) * 0.9)) !important;
+}
+
+[data-theme="dark"] .main-container {
+  background: rgba(35, 25, 50, calc(var(--window-background-opacity) * 0.9)) !important;
+}
+
+/* 面板背景透明度控制 */
+.panel {
+  background: rgba(248, 249, 250, calc(var(--window-background-opacity) * 0.85)) !important;
+}
+
+[data-theme="dark"] .panel {
+  background: rgba(35, 25, 50, calc(var(--window-background-opacity) * 0.85)) !important;
+}
+
+/* 设置面板特殊处理 */
+.settings-content {
+  background: rgba(255, 255, 255, calc(var(--window-background-opacity) * 0.8)) !important;
+}
+
+[data-theme="dark"] .settings-content {
+  background: rgba(20, 15, 35, calc(var(--window-background-opacity) * 0.8)) !important;
+}
+
+/* 设置组背景 */
+.setting-group {
+  background: rgba(255, 255, 255, calc(var(--window-background-opacity) * 0.7)) !important;
+}
+
+[data-theme="dark"] .setting-group {
+  background: rgba(35, 25, 50, calc(var(--window-background-opacity) * 0.7)) !important;
+}
+
+/* 输入框背景 */
+input, textarea, select {
+  background: rgba(255, 255, 255, calc(var(--window-background-opacity) * 0.9)) !important;
+}
+
+[data-theme="dark"] input, 
+[data-theme="dark"] textarea, 
+[data-theme="dark"] select {
+  background: rgba(0, 0, 0, calc(var(--window-background-opacity) * 0.6)) !important;
+}
+
+/* 模态框背景 */
+.modal-content {
+  background: rgba(255, 255, 255, calc(var(--window-background-opacity) * 0.95)) !important;
+}
+
+[data-theme="dark"] .modal-content {
+  background: rgba(20, 15, 35, calc(var(--window-background-opacity) * 0.95)) !important;
+}
+
+/* 确保文字始终不透明 */
+* {
+  color: inherit !important;
+}
+
+h1, h2, h3, h4, h5, h6, p, span, label, button, 
+.setting-text, .setting-label, .tab-btn, .btn, .control-btn, .title-bar-text {
+  opacity: 1 !important;
+}
+
+i, .fas, .far, .fab {
+  opacity: 1 !important;
 }

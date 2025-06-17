@@ -55,12 +55,32 @@
   overflow: hidden;
 }
 
+/* 液态玻璃主题下的预设网站按钮 */
+.liquid-glass-theme .preset-website-btn {
+  background: rgba(var(--bg-secondary-rgb, 248, 249, 250), calc(var(--app-base-opacity) * 0.8 + 0.2));
+  backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.5));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.5));
+  border: 1px solid rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.4));
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.4)),
+    0 2px 8px rgba(0, 0, 0, calc(var(--app-base-opacity) * 0.1));
+}
+
 .preset-website-btn:hover {
   background: var(--primary-color);
   color: white;
   border-color: var(--primary-color);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+}
+
+/* 液态玻璃主题下的悬停效果 */
+.liquid-glass-theme .preset-website-btn:hover {
+  background: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.8 + 0.2));
+  border-color: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.9 + 0.1));
+  box-shadow: 
+    0 4px 12px rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.4)),
+    inset 0 1px 0 rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.6));
 }
 
 /* 预设网站按钮动画效果 */
@@ -142,9 +162,23 @@
   transition: var(--transition);
 }
 
+/* 液态玻璃主题下的管理按钮 */
+.liquid-glass-theme .manage-presets-btn {
+  background: rgba(var(--bg-primary-rgb, 255, 255, 255), calc(var(--app-base-opacity) * 0.3 + 0.1));
+  backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.3));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.3));
+  border: 1px dashed rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.6));
+}
+
 .manage-presets-btn:hover {
   border-color: var(--primary-color);
   color: var(--primary-color);
+}
+
+.liquid-glass-theme .manage-presets-btn:hover {
+  background: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.2 + 0.1));
+  border-color: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.8 + 0.2));
+  color: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 1));
 }
 
 /* 预设网站管理器样式 */
@@ -152,6 +186,17 @@
   width: 700px;
   max-width: 90vw;
   max-height: 75vh;
+}
+
+/* 液态玻璃主题下的预设管理器模态框 */
+.liquid-glass-theme .preset-manager-modal {
+  background: rgba(var(--bg-primary-rgb, 255, 255, 255), calc(var(--app-base-opacity) * 0.9 + 0.1));
+  backdrop-filter: blur(calc(var(--glass-blur, 20px) * 1.2)) saturate(1.5);
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur, 20px) * 1.2)) saturate(1.5);
+  border: 1px solid rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.6));
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.5)),
+    0 20px 60px rgba(0, 0, 0, calc(var(--app-base-opacity) * 0.4));
 }
 
 .preset-list {

@@ -10,6 +10,7 @@
   padding: 8px;
 }
 
+/* 剪切板项目 */
 .clipboard-item {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
@@ -23,10 +24,32 @@
   transform: translateZ(0); /* 启用硬件加速 */
 }
 
+/* 液态玻璃主题下的剪切板项目 */
+.liquid-glass-theme .clipboard-item {
+  background: rgba(var(--bg-secondary-rgb, 248, 249, 250), calc(var(--app-base-opacity) * 0.8 + 0.2));
+  backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.6));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.6));
+  border: 1px solid rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.3));
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.4)),
+    0 2px 8px rgba(0, 0, 0, calc(var(--app-base-opacity) * 0.1));
+}
+
 .clipboard-item:hover {
   background: var(--bg-glass);
   transform: translateY(-1px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+/* 液态玻璃主题下的悬停效果 */
+.liquid-glass-theme .clipboard-item:hover {
+  background: rgba(var(--bg-glass-rgb, 255, 255, 255), calc(var(--app-base-opacity) * 0.6 + 0.4));
+  transform: translateY(-1px);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, calc(var(--app-base-opacity) * 0.2)),
+    inset 0 1px 0 rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.6));
+  backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.8));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.8));
 }
 
 .clipboard-item.pinned {
@@ -37,15 +60,15 @@
   overflow: hidden;
 }
 
-.clipboard-item.pinned::before {
-  content: "\f08d"; /* Font Awesome pin icon */
-  font-family: "Font Awesome 5 Free";
-  font-weight: 900;
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  font-size: 12px;
-  opacity: 0.7;
+/* 液态玻璃主题下的置顶项目 */
+.liquid-glass-theme .clipboard-item.pinned {
+  background: rgba(255, 193, 7, calc(var(--app-base-opacity) * 0.2 + 0.05));
+  backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.6));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.6));
+  border-left: 4px solid rgba(255, 193, 7, calc(var(--app-base-opacity) * 0.8 + 0.2));
+  box-shadow: 
+    0 2px 8px rgba(255, 193, 7, calc(var(--app-base-opacity) * 0.3)),
+    inset 0 1px 0 rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.4));
 }
 
 .clipboard-item.pin-animation {
@@ -65,12 +88,23 @@
   margin-bottom: 8px;
 }
 
+/* 剪切板项目类型标签 */
 .clipboard-item-type {
   font-size: 11px;
   padding: 2px 6px;
   border-radius: 4px;
   background: var(--primary-color);
   color: white;
+}
+
+/* 液态玻璃主题下的类型标签 */
+.liquid-glass-theme .clipboard-item-type {
+  background: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.8 + 0.2));
+  backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.4));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.4));
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.3)),
+    0 1px 3px rgba(0, 0, 0, calc(var(--app-base-opacity) * 0.2));
 }
 
 .clipboard-item-actions {

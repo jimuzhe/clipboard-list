@@ -53,6 +53,16 @@ export interface ElectronAPI {
     onUpdateDownloadCompleted: (callback: (result: any) => void) => void;
     onUpdateDownloadError: (callback: (error: string) => void) => void;
     onNavigateToOnlinePage: (callback: (url: string) => void) => void;
+    getAllShortcuts: () => Promise<any>;
+    updateShortcut: (action: string, shortcut: string) => Promise<any>;
+    getShortcutSuggestions: () => Promise<string[]>;
+    validateShortcut: (shortcut: string) => Promise<any>;
+    formatShortcut: (shortcut: string) => Promise<any>;
+    onShortcutUpdated: (callback: (data: any) => void) => void;
+    onShortcutsResponse: (callback: (shortcuts: any) => void) => void;
+    onShortcutSuggestionsResponse: (callback: (suggestions: string[]) => void) => void;
+    onShortcutValidationResponse: (callback: (data: any) => void) => void;
+    onShortcutFormattedResponse: (callback: (data: any) => void) => void;
 }
 declare global {
     interface Window {

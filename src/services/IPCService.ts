@@ -39,12 +39,14 @@ export class IPCService extends EventEmitter {
         this.registerHandler('window:set-trigger-zone-width', this.handleSetTriggerZoneWidth.bind(this));
         this.registerHandler('window:get-trigger-zone-width', this.handleGetTriggerZoneWidth.bind(this));
         this.registerHandler('window:set-edge-trigger-enabled', this.handleSetEdgeTriggerEnabled.bind(this));
-        this.registerHandler('window:get-edge-trigger-enabled', this.handleGetEdgeTriggerEnabled.bind(this));
-
-        // 窗口置顶功能
+        this.registerHandler('window:get-edge-trigger-enabled', this.handleGetEdgeTriggerEnabled.bind(this));        // 窗口置顶功能
         this.registerHandler('window:set-always-on-top', this.handleSetAlwaysOnTop.bind(this));
         this.registerHandler('window:get-always-on-top', this.handleGetAlwaysOnTop.bind(this));
         this.registerHandler('window:toggle-always-on-top', this.handleToggleAlwaysOnTop.bind(this));
+
+        // 窗口透明度功能
+        this.registerHandler('window:set-opacity', this.handleSetWindowOpacity.bind(this));
+        this.registerHandler('window:get-opacity', this.handleGetWindowOpacity.bind(this));
 
         // 剪切板相关
         this.registerHandler('clipboard:read', this.handleReadClipboard.bind(this));
@@ -72,13 +74,18 @@ export class IPCService extends EventEmitter {
 
         // 主题相关
         this.registerHandler('theme:get', this.handleGetTheme.bind(this));
-        this.registerHandler('theme:set', this.handleSetTheme.bind(this));
-
-        // 自启动相关
+        this.registerHandler('theme:set', this.handleSetTheme.bind(this));        // 自启动相关
         this.registerHandler('auto-start:get-status', this.handleGetAutoStartStatus.bind(this));
         this.registerHandler('auto-start:toggle', this.handleToggleAutoStart.bind(this));
         this.registerHandler('auto-start:enable', this.handleEnableAutoStart.bind(this));
-        this.registerHandler('auto-start:disable', this.handleDisableAutoStart.bind(this));        // 文件和文件夹操作
+        this.registerHandler('auto-start:disable', this.handleDisableAutoStart.bind(this));
+
+        // 快捷键相关
+        this.registerHandler('shortcut-get-all', this.handleGetAllShortcuts.bind(this));
+        this.registerHandler('shortcut-update', this.handleUpdateShortcut.bind(this));
+        this.registerHandler('shortcut-get-suggestions', this.handleGetShortcutSuggestions.bind(this));
+        this.registerHandler('shortcut-validate', this.handleValidateShortcut.bind(this));
+        this.registerHandler('shortcut-format', this.handleFormatShortcut.bind(this));// 文件和文件夹操作
         this.registerHandler('get-default-notes-folder', this.handleGetDefaultNotesFolder.bind(this));
         this.registerHandler('open-folder-dialog', this.handleOpenFolderDialog.bind(this));
         this.registerHandler('list-markdown-files', this.handleListMarkdownFiles.bind(this));
@@ -271,12 +278,24 @@ export class IPCService extends EventEmitter {
             this.emit('window-get-always-on-top');
             this.once('always-on-top-response', resolve);
         });
-    }
-
-    private async handleToggleAlwaysOnTop(): Promise<boolean> {
+    } private async handleToggleAlwaysOnTop(): Promise<boolean> {
         return new Promise((resolve) => {
             this.emit('window-toggle-always-on-top');
             this.once('always-on-top-toggled', resolve);
+        });
+    }
+
+    // === 窗口透明度功能相关处理程序 ===
+    private async handleSetWindowOpacity(event: IpcMainInvokeEvent, opacity: number): Promise<void> {
+        // 确保透明度值在有效范围内
+        const clampedOpacity = Math.max(0.1, Math.min(1.0, opacity));
+        this.emit('window-set-opacity', clampedOpacity);
+    }
+
+    private async handleGetWindowOpacity(): Promise<number> {
+        return new Promise((resolve) => {
+            this.emit('window-get-opacity');
+            this.once('window-opacity-response', resolve);
         });
     }
 
@@ -590,9 +609,7 @@ export class IPCService extends EventEmitter {
             logger.error('Toggle DevTools error:', error);
             throw error;
         }
-    }
-
-    /**
+    }    /**
      * 处理动画设置更新请求
      */
     private async handleUpdateAnimationSettings(event: IpcMainInvokeEvent, settings: { showAnimationDuration: number; hideAnimationDuration: number }): Promise<void> {
@@ -601,6 +618,71 @@ export class IPCService extends EventEmitter {
             logger.info('Animation settings update requested:', settings);
         } catch (error) {
             logger.error('Update animation settings error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 处理获取所有快捷键请求
+     */
+    private async handleGetAllShortcuts(event: IpcMainInvokeEvent): Promise<void> {
+        try {
+            this.emit('shortcut-get-all');
+            logger.debug('Get all shortcuts requested from renderer');
+        } catch (error) {
+            logger.error('Get all shortcuts error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 处理更新快捷键请求
+     */
+    private async handleUpdateShortcut(event: IpcMainInvokeEvent, data: { action: string, shortcut: string }): Promise<void> {
+        try {
+            this.emit('shortcut-update', data);
+            logger.info('Shortcut update requested:', data);
+        } catch (error) {
+            logger.error('Update shortcut error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 处理获取快捷键建议请求
+     */
+    private async handleGetShortcutSuggestions(event: IpcMainInvokeEvent): Promise<void> {
+        try {
+            this.emit('shortcut-get-suggestions');
+            logger.debug('Get shortcut suggestions requested from renderer');
+        } catch (error) {
+            logger.error('Get shortcut suggestions error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 处理验证快捷键请求
+     */
+    private async handleValidateShortcut(event: IpcMainInvokeEvent, shortcut: string): Promise<void> {
+        try {
+            this.emit('shortcut-validate', shortcut);
+            logger.debug('Validate shortcut requested:', shortcut);
+        } catch (error) {
+            logger.error('Validate shortcut error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 处理格式化快捷键请求
+     */
+    private async handleFormatShortcut(event: IpcMainInvokeEvent, shortcut: string): Promise<void> {
+        try {
+            this.emit('shortcut-format', shortcut);
+            logger.debug('Format shortcut requested:', shortcut);
+        } catch (error) {
+            logger.error('Format shortcut error:', error);
             throw error;
         }
     }

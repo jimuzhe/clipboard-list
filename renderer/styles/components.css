@@ -23,6 +23,15 @@
   text-transform: none;
 }
 
+/* 液态玻璃主题下的按钮基础样式 */
+.liquid-glass-theme .btn {
+  backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.5));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.5));
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, calc(var(--app-base-opacity) * 0.15)),
+    inset 0 1px 0 rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.3));
+}
+
 .btn::before {
   content: '';
   position: absolute;
@@ -49,16 +58,41 @@
   border: 1px solid var(--primary-color);
 }
 
+/* 液态玻璃主题下的主要按钮 */
+.liquid-glass-theme .btn-primary {
+  background: linear-gradient(135deg, 
+    rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.9 + 0.1)), 
+    rgba(0, 102, 163, calc(var(--app-base-opacity) * 0.9 + 0.1)));
+  border: 1px solid rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.8 + 0.2));
+}
+
 .btn-primary:hover {
   background: linear-gradient(135deg, #0066a3, var(--primary-color));
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(0, 122, 204, 0.4);
 }
 
+.liquid-glass-theme .btn-primary:hover {
+  background: linear-gradient(135deg, 
+    rgba(0, 102, 163, calc(var(--app-base-opacity) * 0.9 + 0.1)), 
+    rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.9 + 0.1)));
+  box-shadow: 
+    0 6px 20px rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.4)),
+    inset 0 1px 0 rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.4));
+}
+
 .btn-secondary {
   background: linear-gradient(135deg, var(--bg-secondary), rgba(255, 255, 255, 0.9));
   color: var(--text-primary);
   border: 1px solid var(--border-color);
+}
+
+/* 液态玻璃主题下的次要按钮 */
+.liquid-glass-theme .btn-secondary {
+  background: linear-gradient(135deg, 
+    rgba(var(--bg-secondary-rgb, 248, 249, 250), calc(var(--app-base-opacity) * 0.8 + 0.2)), 
+    rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.7 + 0.3)));
+  border: 1px solid rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.3));
 }
 
 /* 深色主题的次要按钮 */
@@ -74,11 +108,14 @@
   box-shadow: 0 6px 20px rgba(0, 122, 204, 0.15);
 }
 
-/* 深色主题的次要按钮悬停 */
-[data-theme="dark"] .btn-secondary:hover {
-  background: linear-gradient(135deg, var(--purple-glass), var(--bg-primary));
-  border-color: var(--purple-accent);
-  box-shadow: 0 6px 20px var(--purple-light);
+.liquid-glass-theme .btn-secondary:hover {
+  background: linear-gradient(135deg, 
+    rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.2)), 
+    rgba(var(--bg-primary-rgb, 255, 255, 255), calc(var(--app-base-opacity) * 0.8 + 0.2)));
+  border-color: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.8 + 0.2));
+  box-shadow: 
+    0 6px 20px rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.25)),
+    inset 0 1px 0 rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.4));
 }
 
 .btn-success {
@@ -87,10 +124,24 @@
   border: 1px solid var(--success-color);
 }
 
+/* 液态玻璃主题下的成功按钮 */
+.liquid-glass-theme .btn-success {
+  background: linear-gradient(135deg, 
+    rgba(40, 167, 69, calc(var(--app-base-opacity) * 0.9 + 0.1)), 
+    rgba(30, 126, 52, calc(var(--app-base-opacity) * 0.9 + 0.1)));
+  border: 1px solid rgba(40, 167, 69, calc(var(--app-base-opacity) * 0.8 + 0.2));
+}
+
 .btn-success:hover {
   background: linear-gradient(135deg, #1e7e34, var(--success-color));
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+}
+
+.liquid-glass-theme .btn-success:hover {
+  box-shadow: 
+    0 6px 20px rgba(40, 167, 69, calc(var(--app-base-opacity) * 0.4)),
+    inset 0 1px 0 rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.4));
 }
 
 .btn-danger {
@@ -99,10 +150,24 @@
   border: 1px solid var(--danger-color);
 }
 
+/* 液态玻璃主题下的危险按钮 */
+.liquid-glass-theme .btn-danger {
+  background: linear-gradient(135deg, 
+    rgba(220, 53, 69, calc(var(--app-base-opacity) * 0.9 + 0.1)), 
+    rgba(200, 35, 51, calc(var(--app-base-opacity) * 0.9 + 0.1)));
+  border: 1px solid rgba(220, 53, 69, calc(var(--app-base-opacity) * 0.8 + 0.2));
+}
+
 .btn-danger:hover {
   background: linear-gradient(135deg, #c82333, var(--danger-color));
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
+}
+
+.liquid-glass-theme .btn-danger:hover {
+  box-shadow: 
+    0 6px 20px rgba(220, 53, 69, calc(var(--app-base-opacity) * 0.4)),
+    inset 0 1px 0 rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.4));
 }
 
 .btn-sm {
@@ -123,12 +188,36 @@
   width: 100%;
 }
 
+/* 液态玻璃主题下的输入框透明度支持 */
+.liquid-glass-theme .search-input, 
+.liquid-glass-theme .input-field, 
+.liquid-glass-theme .setting-input, 
+.liquid-glass-theme .priority-select, 
+.liquid-glass-theme .filter-select {
+  background: rgba(var(--bg-primary-rgb, 255, 255, 255), calc(var(--app-base-opacity) * 0.8 + 0.2));
+  backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.6));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.6));
+  border: 1px solid rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.4));
+}
+
 .search-input:focus, .input-field:focus, .setting-input:focus, .priority-select:focus, .filter-select:focus {
   outline: none;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(0, 122, 204, 0.1);
 }
 
+/* 液态玻璃主题下的聚焦状态 */
+.liquid-glass-theme .search-input:focus, 
+.liquid-glass-theme .input-field:focus, 
+.liquid-glass-theme .setting-input:focus, 
+.liquid-glass-theme .priority-select:focus, 
+.liquid-glass-theme .filter-select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.3));
+  background: rgba(var(--bg-primary-rgb, 255, 255, 255), calc(var(--app-base-opacity) * 0.9 + 0.1));
+}
+
+/* 文本域样式 */
 .textarea-field {
   padding: 8px 12px;
   border: 1px solid var(--border-color);
@@ -142,10 +231,24 @@
   transition: var(--transition);
 }
 
+/* 液态玻璃主题下的文本域 */
+.liquid-glass-theme .textarea-field {
+  background: rgba(var(--bg-primary-rgb, 255, 255, 255), calc(var(--app-base-opacity) * 0.8 + 0.2));
+  backdrop-filter: blur(calc(var(--glass-glass-blur, 20px) * 0.6));
+  -webkit-backdrop-filter: blur(calc(var(--glass-glass-blur, 20px) * 0.6));
+  border: 1px solid rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.4));
+}
+
 .textarea-field:focus {
   outline: none;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(0, 122, 204, 0.1);
+}
+
+.liquid-glass-theme .textarea-field:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.3));
+  background: rgba(var(--bg-primary-rgb, 255, 255, 255), calc(var(--app-base-opacity) * 0.9 + 0.1));
 }
 
 /* 选择器样式 */

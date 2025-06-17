@@ -72,14 +72,19 @@ class WindowManager extends events_1.EventEmitter {
             skipTaskbar: true,
             transparent: true,
             show: false, // 初始不显示，等待内容加载完成
+            backgroundColor: '#00000000', // 完全透明的背景
+            hasShadow: false, // 禁用系统阴影，使用CSS阴影
+            titleBarStyle: 'hidden', // 隐藏标题栏
             webPreferences: {
                 nodeIntegration: false,
                 contextIsolation: true,
                 preload: path.join(__dirname, '../preload.js'),
                 backgroundThrottling: false, // 防止后台节流
                 webviewTag: true, // 启用webview标签支持
+                experimentalFeatures: true, // 启用实验性功能
             },
-        }); // 设置初始隐藏状态，因为窗口创建时 show: false
+        });
+        // 设置初始隐藏状态，因为窗口创建时 show: false
         this.isHidden = true;
         // 保存原始窗口尺寸
         this.originalWindowBounds = {
@@ -871,14 +876,49 @@ class WindowManager extends events_1.EventEmitter {
                 this.openDevTools();
             }
         }
-    }
-    /**
+    } /**
      * 更新动画设置
      */
     updateAnimationSettings(showDuration, hideDuration) {
         this.showAnimationDuration = showDuration;
         this.hideAnimationDuration = hideDuration;
         Logger_1.logger.debug(`Animation settings updated: show=${showDuration}ms, hide=${hideDuration}ms`);
+    }
+    /**
+     * 设置窗口透明度
+     */
+    setOpacity(opacity) {
+        if (!this.window) {
+            Logger_1.logger.error('Cannot set opacity: window not initialized');
+            return;
+        }
+        // 确保透明度值在有效范围内 (0.1-1.0)
+        const clampedOpacity = Math.max(0.1, Math.min(1.0, opacity));
+        try {
+            this.window.setOpacity(clampedOpacity);
+            Logger_1.logger.debug(`Window opacity set to: ${clampedOpacity}`);
+        }
+        catch (error) {
+            Logger_1.logger.error('Failed to set window opacity:', error);
+        }
+    }
+    /**
+     * 获取当前窗口透明度
+     */
+    getOpacity() {
+        if (!this.window) {
+            Logger_1.logger.error('Cannot get opacity: window not initialized');
+            return 1.0;
+        }
+        try {
+            const opacity = this.window.getOpacity();
+            Logger_1.logger.debug(`Current window opacity: ${opacity}`);
+            return opacity;
+        }
+        catch (error) {
+            Logger_1.logger.error('Failed to get window opacity:', error);
+            return 1.0;
+        }
     }
 }
 exports.WindowManager = WindowManager;

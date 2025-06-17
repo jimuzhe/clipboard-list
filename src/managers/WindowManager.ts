@@ -26,9 +26,7 @@ export class WindowManager extends EventEmitter {
         super();
         this.isDev = isDev;
     } createWindow(): BrowserWindow {
-        const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
-
-        this.window = new BrowserWindow({
+        const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize; this.window = new BrowserWindow({
             width: this.config.width,
             height: Math.min(this.config.height, screenHeight - 100),
             x: screenWidth - this.config.width - 20,
@@ -39,14 +37,20 @@ export class WindowManager extends EventEmitter {
             skipTaskbar: true,
             transparent: true,
             show: false, // 初始不显示，等待内容加载完成
+            backgroundColor: '#00000000', // 完全透明的背景
+            hasShadow: false, // 禁用系统阴影，使用CSS阴影
+            titleBarStyle: 'hidden', // 隐藏标题栏
             webPreferences: {
                 nodeIntegration: false,
                 contextIsolation: true,
                 preload: path.join(__dirname, '../preload.js'),
                 backgroundThrottling: false, // 防止后台节流
                 webviewTag: true, // 启用webview标签支持
+                experimentalFeatures: true, // 启用实验性功能
             },
-        });        // 设置初始隐藏状态，因为窗口创建时 show: false
+        });
+
+        // 设置初始隐藏状态，因为窗口创建时 show: false
         this.isHidden = true;
 
         // 保存原始窗口尺寸
@@ -913,14 +917,51 @@ export class WindowManager extends EventEmitter {
                 this.openDevTools();
             }
         }
-    }
-
-    /**
+    }    /**
      * 更新动画设置
      */
     updateAnimationSettings(showDuration: number, hideDuration: number): void {
         this.showAnimationDuration = showDuration;
         this.hideAnimationDuration = hideDuration;
         logger.debug(`Animation settings updated: show=${showDuration}ms, hide=${hideDuration}ms`);
+    }
+
+    /**
+     * 设置窗口透明度
+     */
+    setOpacity(opacity: number): void {
+        if (!this.window) {
+            logger.error('Cannot set opacity: window not initialized');
+            return;
+        }
+
+        // 确保透明度值在有效范围内 (0.1-1.0)
+        const clampedOpacity = Math.max(0.1, Math.min(1.0, opacity));
+
+        try {
+            this.window.setOpacity(clampedOpacity);
+            logger.debug(`Window opacity set to: ${clampedOpacity}`);
+        } catch (error) {
+            logger.error('Failed to set window opacity:', error);
+        }
+    }
+
+    /**
+     * 获取当前窗口透明度
+     */
+    getOpacity(): number {
+        if (!this.window) {
+            logger.error('Cannot get opacity: window not initialized');
+            return 1.0;
+        }
+
+        try {
+            const opacity = this.window.getOpacity();
+            logger.debug(`Current window opacity: ${opacity}`);
+            return opacity;
+        } catch (error) {
+            logger.error('Failed to get window opacity:', error);
+            return 1.0;
+        }
     }
 }

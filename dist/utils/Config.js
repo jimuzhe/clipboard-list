@@ -76,8 +76,7 @@ class Config {
                 soundEnabled: true,
                 autoStartBreak: false,
                 sessionsBeforeLongBreak: 4
-            },
-            online: {
+            }, online: {
                 currentUrl: 'http://8.130.41.186:3000/',
                 presetWebsites: [
                     {
@@ -110,6 +109,9 @@ class Config {
                     }
                 ],
                 showPresetButtons: true
+            },
+            shortcuts: {
+                toggleWindow: 'CommandOrControl+Shift+V'
             }
         };
     }

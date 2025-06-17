@@ -1,57 +1,8 @@
 /* 模态框样式 */
 
-/* 基础模态框覆盖层 */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10000;
-  backdrop-filter: blur(4px);
-}
-
-/* 通用模态框 */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(5px);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
-  box-sizing: border-box;
-}
-
-.modal.active {
-  display: flex;
-}
-
-/* 基础模态框内容 */
-.modal-content {
-  background: var(--bg-primary);
-  border-radius: var(--border-radius);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  max-width: 500px;
-  width: 100%;
-  max-height: calc(100vh - 40px);
-  overflow-y: auto;
-  animation: slideInScale 0.3s ease;
-  border: 1px solid var(--border-color);
-  position: relative;
-  margin: auto;
-}
-
-/* 模态框动画 */
+/* ============================================
+   1. 模态框动画
+   ============================================ */
 @keyframes modalSlideIn {
   from {
     opacity: 0;
@@ -75,12 +26,8 @@
 }
 
 @keyframes modalFadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes modalScaleIn {
@@ -95,12 +42,8 @@
 }
 
 @keyframes modalFadeOut {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 @keyframes modalScaleOut {
@@ -114,6 +57,82 @@
   }
 }
 
+/* ============================================
+   2. 基础模态框样式
+   ============================================ */
+
+/* 基础模态框覆盖层 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, calc(0.5 * var(--app-base-opacity, 1)));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(calc(4px * var(--app-base-opacity, 1)));
+}
+
+/* 通用模态框 */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, calc(0.5 * var(--app-base-opacity, 1)));
+  backdrop-filter: blur(calc(5px * var(--app-base-opacity, 1)));
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.modal.active {
+  display: flex;
+}
+
+/* 基础模态框内容 */
+.modal-content {
+  background: var(--bg-primary);
+  border-radius: var(--border-radius);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, calc(0.3 * var(--app-base-opacity, 1)));
+  max-width: 500px;
+  width: 100%;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  animation: slideInScale 0.3s ease;
+  border: 1px solid var(--border-color);
+  position: relative;
+  margin: auto;
+  opacity: calc(0.9 + var(--app-base-opacity, 0) * 0.1);
+  backdrop-filter: blur(calc(10px * var(--app-base-opacity, 1)));
+  -webkit-backdrop-filter: blur(calc(10px * var(--app-base-opacity, 1)));
+}
+
+/* 液态玻璃主题下的模态框透明度增强 */
+.liquid-glass-theme .modal-content {
+  background: rgba(var(--bg-primary-rgb, 255, 255, 255), calc(var(--app-base-opacity) * 0.9 + 0.1));
+  backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.8)) saturate(1.5);
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.8)) saturate(1.5);
+  border: 1px solid rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.6));
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.5)),
+    0 20px 60px rgba(0, 0, 0, calc(var(--app-base-opacity) * 0.4));
+}
+
+.liquid-glass-theme .modal-overlay,
+.liquid-glass-theme .modal {
+  background: rgba(0, 0, 0, calc(var(--app-base-opacity) * 0.4 + 0.1));
+  backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.3));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.3));
+}
+
 /* 基础模态框头部 */
 .modal-header {
   padding: 16px 20px;
@@ -123,6 +142,14 @@
   align-items: center;
   background: var(--bg-secondary);
   border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+/* 液态玻璃主题下的模态框头部 */
+.liquid-glass-theme .modal-header {
+  background: rgba(var(--bg-secondary-rgb, 248, 249, 250), calc(var(--app-base-opacity) * 0.8 + 0.2));
+  backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.5));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.5));
+  border-bottom: 1px solid rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.4));
 }
 
 .modal-header h3 {
@@ -151,6 +178,14 @@
   color: var(--text-primary);
 }
 
+/* 液态玻璃主题下的关闭按钮 */
+.liquid-glass-theme .modal-close:hover,
+.liquid-glass-theme .modal-close-btn:hover {
+  background: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.3 + 0.1));
+  backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.3));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.3));
+}
+
 /* 模态框主体和底部 */
 .modal-body {
   padding: 20px;
@@ -165,6 +200,18 @@
   background: var(--bg-secondary);
   border-radius: 0 0 16px 16px;
 }
+
+/* 液态玻璃主题下的模态框底部 */
+.liquid-glass-theme .modal-footer {
+  background: rgba(var(--bg-secondary-rgb, 248, 249, 250), calc(var(--app-base-opacity) * 0.8 + 0.2));
+  backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.5));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.5));
+  border-top: 1px solid rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.4));
+}
+
+/* ============================================
+   3. 输入对话框样式
+   ============================================ */
 
 /* 输入对话框专用样式 */
 .input-dialog-modal {
@@ -212,6 +259,18 @@
   animation: modalSlideIn 0.3s ease-out;
 }
 
+/* 液态玻璃主题下的编辑模态框内容 */
+.liquid-glass-theme .edit-modal .modal-content,
+.liquid-glass-theme .add-todo-modal .modal-content {
+  background: rgba(var(--bg-primary-rgb, 255, 255, 255), calc(var(--app-base-opacity) * 0.95 + 0.05));
+  backdrop-filter: blur(calc(var(--glass-blur, 20px) * 1.2)) saturate(1.5);
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur, 20px) * 1.2)) saturate(1.5);
+  border: 1px solid rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.6));
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.5)),
+    0 20px 60px rgba(0, 0, 0, calc(var(--app-base-opacity) * 0.4));
+}
+
 /* 编辑模态框头部样式覆盖 */
 .edit-modal .modal-header,
 .add-todo-modal .modal-header {
@@ -225,16 +284,17 @@
   flex-shrink: 0;
 }
 
-.edit-modal .modal-header::before,
-.add-todo-modal .modal-header::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  right: -50%;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-  pointer-events: none;
+/* 液态玻璃主题下的编辑模态框头部 */
+.liquid-glass-theme .edit-modal .modal-header,
+.liquid-glass-theme .add-todo-modal .modal-header {
+  background: linear-gradient(135deg, 
+    rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.9 + 0.1)), 
+    rgba(0, 86, 179, calc(var(--app-base-opacity) * 0.9 + 0.1))) !important;
+  backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.8));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.8));
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.3)),
+    0 4px 16px rgba(0, 0, 0, calc(var(--app-base-opacity) * 0.2));
 }
 
 .edit-modal .modal-title,
@@ -291,6 +351,14 @@
   overflow-x: hidden;
 }
 
+/* 液态玻璃主题下的编辑模态框主体 */
+.liquid-glass-theme .edit-modal .modal-body,
+.liquid-glass-theme .add-todo-modal .modal-body {
+  background: rgba(var(--bg-primary-rgb, 255, 255, 255), calc(var(--app-base-opacity) * 0.9 + 0.1)) !important;
+  backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.6));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.6));
+}
+
 .edit-modal .modal-footer,
 .add-todo-modal .modal-footer {
   background: var(--bg-primary);
@@ -303,27 +371,14 @@
   flex-shrink: 0;
 }
 
-/* 预设网站管理器模态框 */
-.preset-manager-modal {
-  max-width: 700px;
-  width: 90%;
-}
+/* ============================================
+   模态框表单元素样式
+   ============================================ */
 
-.preset-manager-modal .modal-content {
-  max-height: 85vh;
-}
-
-.preset-manager-modal .modal-body {
-  padding: 24px;
-  overflow-y: auto;
-  max-height: calc(75vh - 120px); /* 减去头部和底部的高度 */
-}
-
-/* 通用表单样式（编辑模态框和待办清单模态框共用） */
+/* 表单组 */
 .edit-modal .form-group,
 .add-todo-modal .form-group {
-  margin-bottom: 24px;
-  position: relative;
+  margin-bottom: 20px;
 }
 
 .edit-modal .form-group:last-child,
@@ -331,29 +386,30 @@
   margin-bottom: 0;
 }
 
+/* 表单标签 */
 .edit-modal .form-label,
 .add-todo-modal .form-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-  color: var(--text-primary);
+  display: block;
   margin-bottom: 8px;
+  font-weight: 600;
   font-size: 14px;
+  color: var(--text-primary);
+  position: relative;
 }
 
 .edit-modal .label-icon,
 .add-todo-modal .label-icon {
-  font-size: 16px;
-  flex-shrink: 0;
+  margin-right: 6px;
+  color: var(--primary-color);
 }
 
 .edit-modal .required,
 .add-todo-modal .required {
   color: var(--danger-color);
-  font-weight: bold;
+  margin-left: 2px;
 }
 
+/* 表单输入框 */
 .edit-modal .form-input,
 .edit-modal .form-textarea,
 .edit-modal .form-select,
@@ -361,18 +417,37 @@
 .add-todo-modal .form-textarea,
 .add-todo-modal .form-select {
   width: 100%;
-  padding: 14px 16px;
+  padding: 12px 16px;
   border: 2px solid var(--border-color);
-  border-radius: 12px;
-  background: var(--bg-secondary);
-  color: var(--text-primary);
+  border-radius: 8px;
   font-size: 14px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
   transition: all 0.3s ease;
   outline: none;
+  font-family: var(--font-family);
   box-sizing: border-box;
-  font-family: inherit;
 }
 
+.edit-modal .form-textarea,
+.add-todo-modal .form-textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.5;
+}
+
+.edit-modal .form-select,
+.add-todo-modal .form-select {
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  padding-right: 40px;
+  appearance: none;
+  cursor: pointer;
+}
+
+/* 表单输入框聚焦状态 */
 .edit-modal .form-input:focus,
 .edit-modal .form-textarea:focus,
 .edit-modal .form-select:focus,
@@ -380,11 +455,11 @@
 .add-todo-modal .form-textarea:focus,
 .add-todo-modal .form-select:focus {
   border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 122, 204, 0.1);
   background: var(--bg-primary);
-  box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
-  transform: translateY(-1px);
 }
 
+/* 表单输入框占位符 */
 .edit-modal .form-input::placeholder,
 .edit-modal .form-textarea::placeholder,
 .add-todo-modal .form-input::placeholder,
@@ -393,132 +468,88 @@
   opacity: 0.7;
 }
 
-.edit-modal .form-textarea,
-.add-todo-modal .form-textarea {
-  resize: vertical;
-  min-height: 100px;
-  line-height: 1.5;
+/* 表单验证状态 */
+.edit-modal .form-input.error,
+.edit-modal .form-textarea.error,
+.edit-modal .form-select.error,
+.add-todo-modal .form-input.error,
+.add-todo-modal .form-textarea.error,
+.add-todo-modal .form-select.error {
+  border-color: var(--danger-color);
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
 }
 
-.edit-modal .form-select,
-.add-todo-modal .form-select {
-  cursor: pointer;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-  background-position: right 12px center;
-  background-repeat: no-repeat;
-  background-size: 16px;
-  padding-right: 48px;
-  appearance: none;
+.edit-modal .form-input.success,
+.edit-modal .form-textarea.success,
+.edit-modal .form-select.success,
+.add-todo-modal .form-input.success,
+.add-todo-modal .form-textarea.success,
+.add-todo-modal .form-select.success {
+  border-color: var(--success-color);
+  box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
 }
 
-.edit-modal .form-select option,
-.add-todo-modal .form-select option {
-  padding: 8px;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-}
-
-.edit-modal .form-row {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-}
-
-/* 当分类字段被隐藏时，让优先级占用整行 */
-.add-todo-modal .form-row .form-group:only-child {
-  grid-column: 1 / -1;
-}
-
-.add-todo-modal .char-counter {
-  position: absolute;
-  bottom: -20px;
-  right: 0;
-  font-size: 12px;
-  color: var(--text-secondary);
-  opacity: 0.8;
-}
-
-.add-todo-modal .input-help {
-  font-size: 12px;
-  color: var(--text-secondary);
-  margin-top: 4px;
-  opacity: 0.8;
-}
-
-.add-todo-modal .input-feedback {
+/* 表单反馈信息 */
+.edit-modal .form-feedback,
+.add-todo-modal .form-feedback {
   margin-top: 6px;
   font-size: 12px;
-  min-height: 18px;
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
-.add-todo-modal .form-features {
-  margin-top: 24px;
-  padding: 20px;
-  background: var(--bg-glass);
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
+.edit-modal .form-feedback.error,
+.add-todo-modal .form-feedback.error {
+  color: var(--danger-color);
 }
 
-.add-todo-modal .feature-item {
-  margin-bottom: 16px;
+.edit-modal .form-feedback.success,
+.add-todo-modal .form-feedback.success {
+  color: var(--success-color);
 }
 
-.add-todo-modal .feature-item:last-child {
-  margin-bottom: 0;
+.edit-modal .form-feedback.info,
+.add-todo-modal .form-feedback.info {
+  color: var(--info-color);
 }
 
-.add-todo-modal .checkbox-label {
+/* 复选框样式 */
+.edit-modal .checkbox-group,
+.add-todo-modal .checkbox-group {
   display: flex;
   align-items: center;
-  gap: 12px;
-  cursor: pointer;
-  padding: 8px 0;
-  transition: all 0.2s ease;
-  user-select: none;
+  gap: 8px;
+  margin: 16px 0;
 }
 
-.add-todo-modal .checkbox-label:hover {
-  background: var(--bg-hover);
-  border-radius: 8px;
-  padding: 8px 12px;
-  margin: 0 -12px;
+.edit-modal .checkbox-input,
+.add-todo-modal .checkbox-input {
+  display: none;
 }
 
-.add-todo-modal .form-checkbox {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-
+.edit-modal .checkbox-custom,
 .add-todo-modal .checkbox-custom {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border: 2px solid var(--border-color);
-  border-radius: 6px;
-  background: var(--bg-secondary);
+  border-radius: 4px;
+  background: var(--bg-primary);
   position: relative;
-  transition: all 0.3s ease;
+  transition: var(--transition);
   flex-shrink: 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
 }
 
-.add-todo-modal .checkbox-custom:hover {
+.edit-modal .checkbox-input:checked + .checkbox-custom,
+.add-todo-modal .checkbox-input:checked + .checkbox-custom {
+  background: var(--primary-color);
   border-color: var(--primary-color);
-  background: rgba(255, 255, 255, 0.08);
 }
 
-.add-todo-modal .form-checkbox:checked + .checkbox-custom {
-  background: linear-gradient(135deg, var(--primary-color), #667eea);
-  border-color: var(--primary-color);
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-}
-
-.add-todo-modal .form-checkbox:checked + .checkbox-custom::after {
-  content: '\f00c'; /* Font Awesome check icon */
+.edit-modal .checkbox-input:checked + .checkbox-custom::after,
+.add-todo-modal .checkbox-input:checked + .checkbox-custom::after {
+  content: '\f00c';
   font-family: "Font Awesome 5 Free";
   font-weight: 900;
   position: absolute;
@@ -526,296 +557,774 @@
   left: 50%;
   transform: translate(-50%, -50%);
   color: white;
-  font-size: 12px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  font-size: 10px;
 }
 
-.add-todo-modal .checkbox-text {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.edit-modal .checkbox-label,
+.add-todo-modal .checkbox-label {
   font-size: 14px;
   color: var(--text-primary);
-  font-weight: 500;
-  line-height: 1.4;
-}
-
-.add-todo-modal .feature-icon {
-  font-size: 16px;
-  flex-shrink: 0;
-  opacity: 0.8;
-  transition: opacity 0.2s ease;
-}
-
-.add-todo-modal .checkbox-label:hover .feature-icon {
-  opacity: 1;
-}
-
-/* 隐藏待办事项模态框中不需要的功能 */
-/* 隐藏分类选择器 */
-.add-todo-modal .form-group:has(#todo-category) {
-    display: none !important;
-}
-
-/* 兼容性方案：直接通过标签文本隐藏分类部分 */
-.add-todo-modal .form-group label[for="todo-category"] {
-    display: none !important;
-}
-
-.add-todo-modal #todo-category {
-    display: none !important;
-}
-
-/* 隐藏功能特性区块（番茄时钟和提醒通知） */
-.add-todo-modal .form-features {
-    display: none !important;
-}
-
-/* 隐藏单个功能项 */
-.add-todo-modal .feature-item {
-    display: none !important;
-}
-
-/* 确保截止日期下面没有多余的空间 */
-.add-todo-modal .form-group:has(#todo-deadline) {
-    margin-bottom: 20px;
-}
-
-/* 编辑模态框按钮样式 */
-.edit-modal .btn {
-  padding: 10px 20px;
-  border: none;
-  border-radius: var(--border-radius);
-  font-size: 13px;
-  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+  user-select: none;
 }
 
-.edit-modal .btn-secondary {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-}
-
-.edit-modal .btn-secondary:hover {
-  background: var(--border-color);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.edit-modal .btn-primary {
-  background: var(--primary-color);
-  color: white;
-}
-
-.edit-modal .btn-primary:hover {
-  background: var(--primary-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px var(--primary-shadow);
-}
-
-/* 删除确认对话框样式 */
-.delete-confirm-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10002; /* 确保在所有其他元素之上 */
-  opacity: 0;
-  animation: modalFadeIn 0.3s ease forwards;
-}
-
-.delete-confirm-modal.active {
-  opacity: 1;
-}
-
-.delete-confirm-modal .modal-content {
-  max-width: 480px;
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  background: var(--bg-primary);
-  backdrop-filter: blur(20px);
-  border: 1px solid var(--border-color);
-  transform: scale(0.9);
-  animation: modalScaleIn 0.3s ease forwards;
-}
-
-.delete-confirm-modal .modal-header {
-  background: linear-gradient(135deg, 
-    rgba(220, 53, 69, 0.1), 
-    rgba(220, 53, 69, 0.05)
-  );
-  border-bottom: 1px solid rgba(220, 53, 69, 0.2);
-  padding: 20px 24px;
-  border-radius: 16px 16px 0 0;
-}
-
-.delete-confirm-modal .modal-title h3 {
-  color: var(--danger-color);
-  font-size: 18px;
-  font-weight: 700;
-  margin: 0;
-}
-
-.delete-confirm-modal .modal-icon {
-  font-size: 20px;
-  margin-right: 12px;
-}
-
-.delete-confirm-modal .modal-body {
-  padding: 24px;
-}
-
-.delete-confirm-content {
-  display: flex;
-  align-items: flex-start;
-  gap: 20px;
-  text-align: left;
-}
-
-.warning-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, 
-    rgba(220, 53, 69, 0.15), 
-    rgba(220, 53, 69, 0.05)
-  );
-  border: 2px solid rgba(220, 53, 69, 0.2);
-  flex-shrink: 0;
-}
-
-.warning-icon i {
-  font-size: 24px;
-  color: var(--danger-color);
-}
-
-.warning-text {
-  flex: 1;
-}
-
-.warning-text p {
-  margin: 0 0 12px 0;
-  color: var(--text-primary);
-  font-size: 15px;
-  font-weight: 500;
-  line-height: 1.5;
-}
-
-.item-preview {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 12px 16px;
-  margin: 12px 0;
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-  font-size: 14px;
-  color: var(--text-primary);
-  word-break: break-all;
-  line-height: 1.4;
-  max-height: 80px;
-  overflow-y: auto;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.warning-note {
-  font-size: 13px !important;
-  color: var(--text-secondary) !important;
-  font-style: italic;
-  margin-top: 16px !important;
-}
-
-.delete-confirm-modal .modal-footer {
-  padding: 20px 24px;
-  background: var(--bg-secondary);
-  border-top: 1px solid var(--border-color);
-  border-radius: 0 0 16px 16px;
+/* 按钮组 */
+.edit-modal .button-group,
+.add-todo-modal .button-group {
   display: flex;
   gap: 12px;
   justify-content: flex-end;
+  margin-top: 24px;
 }
 
-.delete-confirm-modal .btn {
-  padding: 12px 24px;
+.edit-modal .button-group .btn,
+.add-todo-modal .button-group .btn {
+  min-width: 80px;
+}
+
+/* ============================================
+   模态框通用元素样式
+   ============================================ */
+
+/* 分隔线 */
+.modal-divider {
+  margin: 24px 0;
   border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+}
+
+/* 提示信息框 */
+.modal-alert {
+  padding: 12px 16px;
   border-radius: 8px;
+  margin: 16px 0;
   font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: inline-flex;
+  line-height: 1.5;
+  display: flex;
   align-items: center;
   gap: 8px;
-  min-width: 100px;
+}
+
+.modal-alert.info {
+  background: rgba(23, 162, 184, 0.1);
+  border: 1px solid rgba(23, 162, 184, 0.2);
+  color: var(--info-color);
+}
+
+.modal-alert.warning {
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.2);
+  color: var(--warning-color);
+}
+
+.modal-alert.success {
+  background: rgba(40, 167, 69, 0.1);
+  border: 1px solid rgba(40, 167, 69, 0.2);
+  color: var(--success-color);
+}
+
+.modal-alert.error {
+  background: rgba(220, 53, 69, 0.1);
+  border: 1px solid rgba(220, 53, 69, 0.2);
+  color: var(--danger-color);
+}
+
+.modal-alert .alert-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* 进度条 */
+.modal-progress {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 16px 0;
+}
+
+.modal-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-color), var(--primary-color-light, #339edb));
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  position: relative;
+}
+
+.modal-progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: progressShimmer 1.5s infinite;
+}
+
+@keyframes progressShimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* 加载状态 */
+.modal-loading {
+  display: flex;
+  align-items: center;
   justify-content: center;
+  padding: 40px 20px;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.delete-confirm-modal .btn-secondary {
-  background: var(--bg-primary);
+.modal-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border-color);
+  border-top: 3px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.modal-loading-text {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+/* 图标样式 */
+.modal-icon-large {
+  font-size: 48px;
+  margin-bottom: 16px;
+  color: var(--primary-color);
+  text-align: center;
+}
+
+.modal-icon-large.success {
+  color: var(--success-color);
+}
+
+.modal-icon-large.warning {
+  color: var(--warning-color);
+}
+
+.modal-icon-large.error {
+  color: var(--danger-color);
+}
+
+/* 列表样式 */
+.modal-list {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0;
+}
+
+.modal-list-item {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-list-item:last-child {
+  border-bottom: none;
+}
+
+.modal-list-item .item-icon {
+  color: var(--text-secondary);
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.modal-list-item .item-content {
+  flex: 1;
+}
+
+.modal-list-item .item-title {
+  font-weight: 500;
   color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.modal-list-item .item-description {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* 标签样式 */
+.modal-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.modal-tag {
+  padding: 4px 8px;
+  background: var(--bg-secondary);
   border: 1px solid var(--border-color);
+  border-radius: 12px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 500;
 }
 
-.delete-confirm-modal .btn-secondary:hover {
-  background: var(--bg-hover);
+.modal-tag.primary {
+  background: rgba(0, 122, 204, 0.1);
+  border-color: rgba(0, 122, 204, 0.2);
+  color: var(--primary-color);
+}
+
+/* ============================================
+   通用元素的液态玻璃主题透明度支持
+   ============================================ */
+
+/* 提示信息框的液态玻璃主题 */
+.liquid-glass-theme .modal-alert {
+  backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.4));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.4));
+}
+
+.liquid-glass-theme .modal-alert.info {
+  background: rgba(23, 162, 184, calc(var(--app-base-opacity) * 0.15 + 0.05));
+  border: 1px solid rgba(23, 162, 184, calc(var(--app-base-opacity) * 0.3 + 0.1));
+}
+
+.liquid-glass-theme .modal-alert.warning {
+  background: rgba(255, 193, 7, calc(var(--app-base-opacity) * 0.15 + 0.05));
+  border: 1px solid rgba(255, 193, 7, calc(var(--app-base-opacity) * 0.3 + 0.1));
+}
+
+.liquid-glass-theme .modal-alert.success {
+  background: rgba(40, 167, 69, calc(var(--app-base-opacity) * 0.15 + 0.05));
+  border: 1px solid rgba(40, 167, 69, calc(var(--app-base-opacity) * 0.3 + 0.1));
+}
+
+.liquid-glass-theme .modal-alert.error {
+  background: rgba(220, 53, 69, calc(var(--app-base-opacity) * 0.15 + 0.05));
+  border: 1px solid rgba(220, 53, 69, calc(var(--app-base-opacity) * 0.3 + 0.1));
+}
+
+/* 进度条的液态玻璃主题 */
+.liquid-glass-theme .modal-progress {
+  background: rgba(var(--bg-secondary-rgb, 248, 249, 250), calc(var(--app-base-opacity) * 0.8 + 0.2));
+  backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.3));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.3));
+}
+
+.liquid-glass-theme .modal-progress-bar {
+  background: linear-gradient(90deg, 
+    rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.9 + 0.1)), 
+    rgba(51, 158, 219, calc(var(--app-base-opacity) * 0.9 + 0.1)));
+}
+
+/* 加载状态的液态玻璃主题 */
+.liquid-glass-theme .modal-spinner {
+  border: 3px solid rgba(var(--border-color-rgb, 0, 0, 0), calc(var(--app-base-opacity) * 0.2 + 0.1));
+  border-top: 3px solid rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.8 + 0.2));
+}
+
+/* 列表项的液态玻璃主题 */
+.liquid-glass-theme .modal-list-item {
+  border-bottom: 1px solid rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.2));
+}
+
+/* 标签的液态玻璃主题 */
+.liquid-glass-theme .modal-tag {
+  background: rgba(var(--bg-secondary-rgb, 248, 249, 250), calc(var(--app-base-opacity) * 0.8 + 0.2));
+  backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.3));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.3));
+  border: 1px solid rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.3));
+}
+
+.liquid-glass-theme .modal-tag.primary {
+  background: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.15 + 0.05));
+  border-color: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.3 + 0.1));
+}
+
+/* 分隔线的液态玻璃主题 */
+.liquid-glass-theme .modal-divider {
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.4)), 
+    transparent);
+}
+
+/* ============================================
+   编辑模态框底部和按钮的液态玻璃主题透明度支持
+   ============================================ */
+
+/* 编辑模态框底部的液态玻璃主题 */
+.liquid-glass-theme .edit-modal .modal-footer,
+.liquid-glass-theme .add-todo-modal .modal-footer {
+  background: rgba(var(--bg-primary-rgb, 255, 255, 255), calc(var(--app-base-opacity) * 0.9 + 0.1)) !important;
+  backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.6));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.6));
+  border-top: 1px solid rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.4));
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.3)),
+    0 -2px 8px rgba(0, 0, 0, calc(var(--app-base-opacity) * 0.1));
+}
+
+/* 按钮组的液态玻璃主题 */
+.liquid-glass-theme .edit-modal .button-group,
+.liquid-glass-theme .add-todo-modal .button-group {
+  backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.3));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.3));
+}
+
+/* 模态框内按钮的液态玻璃主题增强 */
+.liquid-glass-theme .edit-modal .button-group .btn,
+.liquid-glass-theme .add-todo-modal .button-group .btn,
+.liquid-glass-theme .modal-footer .btn {
+  backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.5));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.5));
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, calc(var(--app-base-opacity) * 0.15)),
+    inset 0 1px 0 rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.3));
+}
+
+/* 主要按钮的液态玻璃主题 */
+.liquid-glass-theme .edit-modal .button-group .btn-primary,
+.liquid-glass-theme .add-todo-modal .button-group .btn-primary,
+.liquid-glass-theme .modal-footer .btn-primary {
+  background: linear-gradient(135deg, 
+    rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.9 + 0.1)), 
+    rgba(0, 102, 163, calc(var(--app-base-opacity) * 0.9 + 0.1))) !important;
+  border: 1px solid rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.8 + 0.2));
+}
+
+.liquid-glass-theme .edit-modal .button-group .btn-primary:hover,
+.liquid-glass-theme .add-todo-modal .button-group .btn-primary:hover,
+.liquid-glass-theme .modal-footer .btn-primary:hover {
+  background: linear-gradient(135deg, 
+    rgba(0, 102, 163, calc(var(--app-base-opacity) * 0.9 + 0.1)), 
+    rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.9 + 0.1))) !important;
+  box-shadow: 
+    0 6px 20px rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.4)),
+    inset 0 1px 0 rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.4));
+}
+
+/* 次要按钮的液态玻璃主题 */
+.liquid-glass-theme .edit-modal .button-group .btn-secondary,
+.liquid-glass-theme .add-todo-modal .button-group .btn-secondary,
+.liquid-glass-theme .modal-footer .btn-secondary {
+  background: linear-gradient(135deg, 
+    rgba(var(--bg-secondary-rgb, 248, 249, 250), calc(var(--app-base-opacity) * 0.8 + 0.2)), 
+    rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.7 + 0.3))) !important;
+  border: 1px solid rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.3));
+}
+
+.liquid-glass-theme .edit-modal .button-group .btn-secondary:hover,
+.liquid-glass-theme .add-todo-modal .button-group .btn-secondary:hover,
+.liquid-glass-theme .modal-footer .btn-secondary:hover {
+  background: linear-gradient(135deg, 
+    rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.2)), 
+    rgba(var(--bg-primary-rgb, 255, 255, 255), calc(var(--app-base-opacity) * 0.8 + 0.2))) !important;
+  border-color: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.8 + 0.2));
+  box-shadow: 
+    0 6px 20px rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.25)),
+    inset 0 1px 0 rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.4));
+}
+
+/* 危险按钮的液态玻璃主题 */
+.liquid-glass-theme .edit-modal .button-group .btn-danger,
+.liquid-glass-theme .add-todo-modal .button-group .btn-danger,
+.liquid-glass-theme .modal-footer .btn-danger {
+  background: linear-gradient(135deg, 
+    rgba(220, 53, 69, calc(var(--app-base-opacity) * 0.9 + 0.1)), 
+    rgba(200, 35, 51, calc(var(--app-base-opacity) * 0.9 + 0.1))) !important;
+  border: 1px solid rgba(220, 53, 69, calc(var(--app-base-opacity) * 0.8 + 0.2));
+}
+
+.liquid-glass-theme .edit-modal .button-group .btn-danger:hover,
+.liquid-glass-theme .add-todo-modal .button-group .btn-danger:hover,
+.liquid-glass-theme .modal-footer .btn-danger:hover {
+  box-shadow: 
+    0 6px 20px rgba(220, 53, 69, calc(var(--app-base-opacity) * 0.4)),
+    inset 0 1px 0 rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.4));
+}
+
+/* ============================================
+   8. 图片预览模态框样式增强
+   ============================================ */
+
+/* 图片预览模态框 */
+.image-preview-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, calc(0.9 * var(--app-base-opacity, 1)));
+  backdrop-filter: blur(calc(15px * var(--app-base-opacity, 1)));
+  -webkit-backdrop-filter: blur(calc(15px * var(--app-base-opacity, 1)));
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  cursor: pointer;
+  animation: fadeInModal 0.3s ease;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* 图片预览容器 */
+.image-preview-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  border-radius: var(--border-radius);
+}
+
+/* 图片预览内容 */
+.image-preview-content {
+  max-width: 90vw;
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: var(--border-radius);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, calc(0.8 * var(--app-base-opacity, 1)));
+  animation: zoomInImage 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s ease, cursor 0.2s ease;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-drag: none;
+  /* 性能优化 */
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000px;
+  -webkit-perspective: 1000px;
+}
+
+.image-preview-content:active {
+  cursor: grabbing;
+}
+
+/* 图片预览关闭按钮 */
+.image-preview-close {
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  background: rgba(255, 255, 255, calc(0.15 * var(--app-base-opacity, 1)));
+  backdrop-filter: blur(calc(10px * var(--app-base-opacity, 1)));
+  -webkit-backdrop-filter: blur(calc(10px * var(--app-base-opacity, 1)));
+  border: 2px solid rgba(255, 255, 255, calc(0.3 * var(--app-base-opacity, 1)));
+  color: white;
+  font-size: 28px;
+  font-weight: 300;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 10001;
+  line-height: 1;
+  user-select: none;
+}
+
+.image-preview-close:hover {
+  background: rgba(255, 255, 255, calc(0.25 * var(--app-base-opacity, 1)));
+  border-color: rgba(255, 255, 255, calc(0.6 * var(--app-base-opacity, 1)));
+  transform: scale(1.1) rotate(90deg);
+  box-shadow: 
+    0 8px 32px rgba(255, 255, 255, calc(0.3 * var(--app-base-opacity, 1))),
+    inset 0 1px 0 rgba(255, 255, 255, calc(0.4 * var(--app-base-opacity, 1)));
+}
+
+.image-preview-close:active {
+  transform: scale(1.05) rotate(90deg);
+}
+
+/* 图片预览控制栏 - 黑色背景优化 */
+.image-preview-controls {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, calc(0.1 * var(--app-base-opacity, 1)));
+  backdrop-filter: blur(calc(20px * var(--app-base-opacity, 1)));
+  -webkit-backdrop-filter: blur(calc(20px * var(--app-base-opacity, 1)));
+  padding: 12px 20px;
+  border-radius: 50px;
+  border: 2px solid rgba(255, 255, 255, calc(0.4 * var(--app-base-opacity, 1)));
+  box-shadow: 
+    0 10px 40px rgba(0, 0, 0, calc(0.8 * var(--app-base-opacity, 1))),
+    0 0 30px rgba(255, 255, 255, calc(0.2 * var(--app-base-opacity, 1))),
+    inset 0 1px 0 rgba(255, 255, 255, calc(0.3 * var(--app-base-opacity, 1)));
+  animation: slideUpControls 0.5s ease 0.3s both;
+  z-index: 10001;
+}
+
+@keyframes slideUpControls {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* 缩放信息显示 - 黑色背景优化 */
+.zoom-info {
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  min-width: 55px;
+  text-align: center;
+  letter-spacing: 0.5px;
+  text-shadow: 
+    0 2px 4px rgba(0, 0, 0, 1),
+    0 0 10px rgba(0, 0, 0, 0.8);
+  user-select: none;
+  background: rgba(255, 255, 255, calc(0.15 * var(--app-base-opacity, 1)));
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 2px solid rgba(255, 255, 255, calc(0.6 * var(--app-base-opacity, 1)));
+  backdrop-filter: blur(calc(10px * var(--app-base-opacity, 1)));
+  -webkit-backdrop-filter: blur(calc(10px * var(--app-base-opacity, 1)));
+  box-shadow: 
+    0 4px 15px rgba(0, 0, 0, calc(0.4 * var(--app-base-opacity, 1))),
+    0 0 20px rgba(255, 255, 255, calc(0.2 * var(--app-base-opacity, 1))),
+    inset 0 1px 0 rgba(255, 255, 255, calc(0.4 * var(--app-base-opacity, 1)));
+}
+
+/* 缩放控制按钮 - 黑色背景优化 */
+.zoom-btn {
+  background: rgba(255, 255, 255, calc(0.6 * var(--app-base-opacity, 1)));
+  backdrop-filter: blur(calc(10px * var(--app-base-opacity, 1)));
+  -webkit-backdrop-filter: blur(calc(10px * var(--app-base-opacity, 1)));
+  border: 2px solid rgba(255, 255, 255, calc(0.8 * var(--app-base-opacity, 1)));
+  color: rgba(0, 0, 0, 0.9);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 10px 16px;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-shadow: none;
+  letter-spacing: 0.3px;
+  user-select: none;
+  outline: none;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    0 4px 15px rgba(0, 0, 0, calc(0.5 * var(--app-base-opacity, 1))),
+    0 0 20px rgba(255, 255, 255, calc(0.3 * var(--app-base-opacity, 1))),
+    inset 0 1px 0 rgba(255, 255, 255, calc(0.8 * var(--app-base-opacity, 1)));
+}
+
+.zoom-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.zoom-btn:hover {
+  background: rgba(255, 255, 255, calc(0.85 * var(--app-base-opacity, 1)));
+  border-color: rgba(255, 255, 255, calc(1.0 * var(--app-base-opacity, 1)));
+  color: rgba(0, 0, 0, 1);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 25px rgba(0, 0, 0, calc(0.6 * var(--app-base-opacity, 1))),
+    0 0 30px rgba(255, 255, 255, calc(0.5 * var(--app-base-opacity, 1))),
+    inset 0 1px 0 rgba(255, 255, 255, calc(1.0 * var(--app-base-opacity, 1)));
+}
+
+.zoom-btn:hover::before {
+  left: 100%;
+}
+
+.zoom-btn:active {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 
+    0 4px 15px rgba(0, 0, 0, calc(0.3 * var(--app-base-opacity, 1))),
+    inset 0 1px 0 rgba(255, 255, 255, calc(0.2 * var(--app-base-opacity, 1)));
 }
 
-.delete-confirm-modal .btn-secondary:focus {
-  outline: 2px solid var(--primary-color);
+.zoom-btn:focus {
+  outline: 2px solid rgba(255, 255, 255, calc(0.4 * var(--app-base-opacity, 1)));
   outline-offset: 2px;
 }
 
-.delete-confirm-modal .btn-danger {
-  background: var(--danger-color);
+/* 重置按钮特殊样式 - 黑色背景优化 */
+.zoom-btn[data-action="reset"] {
+  background: linear-gradient(135deg, 
+    rgba(255, 193, 7, 0.9), 
+    rgba(255, 235, 59, 0.9));
+  border-color: rgba(255, 193, 7, 1);
+  color: rgba(0, 0, 0, 0.9);
+  text-shadow: none;
+  box-shadow: 
+    0 4px 15px rgba(255, 193, 7, 0.4),
+    0 0 20px rgba(255, 193, 7, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.zoom-btn[data-action="reset"]:hover {
+  background: linear-gradient(135deg, 
+    rgba(255, 193, 7, 1), 
+    rgba(255, 235, 59, 1));
+  border-color: rgba(255, 193, 7, 1);
+  color: rgba(0, 0, 0, 1);
+  box-shadow: 
+    0 8px 25px rgba(255, 193, 7, 0.6),
+    0 0 30px rgba(255, 193, 7, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* 适应按钮特殊样式 - 黑色背景优化 */
+.zoom-btn[data-action="fit"] {
+  background: linear-gradient(135deg, 
+    rgba(40, 167, 69, 0.9), 
+    rgba(76, 175, 80, 0.9));
+  border-color: rgba(40, 167, 69, 1);
   color: white;
-  border: 1px solid var(--danger-color);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  box-shadow: 
+    0 4px 15px rgba(40, 167, 69, 0.4),
+    0 0 20px rgba(40, 167, 69, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
-.delete-confirm-modal .btn-danger:hover {
-  background: #c82333;
-  border-color: #bd2130;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
-}
-
-.delete-confirm-modal .btn-icon {
-  display: flex;
-  align-items: center;
-}
-
-/* 深色主题适配 */
-[data-theme="dark"] .delete-confirm-modal .modal-header {
+.zoom-btn[data-action="fit"]:hover {
   background: linear-gradient(135deg, 
-    rgba(220, 53, 69, 0.15), 
-    rgba(220, 53, 69, 0.08)
-  );
+    rgba(40, 167, 69, 1), 
+    rgba(76, 175, 80, 1));
+  border-color: rgba(40, 167, 69, 1);
+  color: white;
+  box-shadow: 
+    0 8px 25px rgba(40, 167, 69, 0.6),
+    0 0 30px rgba(40, 167, 69, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
-[data-theme="dark"] .warning-icon {
-  background: linear-gradient(135deg, 
-    rgba(220, 53, 69, 0.2), 
-    rgba(220, 53, 69, 0.1)
-  );
-  border-color: rgba(220, 53, 69, 0.3);
+/* 液态玻璃主题下的图片预览增强 */
+.liquid-glass-theme .image-preview-modal {
+  background: rgba(0, 0, 0, calc(var(--app-base-opacity) * 0.8 + 0.1));
+  backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.8));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.8));
 }
 
-[data-theme="dark"] .item-preview {
-  background: var(--bg-tertiary);
-  border-color: var(--border-dark);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+.liquid-glass-theme .image-preview-close {
+  background: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.3));
+  border-color: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.6));
+  backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.5));
+  -webkit-backdrop-filter: blur(calc(var(--glass-glass-blur, 20px) * 0.5));
+}
+
+.liquid-glass-theme .image-preview-close:hover {
+  background: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.5));
+  border-color: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.8 + 0.2));
+  box-shadow: 
+    0 8px 32px rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.4)),
+    inset 0 1px 0 rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.6));
+}
+
+.liquid-glass-theme .image-preview-controls {
+  background: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.2));
+  backdrop-filter: blur(calc(var(--glass-glur, 20px) * 1.2));
+  -webkit-backdrop-filter: blur(calc(var(--glass-glur, 20px) * 1.2));
+  border-color: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.4));
+  box-shadow: 
+    0 10px 40px rgba(0, 0, 0, calc(var(--app-base-opacity) * 0.5)),
+    inset 0 1px 0 rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.3));
+}
+
+.liquid-glass-theme .zoom-btn {
+  background: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.4));
+  border-color: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.7));
+  backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.5));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur, 20px) * 0.5));
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.liquid-glass-theme .zoom-btn:hover {
+  background: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.6));
+  border-color: rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.9));
+  box-shadow: 
+    0 8px 25px rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.5)),
+    0 4px 15px rgba(var(--liquid-glass-rgb, 0, 122, 204), calc(var(--app-base-opacity) * 0.4)),
+    inset 0 1px 0 rgba(255, 255, 255, calc(var(--app-base-opacity) * 0.6));
+}
+
+/* 响应式样式 */
+@media (max-width: 768px) {
+  .image-preview-close {
+    top: 20px;
+    right: 20px;
+    width: 48px;
+    height: 48px;
+    font-size: 24px;
+  }
+
+  .image-preview-controls {
+    bottom: 20px;
+    padding: 10px 16px;
+    gap: 10px;
+    border-radius: 40px;
+  }
+
+  .zoom-btn {
+    padding: 8px 14px;
+    font-size: 12px;
+    border-radius: 20px;
+  }
+
+  .zoom-info {
+    font-size: 13px;
+    min-width: 45px;
+  }
+
+  .image-preview-content {
+    max-width: 95vw;
+    max-height: 75vh;
+  }
+}
+
+@media (max-height: 600px) {
+  .image-preview-controls {
+    bottom: 15px;
+    padding: 8px 14px;
+  }
+
+  .image-preview-close {
+    top: 15px;
+    right: 15px;
+    width: 42px;
+    height: 42px;
+    font-size: 22px;
+  }
+
+  .image-preview-content {
+    max-height: 70vh;
+  }
 }

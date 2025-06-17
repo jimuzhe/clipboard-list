@@ -22,6 +22,7 @@ import { WindowManager } from './managers/WindowManager';
 import { TrayManager } from './managers/TrayManager';
 import { AdvancedClipboardManager } from './managers/ClipboardManager_advanced';
 import { AutoStartManager } from './managers/AutoStartManager';
+import { ShortcutManager } from './managers/ShortcutManager';
 import { IPCService } from './services/IPCService';
 import { DataService } from './services/DataService';
 import { UpdateService } from './services/UpdateService';
@@ -38,6 +39,7 @@ class ClipboardListApp {
     private dataService!: DataService;
     private clipboardManager!: AdvancedClipboardManager;
     private autoStartManager!: AutoStartManager;
+    private shortcutManager!: ShortcutManager;
     private ipcService!: IPCService;
     private updateService!: UpdateService;
     private isQuiting: boolean = false;
@@ -101,6 +103,7 @@ class ClipboardListApp {
             this.trayManager = new TrayManager();
             this.clipboardManager = new AdvancedClipboardManager(this.windowManager.getWindow() || undefined);
             this.autoStartManager = new AutoStartManager();
+            this.shortcutManager = new ShortcutManager();
 
             // 设置事件监听
             this.setupEventListeners();
@@ -222,6 +225,16 @@ class ClipboardListApp {
         }); this.ipcService.on('window-toggle-always-on-top', () => {
             const newState = this.windowManager.toggleAlwaysOnTop();
             this.ipcService.emit('always-on-top-toggled', newState);
+        });
+
+        // 窗口透明度功能
+        this.ipcService.on('window-set-opacity', (opacity: number) => {
+            this.windowManager.setOpacity(opacity);
+        });
+
+        this.ipcService.on('window-get-opacity', () => {
+            const currentOpacity = this.windowManager.getOpacity();
+            this.ipcService.emit('window-opacity-response', currentOpacity);
         });
 
         // 在线页面导航
@@ -373,9 +386,7 @@ class ClipboardListApp {
                     data
                 );
             }
-        });
-
-        // 边缘触发功能
+        });        // 边缘触发功能
         this.ipcService.on('window-set-trigger-zone-width', (width: number) => {
             this.windowManager.setTriggerZoneWidth(width);
             this.ipcService.emit('trigger-zone-width-set');
@@ -384,6 +395,68 @@ class ClipboardListApp {
         this.ipcService.on('window-get-trigger-zone-width', () => {
             const width = this.windowManager.getTriggerZoneWidth();
             this.ipcService.emit('trigger-zone-width-response', width);
+        });        // 快捷键管理
+        this.ipcService.on('shortcut-get-all', () => {
+            const shortcuts = this.shortcutManager.getAllShortcuts();
+            const shortcutsObj = Object.fromEntries(shortcuts);
+            if (this.windowManager.getWindow()) {
+                this.ipcService.sendToRenderer(
+                    this.windowManager.getWindow()!.webContents,
+                    'shortcuts-response',
+                    shortcutsObj
+                );
+            }
+        });
+
+        this.ipcService.on('shortcut-update', ({ action, shortcut }: { action: string, shortcut: string }) => {
+            const success = this.shortcutManager.updateShortcut(action, shortcut);
+            if (success) {
+                // 更新配置文件
+                const currentConfig = config.getConfig();
+                if (action === 'toggleWindow') {
+                    config.set('shortcuts', { ...currentConfig.shortcuts, toggleWindow: shortcut });
+                }
+            }
+            if (this.windowManager.getWindow()) {
+                this.ipcService.sendToRenderer(
+                    this.windowManager.getWindow()!.webContents,
+                    'shortcut-updated',
+                    { action, shortcut, success }
+                );
+            }
+        });
+
+        this.ipcService.on('shortcut-get-suggestions', () => {
+            const suggestions = this.shortcutManager.getShortcutSuggestions();
+            if (this.windowManager.getWindow()) {
+                this.ipcService.sendToRenderer(
+                    this.windowManager.getWindow()!.webContents,
+                    'shortcut-suggestions-response',
+                    suggestions
+                );
+            }
+        });
+
+        this.ipcService.on('shortcut-validate', (shortcut: string) => {
+            const isValid = !this.shortcutManager.isRegistered(shortcut);
+            if (this.windowManager.getWindow()) {
+                this.ipcService.sendToRenderer(
+                    this.windowManager.getWindow()!.webContents,
+                    'shortcut-validation-response',
+                    { shortcut, isValid }
+                );
+            }
+        });
+
+        this.ipcService.on('shortcut-format', (shortcut: string) => {
+            const formatted = this.shortcutManager.formatShortcutDisplay(shortcut);
+            if (this.windowManager.getWindow()) {
+                this.ipcService.sendToRenderer(
+                    this.windowManager.getWindow()!.webContents,
+                    'shortcut-formatted-response',
+                    { shortcut, formatted }
+                );
+            }
         });
 
         this.ipcService.on('window-set-edge-trigger-enabled', (enabled: boolean) => {
@@ -526,15 +599,17 @@ class ClipboardListApp {
         } catch (error) {
             logger.error('Failed to initialize tray menu state:', error);
         }
-    }
-
-    /**
+    }    /**
      * 设置全局快捷键
      */
     private setupGlobalShortcuts(): void {
         try {
-            // 注册全局快捷键 Ctrl+Shift+V 切换窗口显示
-            globalShortcut.register('CommandOrControl+Shift+V', () => {
+            // 获取配置中的快捷键
+            const shortcutConfig = config.get('shortcuts');
+            const toggleShortcut = shortcutConfig?.toggleWindow || 'CommandOrControl+Shift+V';
+
+            // 注册切换窗口显示的快捷键
+            this.shortcutManager.register('toggleWindow', toggleShortcut, () => {
                 if (this.windowManager.isVisible()) {
                     this.windowManager.hide();
                 } else {
@@ -651,13 +726,15 @@ class ClipboardListApp {
      */
     public async createMainWindow(): Promise<void> {
         await this.createWindow();
-    }
-    /**
+    }    /**
      * 清理资源
      */
     public cleanup(): void {
         try {
-            // 注销全局快捷键
+            // 清理快捷键管理器
+            this.shortcutManager?.destroy();
+
+            // 注销全局快捷键（作为备份清理）
             globalShortcut.unregisterAll();
 
             // 停止剪切板监控

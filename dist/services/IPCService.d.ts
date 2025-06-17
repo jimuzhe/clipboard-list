@@ -44,6 +44,8 @@ export declare class IPCService extends EventEmitter {
     private handleSetAlwaysOnTop;
     private handleGetAlwaysOnTop;
     private handleToggleAlwaysOnTop;
+    private handleSetWindowOpacity;
+    private handleGetWindowOpacity;
     private handleReadClipboard;
     private handleWriteClipboard;
     private handleWriteImageClipboard;
@@ -90,11 +92,30 @@ export declare class IPCService extends EventEmitter {
     private handleCloseDevTools; /**
      * 处理切换开发者工具请求
      */
-    private handleToggleDevTools;
-    /**
+    private handleToggleDevTools; /**
      * 处理动画设置更新请求
      */
     private handleUpdateAnimationSettings;
+    /**
+     * 处理获取所有快捷键请求
+     */
+    private handleGetAllShortcuts;
+    /**
+     * 处理更新快捷键请求
+     */
+    private handleUpdateShortcut;
+    /**
+     * 处理获取快捷键建议请求
+     */
+    private handleGetShortcutSuggestions;
+    /**
+     * 处理验证快捷键请求
+     */
+    private handleValidateShortcut;
+    /**
+     * 处理格式化快捷键请求
+     */
+    private handleFormatShortcut;
     /**
      * 移除处理程序
      */
