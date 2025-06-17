@@ -106,16 +106,14 @@ class App {
                 this.themeManager.applyLiquidGlassTheme(e.target.checked);
                 this.toggleLiquidGlassControls(e.target.checked);
             });
-        }
-
-        // 玻璃透明度
+        } // 玻璃透明度
         const glassOpacity = document.getElementById('glass-opacity');
         if (glassOpacity) {
             glassOpacity.addEventListener('input', (e) => {
                 const value = parseFloat(e.target.value);
                 this.state.settings.liquidGlassOpacity = value;
                 this.state.saveData();
-                this.themeManager.updateLiquidGlassOpacity(value);
+                this.updateAppOpacity(value); // 使用新的方法更新整个应用的透明度
                 this.updateSliderValue(e.target, Math.round(value * 100) + '%');
             });
         }
@@ -1644,6 +1642,19 @@ class App {
         setTimeout(() => {
             this.initializeLiquidGlassMouseTracking();
         }, 100);
+    }
+
+    // 更新整个应用程序的透明度
+    updateAppOpacity(opacity) {
+        // 通过ThemeManager更新透明度
+        this.themeManager.updateLiquidGlassOpacity(opacity);
+
+        // 强制重新应用液态玻璃效果到所有元素
+        if (this.state.settings.liquidGlassTheme) {
+            setTimeout(() => {
+                this.reinitializeLiquidGlassEffects();
+            }, 50);
+        }
     }
 }
 

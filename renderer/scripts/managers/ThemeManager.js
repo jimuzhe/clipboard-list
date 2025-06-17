@@ -69,6 +69,7 @@ class ThemeManager {
     updateLiquidGlassOpacity(opacity) {
         const root = document.documentElement;
         root.style.setProperty('--liquid-glass-opacity', opacity);
+        root.style.setProperty('--app-base-opacity', opacity); // 新增：控制整个应用的透明度
         root.style.setProperty('--liquid-glass-alpha', Math.round(opacity * 255).toString(16).padStart(2, '0'));
 
         // 更新交互效果透明度
