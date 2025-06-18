@@ -1,10 +1,9 @@
 # 移记 QuiverNote - 智能剪切板管理工具
 
-[![Version](https://img.shields.io/badge/version-2.4.0-blue.svg)](https://github.com/longdz/quiver-note)
+[![Version](https://img.shields.io/badge/version-2.4.0-blue.svg)](https://github.com/jimuzhe/clipboard-list)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Windows-lightgrey.svg)](https://github.com/longdz/quiver-note)
+[![Platform](https://img.shields.io/badge/platform-Windows-lightgrey.svg)](https://github.com/jimuzhe/clipboard-list)
 [![Electron](https://img.shields.io/badge/Electron-36.4.0-47848F.svg)](https://electronjs.org/)
-[![Vibe Coding](https://img.shields.io/badge/🎵-Vibe%20Coding-ff69b4.svg)](https://github.com/longdz/quiver-note)
 
 一个功能丰富的 Windows 桌面应用程序，基于 Electron 开发，提供剪切板管理、待办清单、Markdown 笔记等多种生产力工具。
 
