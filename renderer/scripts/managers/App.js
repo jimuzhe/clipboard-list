@@ -2338,25 +2338,28 @@ class App {
         if (!imageData) {
             console.error('❌ 无效的图片数据');
             return;
-        }
-
-        // 创建模态框元素
+        }        // 创建模态框元素
         const modal = document.createElement('div');
         modal.className = 'image-preview-modal';
         modal.innerHTML = `
-            <button class="image-preview-close" title="关闭预览">&times;</button>
+            <button class="image-preview-close" title="关闭预览 (ESC)">&times;</button>
             <div class="image-preview-container">
                 <img src="${imageData}" alt="图片预览" class="image-preview-content">
-            </div>            <div class="image-preview-controls">
+            </div>
+            <div class="image-preview-controls">
                 <span class="zoom-info">100%</span>
-                <button class="zoom-btn" data-action="reset" title="重置到原始大小 (1:1)">
+                <button class="zoom-btn" data-action="reset" title="重置到原始大小 (按R键或0键)">
                     <i class="fas fa-undo"></i> 重置
                 </button>
-                <button class="zoom-btn" data-action="fit" title="适应窗口大小">
+                <button class="zoom-btn" data-action="fit" title="适应窗口大小 (按F键)">
                     <i class="fas fa-expand-arrows-alt"></i> 适应
                 </button>
+                <div class="zoom-tips" title="操作提示">
+                    <i class="fas fa-info-circle"></i>
+                    <span>滚轮缩放 | Ctrl+滚轮精细缩放 | +/- 键缩放</span>
+                </div>
             </div>
-        `; // 添加到页面
+        `;// 添加到页面
         document.body.appendChild(modal);
 
         // 图片缩放和拖拽状态
@@ -2433,29 +2436,65 @@ class App {
             translateX = 0;
             translateY = 0;
             updateImageTransform();
-        };
-
-        // 滚轮缩放
+        };        // 滚轮缩放 - 增强体验版本（支持精细缩放）
         const handleWheel = (e) => {
             e.preventDefault();
 
-            const delta = e.deltaY > 0 ? -0.1 : 0.1;
-            const newScale = Math.max(0.1, Math.min(5, scale + delta));
+            // 添加缩放中的CSS类，用于平滑过渡
+            img.classList.add('zooming');
+            setTimeout(() => img.classList.remove('zooming'), 100);
+
+            // 根据是否按住Ctrl键调整缩放步长
+            let zoomStep;
+            if (e.ctrlKey) {
+                // Ctrl+滚轮：精细缩放
+                zoomStep = scale > 1 ? 0.05 : 0.03;
+            } else {
+                // 普通滚轮：常规缩放
+                zoomStep = scale > 1 ? 0.15 : 0.1;
+            }
+
+            const delta = e.deltaY > 0 ? -zoomStep : zoomStep;
+            const proposedScale = scale + delta;
+            const newScale = Math.max(0.1, Math.min(10, proposedScale)); // 扩大缩放范围到10倍
+
+            // 如果达到缩放边界，给用户视觉反馈
+            if (proposedScale !== newScale) {
+                // 添加边界反馈动画
+                img.classList.add('zoom-boundary');
+                setTimeout(() => img.classList.remove('zoom-boundary'), 200);
+                
+                // 更新缩放显示（即使在边界也要显示）
+                if (proposedScale <= 0.1) {
+                    zoomInfo.textContent = '10%';
+                } else if (proposedScale >= 10) {
+                    zoomInfo.textContent = '1000%';
+                }
+                console.log(`🚫 缩放已达到${proposedScale <= 0.1 ? '最小' : '最大'}限制${e.ctrlKey ? '（精细模式）' : ''}`);
+                return;
+            }
 
             if (newScale !== scale) {
                 // 计算鼠标位置相对于图片的位置
                 const rect = img.getBoundingClientRect();
                 const mouseX = e.clientX - rect.left - rect.width / 2;
+                const mouseY = e.clientY - rect.top - rect.height / 2;
 
-
-                // 调整平移以保持鼠标位置不变
-                translateX -= mouseX * (newScale - scale) / scale;
-                translateY -= mouseY * (newScale - scale) / scale;
+                // 调整平移以保持鼠标位置不变（更精确的算法）
+                const scaleDiff = newScale - scale;
+                translateX -= (mouseX * scaleDiff) / scale;
+                translateY -= (mouseY * scaleDiff) / scale;
 
                 scale = newScale;
                 updateImageTransform();
+
+                // 更新鼠标样式
+                img.style.cursor = scale > 1 ? 'grab' : 'default';
+                
+                // 添加缩放日志
+                console.log(`🔍 缩放至: ${Math.round(scale * 100)}%${e.ctrlKey ? '（精细模式）' : ''}`);
             }
-        }; // 鼠标拖拽 - 性能优化版本
+        };// 鼠标拖拽 - 性能优化版本
         const handleMouseDown = (e) => {
             if (e.target === img) {
                 isDragging = true;
@@ -2548,14 +2587,48 @@ class App {
                     fitToWindow();
                 }
             });
-        });
-
-        // ESC键关闭
+        });        // 键盘事件处理 - 增强版本
         const handleKeydown = (e) => {
-            if (e.key === 'Escape') {
-                closePreview();
+            switch(e.key) {
+                case 'Escape':
+                    closePreview();
+                    break;
+                case '0':
+                case 'r':
+                case 'R':
+                    // 按 0 或 R 键重置到原始大小
+                    resetImage();
+                    break;
+                case 'f':
+                case 'F':
+                    // 按 F 键适应窗口
+                    fitToWindow();
+                    break;
+                case '=':
+                case '+':
+                    // 按 + 号放大
+                    e.preventDefault();
+                    simulateZoom(false);
+                    break;
+                case '-':
+                case '_':
+                    // 按 - 号缩小
+                    e.preventDefault();
+                    simulateZoom(true);
+                    break;
             }
-        }; // 添加事件监听
+        };
+
+        // 模拟滚轮缩放的辅助函数
+        const simulateZoom = (zoomOut) => {
+            const fakeEvent = {
+                preventDefault: () => {},
+                deltaY: zoomOut ? 100 : -100,
+                clientX: container.offsetWidth / 2,
+                clientY: container.offsetHeight / 2
+            };
+            handleWheel(fakeEvent);
+        };// 添加事件监听
         document.addEventListener('keydown', handleKeydown);
         container.addEventListener('wheel', handleWheel);
         img.addEventListener('mousedown', handleMouseDown);
