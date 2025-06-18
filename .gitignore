@@ -14,6 +14,8 @@ dist/
 dist-installer/
 build/
 out/
+website/
+deploy/
 
 # Electron specific
 *.exe

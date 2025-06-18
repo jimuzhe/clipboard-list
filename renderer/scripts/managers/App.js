@@ -311,6 +311,38 @@ class App {
                 this.checkForUpdates();
             });
         }
+
+        // 设置更新下载进度监听器
+        if (window.electronAPI && window.electronAPI.onUpdateDownloadProgress) {
+            window.electronAPI.onUpdateDownloadProgress((progress) => {
+                this.updateDownloadProgress(progress);
+            });
+        }
+
+        // 设置下载开始监听器
+        if (window.electronAPI && window.electronAPI.onUpdateDownloadStarted) {
+            window.electronAPI.onUpdateDownloadStarted((updateInfo) => {
+                console.log('📥 下载开始:', updateInfo);
+            });
+        }
+
+        // 设置下载完成监听器
+        if (window.electronAPI && window.electronAPI.onUpdateDownloadCompleted) {
+            window.electronAPI.onUpdateDownloadCompleted((result) => {
+                console.log('✅ 下载完成:', result);
+                if (result.filePath) {
+                    this.showDownloadCompleteDialog(result.filePath);
+                }
+            });
+        }
+
+        // 设置下载错误监听器
+        if (window.electronAPI && window.electronAPI.onUpdateDownloadError) {
+            window.electronAPI.onUpdateDownloadError((error) => {
+                console.error('❌ 下载失败:', error);
+                this.showDownloadErrorDialog(error);
+            });
+        }
     }
 
     setupShortcutListeners() {
@@ -482,7 +514,7 @@ class App {
             <div class="update-dialog">
                 <div class="update-dialog-header">
                     <h3>🎉 发现新版本</h3>
-                    <button class="update-dialog-close" onclick="this.closest('.update-dialog-overlay').remove()">×</button>
+                    <button class="update-dialog-close">×</button>
                 </div>
                 <div class="update-dialog-content">
                     <p><strong>新版本:</strong> ${updateInfo.version}</p>
@@ -495,15 +527,37 @@ class App {
                     </div>
                 </div>
                 <div class="update-dialog-actions">
-                    <button class="btn btn-secondary" onclick="this.closest('.update-dialog-overlay').remove()">稍后提醒</button>
-                    <button class="btn btn-primary" onclick="window.app.downloadUpdate('${encodeURIComponent(JSON.stringify(updateInfo))}')">立即下载</button>
+                    <button class="btn btn-secondary" data-action="later">稍后提醒</button>
+                    <button class="btn btn-primary" data-action="download">立即下载</button>
                 </div>
             </div>
         `;
 
+        // 绑定事件处理器
+        const closeBtn = dialog.querySelector('.update-dialog-close');
+        const laterBtn = dialog.querySelector('[data-action="later"]');
+        const downloadBtn = dialog.querySelector('[data-action="download"]');
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                dialog.remove();
+            });
+        }
+
+        if (laterBtn) {
+            laterBtn.addEventListener('click', () => {
+                dialog.remove();
+            });
+        }
+
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', () => {
+                this.downloadUpdate(encodeURIComponent(JSON.stringify(updateInfo)));
+            });
+        }
+
         document.body.appendChild(dialog);
     }
-
     /**
      * 显示无更新对话框
      */
@@ -514,16 +568,32 @@ class App {
             <div class="update-dialog">
                 <div class="update-dialog-header">
                     <h3>✅ 已是最新版本</h3>
-                    <button class="update-dialog-close" onclick="this.closest('.update-dialog-overlay').remove()">×</button>
+                    <button class="update-dialog-close">×</button>
                 </div>
                 <div class="update-dialog-content">
                     <p>您当前使用的已经是最新版本，无需更新。</p>
                 </div>
                 <div class="update-dialog-actions">
-                    <button class="btn btn-primary" onclick="this.closest('.update-dialog-overlay').remove()">确定</button>
+                    <button class="btn btn-primary" data-action="close">确定</button>
                 </div>
             </div>
         `;
+
+        // 绑定事件处理器
+        const closeBtn = dialog.querySelector('.update-dialog-close');
+        const confirmBtn = dialog.querySelector('[data-action="close"]');
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                dialog.remove();
+            });
+        }
+
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', () => {
+                dialog.remove();
+            });
+        }
 
         document.body.appendChild(dialog);
     }
@@ -538,7 +608,7 @@ class App {
             <div class="update-dialog">
                 <div class="update-dialog-header">
                     <h3>❌ 检查更新失败</h3>
-                    <button class="update-dialog-close" onclick="this.closest('.update-dialog-overlay').remove()">×</button>
+                    <button class="update-dialog-close">×</button>
                 </div>
                 <div class="update-dialog-content">
                     <p>检查更新时出现错误：</p>
@@ -546,14 +616,29 @@ class App {
                     <p>请检查网络连接后重试。</p>
                 </div>
                 <div class="update-dialog-actions">
-                    <button class="btn btn-primary" onclick="this.closest('.update-dialog-overlay').remove()">确定</button>
+                    <button class="btn btn-primary" data-action="close">确定</button>
                 </div>
             </div>
         `;
 
+        // 绑定事件处理器
+        const closeBtn = dialog.querySelector('.update-dialog-close');
+        const confirmBtn = dialog.querySelector('[data-action="close"]');
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                dialog.remove();
+            });
+        }
+
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', () => {
+                dialog.remove();
+            });
+        }
+
         document.body.appendChild(dialog);
     }
-
     /**
      * 下载更新
      */
@@ -571,14 +656,12 @@ class App {
             // 显示下载进度对话框
             this.showDownloadProgressDialog();
 
-            // 调用主进程下载更新
-            const result = await window.electronAPI.downloadUpdate(updateInfo);
+            // 调用主进程下载更新（不等待结果，通过事件监听器处理）
+            window.electronAPI.downloadUpdate(updateInfo).catch((error) => {
+                console.error('❌ 启动下载失败:', error);
+                this.showDownloadErrorDialog(error.message || '启动下载失败');
+            });
 
-            if (result.success) {
-                this.showDownloadCompleteDialog(result.filePath);
-            } else {
-                this.showDownloadErrorDialog(result.error);
-            }
         } catch (error) {
             console.error('❌ 下载更新失败:', error);
             this.showDownloadErrorDialog(error.message || '下载更新失败');
@@ -610,12 +693,44 @@ class App {
                         <p class="progress-text">准备下载...</p>
                     </div>
                 </div>
-            </div>
-        `;
+            </div>        `;
 
         document.body.appendChild(dialog);
     }
 
+    /**
+     * 更新下载进度
+     */
+    updateDownloadProgress(progress) {
+        const dialog = document.querySelector('.update-dialog-overlay');
+        if (!dialog) return;
+
+        const progressFill = dialog.querySelector('.progress-fill');
+        const progressText = dialog.querySelector('.progress-text');
+
+        if (progressFill && progressText) {
+            const percent = Math.round(progress.percent || 0);
+            progressFill.style.width = `${percent}%`;
+
+            // 格式化显示文件大小
+            const formatBytes = (bytes) => {
+                if (bytes === 0) return '0 B';
+                const k = 1024;
+                const sizes = ['B', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            };
+
+            const transferredFormatted = formatBytes(progress.transferredBytes || 0);
+            const totalFormatted = formatBytes(progress.totalBytes || 0);
+
+            if (progress.totalBytes > 0) {
+                progressText.textContent = `下载中... ${percent}% (${transferredFormatted} / ${totalFormatted})`;
+            } else {
+                progressText.textContent = `下载中... ${transferredFormatted}`;
+            }
+        }
+    }
     /**
      * 显示下载完成对话框
      */
@@ -626,21 +741,43 @@ class App {
                 <div class="update-dialog">
                     <div class="update-dialog-header">
                         <h3>✅ 下载完成</h3>
-                        <button class="update-dialog-close" onclick="this.closest('.update-dialog-overlay').remove()">×</button>
+                        <button class="update-dialog-close">×</button>
                     </div>
                     <div class="update-dialog-content">
                         <p>更新文件已下载完成！</p>
                         <p>您可以选择立即安装或稍后手动安装。</p>
                     </div>
                     <div class="update-dialog-actions">
-                        <button class="btn btn-secondary" onclick="window.app.showDownloadFolder('${filePath}')">查看文件</button>
-                        <button class="btn btn-primary" onclick="window.app.installUpdate('${filePath}')">立即安装</button>
+                        <button class="btn btn-secondary" data-action="show-folder">查看文件</button>
+                        <button class="btn btn-primary" data-action="install">立即安装</button>
                     </div>
                 </div>
             `;
+
+            // 绑定事件处理器
+            const closeBtn = dialog.querySelector('.update-dialog-close');
+            const showFolderBtn = dialog.querySelector('[data-action="show-folder"]');
+            const installBtn = dialog.querySelector('[data-action="install"]');
+
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    dialog.remove();
+                });
+            }
+
+            if (showFolderBtn) {
+                showFolderBtn.addEventListener('click', () => {
+                    this.showDownloadFolder(filePath);
+                });
+            }
+
+            if (installBtn) {
+                installBtn.addEventListener('click', () => {
+                    this.installUpdate(filePath);
+                });
+            }
         }
     }
-
     /**
      * 显示下载错误对话框
      */
@@ -651,17 +788,33 @@ class App {
                 <div class="update-dialog">
                     <div class="update-dialog-header">
                         <h3>❌ 下载失败</h3>
-                        <button class="update-dialog-close" onclick="this.closest('.update-dialog-overlay').remove()">×</button>
+                        <button class="update-dialog-close">×</button>
                     </div>
                     <div class="update-dialog-content">
                         <p>下载更新时出现错误：</p>
                         <p class="error-message">${error}</p>
                     </div>
                     <div class="update-dialog-actions">
-                        <button class="btn btn-primary" onclick="this.closest('.update-dialog-overlay').remove()">确定</button>
+                        <button class="btn btn-primary" data-action="close">确定</button>
                     </div>
                 </div>
             `;
+
+            // 绑定事件处理器
+            const closeBtn = dialog.querySelector('.update-dialog-close');
+            const confirmBtn = dialog.querySelector('[data-action="close"]');
+
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    dialog.remove();
+                });
+            }
+
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', () => {
+                    dialog.remove();
+                });
+            }
         }
     }
 
